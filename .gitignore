@@ -1,0 +1,22 @@
+*/
+*.sh
+*_old.py
+
+
+# Ignore system files
+.DS_Store
+
+# Ignore log files
+*.log
+
+# Ignore Node.js modules
+node_modules/
+
+# Ignore Python virtual environments
+venv/
+
+# Ignore database files
+db.sqlite
+
+# Ignore editor-specific files
+.vscode/
