@@ -1,10 +1,12 @@
-*/
-*.sh
+data_PDBbind/
+data_runs/*/*/
+DTI_0*/
 *_old.py
-
+testfiles/
 
 # Ignore system files
 .DS_Store
+__pycache__
 
 # Ignore log files
 *.log
