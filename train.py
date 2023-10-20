@@ -17,7 +17,7 @@ from Dataset import IG_Dataset
 def parse_args():
     parser = argparse.ArgumentParser(description="Training Parameters and Input Dataset Control")
     parser.add_argument("--model", required=True, help="The name of the model architecture")
-    parser.add_argument("--loss_func", default='MSE', help="The loss function that will be used ['MSE', 'wMSE', 'L1', 'Huber']")
+    parser.add_argument("--loss_func", default='MSE', help="The loss function that will be used ['MSE', 'RMSE', 'wMSE', 'L1', 'Huber']")
     parser.add_argument("--wandb", default=True, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Wheter or not the run should be streamed to Weights and Biases")
     parser.add_argument("--project_name", help="Project Name for the saving of run data to Weights and Biases")
     parser.add_argument("--run_name", required=True, help="Name of the Run to display in saved data and in Weights and Biases (string)")
@@ -265,6 +265,19 @@ print(learning_rate_reduction_scheme)
 
 # DEFINE LOSS FUNCTION ['MSE', 'wMSE', 'L1', 'Huber']
 
+class wMSELoss(torch.nn.Module):
+    def __init__(self):
+        super(wMSELoss, self).__init__()
+    def forward(self, output, targets):
+        squared_errors = (output - targets) ** 2
+        return torch.mean(squared_errors * (targets + 1))
+    
+class RMSELoss(torch.nn.Module):
+    def __init__(self):
+        super(RMSELoss, self).__init__()
+        self.mse = torch.nn.MSELoss()
+    def forward(self, output, targets):
+        return torch.sqrt(self.mse(output, targets))
 
 
 if loss_function == 'Huber':
@@ -274,10 +287,10 @@ elif loss_function == 'L1':
     criterion = torch.nn.L1Loss(size_average=None, reduce=None, reduction='mean')
 
 elif loss_function == 'wMSE':
-    def compute_wMSE_loss(output, targets): # Sum of squared error (label weighted) = w_sse
-        error = (output-targets)
-        return (torch.sum(error**2 * torch.add(targets, 1)))
-    criterion = compute_wMSE_loss()
+    criterion = wMSELoss()
+
+elif loss_function == 'RMSE':
+    criterion = RMSELoss()
 
 else: 
     criterion = torch.nn.MSELoss()
@@ -289,7 +302,7 @@ else:
 
 # Training Function for 1 Epoch
 #-------------------------------------------------------------------------------------------------------------------------------
-def train(Model, loader):
+def train(Model, loader, criterion, optimizer, device):
     Model.train()
         
     # Initialize variables to accumulate metrics
@@ -314,16 +327,16 @@ def train(Model, loader):
         y_pred.extend(output.tolist())
 
     # Calculate evaluation metrics
-    epoch_loss = total_loss / len(loader.dataset)
+    avg_loss = total_loss / len(loader)
     r2_score = 1 - np.sum((np.array(y_true) - np.array(y_pred)) ** 2) / np.sum((np.array(y_true) - np.mean(np.array(y_true))) ** 2)
 
-    return epoch_loss, r2_score
+    return avg_loss, r2_score
 #-------------------------------------------------------------------------------------------------------------------------------
 
 
 # Evaluation Function
 #-------------------------------------------------------------------------------------------------------------------------------
-def evaluate(Model, loader):
+def evaluate(Model, loader, criterion, device):
     Model.eval()
 
     # Initialize variables to accumulate the evaluation results
@@ -349,7 +362,7 @@ def evaluate(Model, loader):
 
 
     # Calculate evaluation metrics
-    eval_loss = total_loss / len(loader.dataset)
+    eval_loss = total_loss / len(loader)
     r2_score = 1 - np.sum((np.array(y_true) - np.array(y_pred)) ** 2) / np.sum((np.array(y_true) - np.mean(np.array(y_true))) ** 2)
 
     return eval_loss, r2_score, y_true, y_pred
@@ -388,7 +401,8 @@ with open(f'{save_dir}/{run_name}_saving_log.txt', 'w') as f:
     f.write(f'Number of Parameters: {parameters}\n')
     f.write(f'Learning Rate: {learning_rate}\n')
     f.write(f'Weight Decay: {weight_decay}\n')
-    f.write(f'Batch Size: {batch_size}\n\n')
+    f.write(f'Batch Size: {batch_size}\n')
+    f.write(f'Loss Function: {loss_function}\n\n')    
     f.write(f'Number of Epochs: {num_epochs}\n')
     f.write(f'{learning_rate_reduction_scheme}\n')
     f.close() 
@@ -447,18 +461,17 @@ def residuals_plot(train_y_true, train_y_pred, val_y_true, val_y_pred, title):
 
 
 
-lowest_val_mse = 1000
-lowest_val_w_mse = 1000
+lowest_val_loss = 1000
 plotted_epochs = []
 
 
 # Training and Validation Set Performance BEFORE Training
 #-------------------------------------------------------------------------------------------------------------------------------
 
-train_w_mse, train_mse, train_mae, train_r2, *_ = evaluate(Model, eval_loader_train)
-val_w_mse, val_mse, val_mae, val_r2, *_ = evaluate(Model, eval_loader_val)
+train_loss, train_r2, *_ = evaluate(Model, eval_loader_train, criterion, device)
+val_loss, val_r2, *_ = evaluate(Model, eval_loader_val, criterion, device)
 
-printout = f'Before Train: Train Data: W_MSE:{train_w_mse:6.3f}|  MSE:{train_mse:6.3f}|  R2:{train_r2:6.3f}|  -- Val Data: W_MSE:{val_w_mse:6.3f}|  MSE:{val_mse:6.3f}|  R2:{val_r2:6.3f}| '
+printout = f'Before Train: Train Loss: {train_loss:6.3f}|  R2:{train_r2:6.3f}|  -- Val Loss: {val_loss:6.3f}|  R2:{val_r2:6.3f}| '
 print(printout)
 
 with open(f'{save_dir}/{run_name}_saving_log.txt', 'a') as f:
@@ -468,15 +481,9 @@ if wandb_tracking:
     wandb.log({
             "Epoch": epoch,
             "Learning Rate": optimizer.param_groups[0]['lr'],
-            
-            "Training Mean Squared Error (MSE)":train_mse,
-            "Training Label-Weighted Mean Squared Error (MSE)":train_w_mse,
-            "Training Mean Absolute Error (MAE)":train_mae,
+            "Training Loss":train_loss,
             "Training R2": train_r2,
-
-            "Validation Mean Squared Error (MSE)":val_mse,
-            "Validation Label-Weighted Mean Squared Error (MSE)":val_w_mse,
-            "Validation Mean Absolute Error (MAE)":val_mae,
+            "Validation Loss":val_loss,
             "Validation R2": val_r2
             })
 #-------------------------------------------------------------------------------------------------------------------------------
@@ -488,35 +495,29 @@ if wandb_tracking:
 #===============================================================================================================================================
 for epoch in range(epoch+1, num_epochs+1):
     
-    train_loss, train_r2, *_ = train(Model, train_loader)
+    train_loss, train_r2 = train(Model, train_loader, criterion, optimizer, device)
 
 
     # Validation Set Performance Between Training Epochs
     #-------------------------------------------------------------------------------------------------------------------------------
     
-    val_w_mse, val_mse, val_mae, val_r2, *_ = evaluate(Model, eval_loader_val)
+    val_loss, val_r2, *_ = evaluate(Model, eval_loader_val, criterion, device)
 
-    printout = f'Epoch {epoch:05d}:  Train Data: W_MSE:{train_w_mse:6.3f}|  MSE:{train_mse:6.3f}|  R2:{train_r2:6.3f}|  -- Val Data: W_MSE:{val_w_mse:6.3f}|  MSE:{val_mse:6.3f}|  R2:{val_r2:6.3f}| '
+    printout = f'Epoch {epoch:05d}:  Train Loss: {train_loss:6.3f}|  R2:{train_r2:6.3f}|  -- Val Loss: {val_loss:6.3f}|  R2:{val_r2:6.3f}| '
     print(printout)
 
     if wandb_tracking:
         wandb.log({
                 "Epoch": epoch,
                 "Learning Rate": optimizer.param_groups[0]['lr'],
-                
-                "Training Mean Squared Error (MSE)":train_mse,
-                "Training Label-Weighted Mean Squared Error (MSE)":train_w_mse,
-                "Training Mean Absolute Error (MAE)":train_mae,
+                "Training Loss":train_loss,
                 "Training R2": train_r2,
-
-                "Validation Mean Squared Error (MSE)":val_mse,
-                "Validation Label-Weighted Mean Squared Error (MSE)":val_w_mse,
-                "Validation Mean Absolute Error (MAE)":val_mae,
+                "Validation Loss":val_loss,
                 "Validation R2": val_r2
                 })
         
     # Take a step in the activated learning rate reduction schemes
-    if alr_plateau: plat_scheduler.step(val_mse) # THIS WILL NOT WORK 
+    if alr_plateau: plat_scheduler.step(val_loss)
     if alr_lin: lin_scheduler.step()
     if alr_mult: mult_scheduler.step()
     #-------------------------------------------------------------------------------------------------------------------------------
@@ -525,17 +526,12 @@ for epoch in range(epoch+1, num_epochs+1):
     # Determine if the model should be saved
     log_string = ''
 
-    # if save_w_mse:= val_w_mse <= lowest_val_mse:
-    #     lowest_val_w_mse = val_w_mse
-    #     log_string += ' Val W_MSE'
-    #     last_saved_epoch = epoch
-
-    if save_mse:= val_mse <= lowest_val_mse:
-        lowest_val_mse = val_mse
-        log_string += ' Val MSE'
+    if save:= val_loss <= lowest_val_loss:
+        lowest_val_loss = val_loss
+        log_string += ' Val Loss'
         last_saved_epoch = epoch
 
-    if save_mse or epoch % (num_epochs/20) == 0:
+    if save or epoch % (num_epochs/20) == 0:
         torch.save(Model.state_dict(), f'{save_dir}/{run_name}_stdict_{epoch}.pt')
         
     with open(f'{save_dir}/{run_name}_saving_log.txt', 'a') as f:
@@ -559,14 +555,14 @@ for epoch in range(epoch+1, num_epochs+1):
         state_dict_path = f'{save_dir}/{run_name}_stdict_{epoch}.pt'
         eval_model.load_state_dict(torch.load(state_dict_path))
         
-        train_w_mse, train_mse, train_mae, train_r2, train_y_true, train_y_pred = evaluate(eval_model, eval_loader_train)
-        val_w_mse, val_mse, val_mae, val_r2, val_y_true, val_y_pred = evaluate(eval_model, eval_loader_val)
+        train_loss, train_r2, train_y_true, train_y_pred = evaluate(eval_model, eval_loader_train, criterion, device)
+        val_loss, val_r2, val_y_true, val_y_pred = evaluate(eval_model, eval_loader_val, criterion, device)
 
         # Plot the predictions
         axislim = int(1 + max( train_y_true + train_y_pred + val_y_true + val_y_pred))
         predictions = plot_predictions( train_y_true, train_y_pred,
                                         val_y_true, val_y_pred,
-                                        f"{run_name}: Epoch {epoch}\nTrain R2 = {train_r2:.3f}, Validation R2 = {val_r2:.3f}\nTrain MSE = {train_mse:.3f}, Validation MSE = {val_mse:.3f}",
+                                        f"{run_name}: Epoch {epoch}\nTrain R2 = {train_r2:.3f}, Validation R2 = {val_r2:.3f}\nTrain Loss = {train_loss:.3f}, Validation Loss = {val_loss:.3f}",
                                         axislim)
         
 
@@ -582,18 +578,18 @@ for epoch in range(epoch+1, num_epochs+1):
             state_dict_path = f'{save_dir}/{run_name}_stdict_{last_saved_epoch}.pt'
             eval_model.load_state_dict(torch.load(state_dict_path))
 
-            train_w_mse, train_mse, train_mae, train_r2, train_y_true, train_y_pred = evaluate(eval_model, eval_loader_train)
-            val_w_mse, val_mse, val_mae, val_r2, val_y_true, val_y_pred = evaluate(eval_model, eval_loader_val)
+            train_loss, train_r2, train_y_true, train_y_pred = evaluate(eval_model, eval_loader_train, criterion, device)
+            val_loss, val_r2, val_y_true, val_y_pred = evaluate(eval_model, eval_loader_val, criterion, device)
 
             # Plot the predictions
             axislim = int(1 + max( train_y_true + train_y_pred + val_y_true + val_y_pred))
             best_predictions = plot_predictions( train_y_true, train_y_pred,
                                     val_y_true, val_y_pred,
-                                    f"{run_name}: Epoch {last_saved_epoch}\nTrain R2 = {train_r2:.3f}, Validation R2 = {val_r2:.3f}\nTrain MSE = {train_mse:.3f}, Validation MSE = {val_mse:.3f}",
+                                    f"{run_name}: Epoch {last_saved_epoch}\nTrain R2 = {train_r2:.3f}, Validation R2 = {val_r2:.3f}\nTrain Loss = {train_loss:.3f}, Validation Loss = {val_loss:.3f}",
                                     axislim)
 
             residuals = residuals_plot(train_y_true, train_y_pred, val_y_true, val_y_pred, 
-                                       f"{run_name}: Epoch {last_saved_epoch}\nTrain R2 = {train_r2:.3f}, Validation R2 = {val_r2:.3f}\nTrain MSE = {train_mse:.3f}, Validation MSE = {val_mse:.3f}")     
+                                       f"{run_name}: Epoch {last_saved_epoch}\nTrain R2 = {train_r2:.3f}, Validation R2 = {val_r2:.3f}\nTrain Loss = {train_loss:.3f}, Validation Loss = {val_loss:.3f}")     
             
             plotted_epochs.append(last_saved_epoch)
 
