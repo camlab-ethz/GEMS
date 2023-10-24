@@ -17,6 +17,8 @@ from Dataset import IG_Dataset
 def parse_args():
     parser = argparse.ArgumentParser(description="Training Parameters and Input Dataset Control")
     parser.add_argument("--model", required=True, help="The name of the model architecture")
+    parser.add_argument("--embedding", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Wheter or not ESM embedding should be used")
+    parser.add_argument("--edge_features", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Wheter or not Edge Features should be used")
     parser.add_argument("--loss_func", default='MSE', help="The loss function that will be used ['MSE', 'RMSE', 'wMSE', 'L1', 'Huber']")
     parser.add_argument("--wandb", default=True, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Wheter or not the run should be streamed to Weights and Biases")
     parser.add_argument("--project_name", help="Project Name for the saving of run data to Weights and Biases")
@@ -31,23 +33,23 @@ def parse_args():
     parser.add_argument("--device", default=1, type=int, help="The device index of the device on which the code should run")
 
     # If the learning rate should be adaptive LINEAR
-    parser.add_argument("--alr_lin", default=False, help="Linear learning rate reduction scheme will be used")
+    parser.add_argument("--alr_lin",  default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Linear learning rate reduction scheme will be used")
     parser.add_argument("--start_factor", default=1, help="Factor by which the learning rate will be reduced. new_lr = lr * factor.")
     parser.add_argument("--end_factor", default=0.01, help="Factor by which the learning rate will be reduced in the last epoch. new_lr = lr * factor.")
-    parser.add_argument("--total_iters", default=10000, help="The number of iterations after which the linear reduction of the LR should be finished")
+    parser.add_argument("--total_iters", default=1000, help="The number of iterations after which the linear reduction of the LR should be finished")
 
     # If the learning rate should be adaptive MULTIPLICATIVE
-    parser.add_argument("--alr_mult", default=False, help="Multiplicative learning rate reduction scheme will be used")
-    parser.add_argument("--factor", default=0.9995, help="Factor by which the learning rate will be reduced. new_lr = lr * factor.")
+    parser.add_argument("--alr_mult",  default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Multiplicative learning rate reduction scheme will be used")
+    parser.add_argument("--factor", default=0.99, help="Factor by which the learning rate will be reduced. new_lr = lr * factor.")
 
     # If the learning rate should be adaptive REDUCEONPLATEAU
-    parser.add_argument("--alr_plateau", default=False, help="Adaptive learning rate reduction REDUCELRONPLATEAU scheme will be used")
+    parser.add_argument("--alr_plateau",  default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Adaptive learning rate reduction REDUCELRONPLATEAU scheme will be used")
     parser.add_argument("--reduction", default=0.1, type=float, help="Factor by which the LR should be reduced on plateau")
     parser.add_argument("--patience", default=10, type=int, help="Number of epochs with no improvement after which learning rate will be reduced.")
     parser.add_argument("--min_lr", default=0.5e-4, type=float, help="A lower bound on the learning rate")
 
     # If a state_dict should be loaded before the training
-    parser.add_argument("--pretrained", default=False, help="Provide the path of a state dict that should be imported")
+    parser.add_argument("--pretrained",  default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Provide the path of a state dict that should be imported")
     parser.add_argument("--start_epoch", default=0, type=int, help="Provide the starting epoch (in case of importing pretrained model)")
 
     return parser.parse_args()
@@ -61,10 +63,12 @@ torch.manual_seed(0)
 #----------------------------------------------------------------------------------------------------
 
 # Location and feature dimensionality of the dataset to be used
-data_dir = '/data/grbv/PDBbind/input_graphs/training_data'
+data_dir = '/data/grbv/PDBbind/DTI_1/input_graphs_esm2_t6_8M/training_data'
 
 # Architecture and run settings
 model_arch = args.model
+embedding = args.embedding
+edge_features = args.edge_features
 project_name = args.project_name
 run_name = args.run_name
 wandb_tracking = args.wandb
@@ -83,7 +87,7 @@ dropout_prob = args.dropout
 n_folds = args.n_folds
 fold_to_train = args.fold_to_train
 
-save_dir = f'data_runs/{project_name}/{run_name}/Fold{fold_to_train}'
+save_dir = f'experiments/{project_name}/{run_name}/Fold{fold_to_train}'
 wandb_dir = '/data/grabeda2'
 
 run_name = f'{run_name}_f{fold_to_train}' 
@@ -114,6 +118,8 @@ if alr_plateau:
 if wandb_tracking: 
         config = {
                 "Learning Rate": learning_rate,
+                "ESM Embedding": embedding,
+                "Edge Features": edge_features,
                 "Weight Decay": weight_decay,
                 "Architecture": model_arch,
                 "Epochs": num_epochs,
@@ -138,10 +144,10 @@ if not os.path.exists(save_dir):
 
 # Load Dataset - Split into training and validation set in a stratified way
 #----------------------------------------------------------------------------------------------------
-dataset = IG_Dataset(data_dir)
+dataset = IG_Dataset(data_dir, embedding=embedding, edge_features=edge_features)
 print(dataset)
 
-node_feat_dim = dataset[0].x.shape[1]
+node_feat_dim = dataset[0].x_prot_emb.shape[1]
 edge_feat_dim = dataset[0].edge_attr.shape[1]
 
 labels = [graph.affinity.item() for graph in dataset]
@@ -170,10 +176,11 @@ val_dataset = Subset(dataset, val_idx)
 print(f'Length Training Dataset: {len(train_dataset)}')
 print(f'Length Validation Dataset: {len(val_dataset)}')
 
-train_loader = DataLoader(dataset = train_dataset, batch_size=batch_size, shuffle=True, num_workers=4, persistent_workers=True)
-eval_loader_train = DataLoader(dataset = train_dataset, batch_size=1024, shuffle=True, num_workers=4, persistent_workers=True)
-eval_loader_val = DataLoader(dataset = val_dataset, batch_size=1024, shuffle=True, num_workers=4, persistent_workers=True)
+train_loader = DataLoader(dataset = train_dataset, batch_size=batch_size, shuffle=True, num_workers=8, persistent_workers=True)
+eval_loader_train = DataLoader(dataset = train_dataset, batch_size=1024, shuffle=True, num_workers=8, persistent_workers=True)
+eval_loader_val = DataLoader(dataset = val_dataset, batch_size=1024, shuffle=True, num_workers=8, persistent_workers=True)
 #----------------------------------------------------------------------------------------------------
+
 
 
 
@@ -190,20 +197,19 @@ def create_histogram(data, title, xlim, num_bins=50):
     fig = plt.figure(figsize=(12, 6))  # Set the figure size as needed
 
     # Create the histogram
-    frequencies, bins, _ = plt.hist(data, bins=num_bins)
+    frequencies, bins, _ = plt.hist(data, bins=num_bins, edgecolor='black', alpha=0.7)
     plt.xlabel('Labels')
     plt.ylabel('Count (Log Scale)')
     plt.title(title)
 
-    # # Set a gap in the y-axis
-    # max_freq = max(plt.gca().get_ylim()[1], max(frequencies))
-    # plt.ylim(0, max_freq * 1.1)  # Adjust the multiplier as needed
+    # Calculate bin centers
+    bin_centers = (bins[:-1] + bins[1:]) / 2
 
     # Add labels to the columns
-    for freq, bin_val in zip(frequencies, bins):
-        plt.text(bin_val, freq, str(int(freq)), ha='center', va='bottom')
+    for freq, bin_center, in zip(frequencies, bin_centers):
+        plt.text(bin_center, freq+1, str(int(freq)), ha='center', rotation=90, va='bottom', fontweight='bold', fontsize=8)
 
-    plt.yscale('log')
+    plt.yscale('linear')
     plt.xlim(0, np.ceil(xlim))
 
     return fig
@@ -282,18 +288,23 @@ class RMSELoss(torch.nn.Module):
 
 if loss_function == 'Huber':
     criterion = torch.nn.HuberLoss(reduction='mean', delta=1.0)
+    print(f'Loss Function: Huber Loss')
 
 elif loss_function == 'L1':
     criterion = torch.nn.L1Loss(size_average=None, reduce=None, reduction='mean')
+    print(f'Loss Function: L1 Loss')
 
 elif loss_function == 'wMSE':
     criterion = wMSELoss()
+    print(f'Loss Function: wMSE Loss')
 
 elif loss_function == 'RMSE':
     criterion = RMSELoss()
+    print(f'Loss Function: RMSE Loss')
 
 else: 
     criterion = torch.nn.MSELoss()
+    print(f'Loss Function: MSE Loss')
 
 #----------------------------------------------------------------------------------------------------
 
@@ -375,7 +386,7 @@ def evaluate(Model, loader, criterion, device):
 
 
 
-# Initialize WandB tracking with config dictionary, log file and data collection
+# Initialize WandB tracking with config dictionary
 #-----------------------------------------------------------------------------------
 if wandb_tracking:
     wandb.init(project=project_name, name = run_name, config=config, dir=wandb_dir)
@@ -394,25 +405,26 @@ else:
     epoch = 0
 
 
-# Generate txt log file
-with open(f'{save_dir}/{run_name}_saving_log.txt', 'w') as f:
-    f.write(f'Model Architecture {model_arch} - Fold {fold_to_train} ({run_name}):\n')
-    f.write(f'Model Training Output ({run_name}):\n')
-    f.write(f'Number of Parameters: {parameters}\n')
-    f.write(f'Learning Rate: {learning_rate}\n')
-    f.write(f'Weight Decay: {weight_decay}\n')
-    f.write(f'Batch Size: {batch_size}\n')
-    f.write(f'Loss Function: {loss_function}\n\n')    
-    f.write(f'Number of Epochs: {num_epochs}\n')
-    f.write(f'{learning_rate_reduction_scheme}\n')
-    f.close() 
+print(f'Model Architecture {model_arch} - Fold {fold_to_train} ({run_name})')
+print(f'Number of Parameters: {parameters}')
+print(f'ESM Embedding: {embedding}')
+print(f'Edge Features: {edge_features}')
+print(f'Learning Rate: {learning_rate}')
+print(f'Weight Decay: {weight_decay}')
+print(f'Batch Size: {batch_size}')
+print(f'Loss Function: {loss_function}')    
+print(f'Number of Epochs: {num_epochs}')
+print(f'{learning_rate_reduction_scheme}\n')
+
+print(f'Model Training Output ({run_name})')
 
 
 
 # Plotting Functions
 #-------------------------------------------------------------------------------------------------------------------------
-def plot_predictions(train_y_true, train_y_pred, val_y_true, val_y_pred, title, axislim):
+def plot_predictions(train_y_true, train_y_pred, val_y_true, val_y_pred, title):
     
+    axislim = 1.1
     fig = plt.figure(figsize=(8, 8))  # Set the figure size as needed
 
     plt.scatter(train_y_true, train_y_pred, alpha=0.5, c='blue', label='Training Data')
@@ -421,9 +433,10 @@ def plot_predictions(train_y_true, train_y_pred, val_y_true, val_y_pred, title, 
     plt.plot([min(train_y_true + val_y_true), axislim], [min(train_y_true + val_y_true), axislim], color='red', linestyle='--')
     plt.xlabel('True Values')
     plt.ylabel('Predicted Values')
-    plt.ylim(-0.25, axislim)
-    plt.xlim(0, axislim)
+    plt.ylim(-0.1, axislim)
+    plt.xlim(-0.1, axislim)
     plt.axhline(0, color='grey', linestyle='--')
+    plt.axvline(0, color='grey', linestyle='--')
     plt.title(title)
     
     # Adding manual legend items for colors
@@ -436,7 +449,7 @@ def plot_predictions(train_y_true, train_y_pred, val_y_true, val_y_pred, title, 
 
 
 def residuals_plot(train_y_true, train_y_pred, val_y_true, val_y_pred, title):
-    
+    axislim = 1.1
     fig = plt.figure(figsize=(8, 8))  # Set the figure size as needed
 
     plt.style.use('ggplot')
@@ -444,13 +457,14 @@ def residuals_plot(train_y_true, train_y_pred, val_y_true, val_y_pred, title):
     val_residuals = np.array(val_y_true) - np.array(val_y_pred)
 
     # Plot training residuals in blue
-    plt.scatter(train_y_pred, train_residuals, c='blue', label='Training Data')
+    plt.scatter(train_y_pred, train_residuals, c='blue', label='Training Data', alpha=0.5)
 
     # Plot validation residuals in red
-    plt.scatter(val_y_pred, val_residuals, c='red', label='Validation Data')
+    plt.scatter(val_y_pred, val_residuals, c='red', label='Validation Data', alpha=0.5)
 
     plt.xlabel('Predicted Values')
     plt.ylabel('Residuals')
+    plt.xlim(-0.1, axislim)
     plt.axhline(y=0, color='r', linestyle='--')
     plt.title(title)
     plt.legend()  # Add a legend to differentiate training and validation data
@@ -474,8 +488,8 @@ val_loss, val_r2, *_ = evaluate(Model, eval_loader_val, criterion, device)
 printout = f'Before Train: Train Loss: {train_loss:6.3f}|  R2:{train_r2:6.3f}|  -- Val Loss: {val_loss:6.3f}|  R2:{val_r2:6.3f}| '
 print(printout)
 
-with open(f'{save_dir}/{run_name}_saving_log.txt', 'a') as f:
-        f.write(f'{printout} \n')
+# with open(f'{save_dir}/{run_name}_saving_log.txt', 'a') as f:
+#         f.write(f'{printout} \n')
 
 if wandb_tracking:
     wandb.log({
@@ -504,7 +518,6 @@ for epoch in range(epoch+1, num_epochs+1):
     val_loss, val_r2, *_ = evaluate(Model, eval_loader_val, criterion, device)
 
     printout = f'Epoch {epoch:05d}:  Train Loss: {train_loss:6.3f}|  R2:{train_r2:6.3f}|  -- Val Loss: {val_loss:6.3f}|  R2:{val_r2:6.3f}| '
-    print(printout)
 
     if wandb_tracking:
         wandb.log({
@@ -524,18 +537,19 @@ for epoch in range(epoch+1, num_epochs+1):
 
 
     # Determine if the model should be saved
-    log_string = ''
+    log_string = printout
 
     if save:= val_loss <= lowest_val_loss:
         lowest_val_loss = val_loss
-        log_string += ' Val Loss'
+        log_string += ' Saved'
         last_saved_epoch = epoch
 
     if save or epoch % (num_epochs/20) == 0:
         torch.save(Model.state_dict(), f'{save_dir}/{run_name}_stdict_{epoch}.pt')
-        
-    with open(f'{save_dir}/{run_name}_saving_log.txt', 'a') as f:
-        f.write(f'{printout}{log_string} \n')
+    
+    print(log_string, flush=True)
+    # with open(f'{save_dir}/{run_name}_saving_log.txt', 'a') as f:
+    #     f.write(f'{printout}{log_string} \n')
 
 
     # Evaluation
@@ -559,11 +573,11 @@ for epoch in range(epoch+1, num_epochs+1):
         val_loss, val_r2, val_y_true, val_y_pred = evaluate(eval_model, eval_loader_val, criterion, device)
 
         # Plot the predictions
-        axislim = int(1 + max( train_y_true + train_y_pred + val_y_true + val_y_pred))
+        #axislim = int(0.5 + max( train_y_true + train_y_pred + val_y_true + val_y_pred))
         predictions = plot_predictions( train_y_true, train_y_pred,
                                         val_y_true, val_y_pred,
-                                        f"{run_name}: Epoch {epoch}\nTrain R2 = {train_r2:.3f}, Validation R2 = {val_r2:.3f}\nTrain Loss = {train_loss:.3f}, Validation Loss = {val_loss:.3f}",
-                                        axislim)
+                                        f"{run_name}: Epoch {epoch}\nTrain R2 = {train_r2:.3f}, Validation R2 = {val_r2:.3f}\nTrain Loss = {train_loss:.3f}, Validation Loss = {val_loss:.3f}")
+#                                        axislim)
         
 
 
@@ -582,11 +596,11 @@ for epoch in range(epoch+1, num_epochs+1):
             val_loss, val_r2, val_y_true, val_y_pred = evaluate(eval_model, eval_loader_val, criterion, device)
 
             # Plot the predictions
-            axislim = int(1 + max( train_y_true + train_y_pred + val_y_true + val_y_pred))
+            #axislim = int(0.5 + max( train_y_true + train_y_pred + val_y_true + val_y_pred))
             best_predictions = plot_predictions( train_y_true, train_y_pred,
                                     val_y_true, val_y_pred,
-                                    f"{run_name}: Epoch {last_saved_epoch}\nTrain R2 = {train_r2:.3f}, Validation R2 = {val_r2:.3f}\nTrain Loss = {train_loss:.3f}, Validation Loss = {val_loss:.3f}",
-                                    axislim)
+                                    f"{run_name}: Epoch {last_saved_epoch}\nTrain R2 = {train_r2:.3f}, Validation R2 = {val_r2:.3f}\nTrain Loss = {train_loss:.3f}, Validation Loss = {val_loss:.3f}")
+#                                    axislim)
 
             residuals = residuals_plot(train_y_true, train_y_pred, val_y_true, val_y_pred, 
                                        f"{run_name}: Epoch {last_saved_epoch}\nTrain R2 = {train_r2:.3f}, Validation R2 = {val_r2:.3f}\nTrain Loss = {train_loss:.3f}, Validation Loss = {val_loss:.3f}")     
