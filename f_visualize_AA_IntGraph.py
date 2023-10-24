@@ -3,7 +3,7 @@ import plotly.graph_objects as go
 from plotly.offline import iplot
 import plotly.io as io
 from sklearn.neighbors import NearestNeighbors
-
+import torch
 
 
 
@@ -22,6 +22,14 @@ def visualize_graph(graph,
     # To prepare a list of all the edges in the graph, and a list of same shape that countains the features of these edges
     # For this, remove double edges (undirected graph) and remove self_loops
 
+    x_lig = graph.x_lig
+    x_prot_emb = graph.x_prot_emb
+    x_prot_aa = graph.x_prot_aa
+
+    #graph.x = torch.cat((x_lig, x_prot_aa), axis=0)    
+    graph.x = torch.cat((x_lig, x_prot_emb), axis=0)
+    print(graph.x.shape)
+
     if show_edge_attr:
         edge_list, edge_attr = remove_self_loops(graph.edge_index, graph.edge_attr)
         edge_list = edge_list.T.tolist()
@@ -36,6 +44,7 @@ def visualize_graph(graph,
 
         # Prepare hoverinfo as a list of lists, round floats
         hoverinfo_nodes = graph.x.tolist()
+
         for l in range(len(hoverinfo_nodes)):
             hoverinfo_nodes[l] = [int(entry) if entry % 1 == 0 else round(entry,4) for entry in hoverinfo_nodes[l]]
 
@@ -63,6 +72,7 @@ def visualize_graph(graph,
 
     #Marker Colors based on atom type
     atomtypes = (graph.x[:,320:361] == 1).nonzero(as_tuple=True)[1].tolist() #identify the index of the first 1 in the feature matrix = atom type
+    print(atomtypes)
     
     marker_color_mapping = {0:'rgb(0,0,0)', 3:'rgb(34,139,34)', 2:'rgb(65,105,225)', 5:'rgb(255,0,0)', 
                             4:'rgb(0,0,255)', 6:'rgb(0,255,0)', 5:'rgb(255,0,0)', 7:'rgb(0,0,0)',
@@ -71,6 +81,7 @@ def visualize_graph(graph,
 
     #Marker shape based on atom type (Fe, Cl and the atoms in highligh as crosses, the rest as circles)
     not_ions = [0,2,3,4,5,6,10,11]
+    ['H','Li','B','C','N','O','F','Na','Mg','Si','P','S','Cl','K','Ca','V','Mn','Fe','Co','Ni','Cu','Zn','Ga','As','Se','Br','Rb','Sr','Ru','Rh','Cd','In','Sb','Te','I','Cs','Ba','Os','Ir','Pt','Au','Hg']
     symbols = ['x' if atom not in not_ions else 'circle' for atom in atomtypes]
     if highlight != None:
         symbols = [highlight_symbol if index in highlight else symbol for index, symbol in enumerate(symbols)]
