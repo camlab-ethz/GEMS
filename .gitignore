@@ -1,5 +1,5 @@
-data_PDBbind/
-data_runs/*/*/
+
+experiments/*/*/
 DTI_0*/
 *_old.py
 testfiles/
@@ -7,6 +7,9 @@ testfiles/
 # Ignore system files
 .DS_Store
 __pycache__
+
+# Ignore bash scripts
+*.sh
 
 # Ignore log files
 *.log
