@@ -3,6 +3,7 @@ experiments/*/*/
 DTI_0*/
 *_old.py
 testfiles/
+test*
 
 # Ignore system files
 .DS_Store
