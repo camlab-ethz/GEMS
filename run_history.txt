@@ -1,0 +1,60 @@
+----------------------------------------------------
+Grid Search to optimize LR and BS 
+
+r001_GAT0mp_t61_bs1_lr1_MSE
+r002_GAT0mp_t61_bs1_lr2_MSE
+r003_GAT0mp_t61_bs1_lr3_MSE
+r004_GAT0mp_t61_bs1_lr4_MSE
+
+r005_GAT0mp_t61_bs2_lr1_MSE
+r006_GAT0mp_t61_bs2_lr2_MSE
+r007_GAT0mp_t61_bs2_lr3_MSE
+r008_GAT0mp_t61_bs2_lr4_MSE
+
+r009_GAT0mp_t61_bs5_lr1_MSE
+r010_GAT0mp_t61_bs5_lr2_MSE
+r011_GAT0mp_t61_bs5_lr3_MSE
+r012_GAT0mp_t61_bs5_lr4_MSE
+
+for i in $(seq -w 1 12); do sbatch r0${i}.sh; done
+
+-----------------------------------------------------
+Test even lower learning rate and a larger batch size
+r013_GAT0mp_t61_bs6_lr3_MSE
+r014_GAT0mp_t61_bs6_lr4_MSE
+r015_GAT0mp_t61_bs6_lr5_MSE
+
+r016_GAT0mp_t61_bs1_lr5_MSE
+r017_GAT0mp_t61_bs2_lr5_MSE
+r018_GAT0mp_t61_bs5_lr5_MSE
+
+for i in $(seq -w 13 18); do sbatch r0${i}.sh; done
+
+------------------------------------------------------
+Run the best runs with linear LR scheduler (1-0.01-500)
+r019_GAT0mp_t61_bs2_lr3_MSElin
+r020_GAT0mp_t61_bs5_lr3_MSElin
+r021_GAT0mp_t61_bs6_lr3_MSElin
+for i in $(seq -w 19 21); do sbatch r0${i}.sh; done
+
+The runs with adaptive learning rate are not better
+------------------------------------------------------
+
+LR 0.0001 is the best. Complete 5fold CV for the runs with LR 0.0004 (4, 8, 12)
+r004_GAT0mp_t61_bs1_lr4_MSE
+r008_GAT0mp_t61_bs2_lr4_MSE
+r012_GAT0mp_t61_bs5_lr4_MSE
+
+for i in 04 08 12; do sbatch r0${i}_cv.sh; done
+
+The Performance between the folds has very low variability. 
+I think it is ok to experiment with only one fold.
+--------------------------------------------------------
+
+TRY WITH MORE ATTENTION HEADS IN THE THREE CONVOLUTIONAL LAYERS (AT THE MOMENT WITH AVG INSTEAD OF CONCAT)
+
+r022_GAT1mp_t61_bs2_lr4_MSE
+r023_GAT2mp_t61_bs2_lr4_MSE
+r024_GAT3mp_t61_bs2_lr4_MSE
+
+for i in $(seq -w 22 24); do sbatch r0${i}.sh; done

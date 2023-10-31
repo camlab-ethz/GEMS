@@ -17,6 +17,7 @@ from Dataset import IG_Dataset
 def parse_args():
     parser = argparse.ArgumentParser(description="Training Parameters and Input Dataset Control")
     parser.add_argument("--model", required=True, help="The name of the model architecture")
+    parser.add_argument("--data_path", required=True, help="The source path of the data e.g. '/cfs/earth/scratch/grbv/DTI/input_graphs_esm2_t6'")
     parser.add_argument("--embedding", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Wheter or not ESM embedding should be used")
     parser.add_argument("--edge_features", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Wheter or not Edge Features should be used")
     parser.add_argument("--loss_func", default='MSE', help="The loss function that will be used ['MSE', 'RMSE', 'wMSE', 'L1', 'Huber']")
@@ -30,13 +31,13 @@ def parse_args():
     parser.add_argument("--learning_rate", default=0.01, type=float, help="The learning rate with which the model should train (float)")
     parser.add_argument("--weight_decay", default=0.001, type=float, help="The weight decay parameter with which the model should train (float)")
     parser.add_argument("--dropout", default=0, type=float, help="The dropout probability that should be applied in the dropout layer")
-    parser.add_argument("--device", default=1, type=int, help="The device index of the device on which the code should run")
+    #parser.add_argument("--device", default=1, type=int, help="The device index of the device on which the code should run")
 
     # If the learning rate should be adaptive LINEAR
     parser.add_argument("--alr_lin",  default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Linear learning rate reduction scheme will be used")
-    parser.add_argument("--start_factor", default=1, help="Factor by which the learning rate will be reduced. new_lr = lr * factor.")
-    parser.add_argument("--end_factor", default=0.01, help="Factor by which the learning rate will be reduced in the last epoch. new_lr = lr * factor.")
-    parser.add_argument("--total_iters", default=1000, help="The number of iterations after which the linear reduction of the LR should be finished")
+    parser.add_argument("--start_factor", default=1, type=float,help="Factor by which the learning rate will be reduced. new_lr = lr * factor.")
+    parser.add_argument("--end_factor", default=0.01, type=float, help="Factor by which the learning rate will be reduced in the last epoch. new_lr = lr * factor.")
+    parser.add_argument("--total_iters", default=1000, type=float, help="The number of iterations after which the linear reduction of the LR should be finished")
 
     # If the learning rate should be adaptive MULTIPLICATIVE
     parser.add_argument("--alr_mult",  default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Multiplicative learning rate reduction scheme will be used")
@@ -62,17 +63,15 @@ torch.manual_seed(0)
 # Training Parameters and Config
 #----------------------------------------------------------------------------------------------------
 
-# Location and feature dimensionality of the dataset to be used
-data_dir = '/data/grbv/PDBbind/DTI_1/input_graphs_esm2_t6_8M/training_data'
-
 # Architecture and run settings
 model_arch = args.model
+data_dir = args.data_path
 embedding = args.embedding
 edge_features = args.edge_features
 project_name = args.project_name
 run_name = args.run_name
 wandb_tracking = args.wandb
-device_idx = args.device
+#device_idx = args.device
 if wandb_tracking: print(f'Saving into Project Folder {project_name}')
 
 random_seed = 42
@@ -88,7 +87,7 @@ n_folds = args.n_folds
 fold_to_train = args.fold_to_train
 
 save_dir = f'experiments/{project_name}/{run_name}/Fold{fold_to_train}'
-wandb_dir = '/data/grabeda2'
+wandb_dir = '/cfs/earth/scratch/grbv/DTI/wandb'
 
 run_name = f'{run_name}_f{fold_to_train}' 
 
@@ -126,7 +125,7 @@ if wandb_tracking:
                 "Batch Size": batch_size,
                 "Splitting Random Seed":random_seed,
                 "Dropout Probability": dropout_prob,
-                "Device Idx": device_idx,
+                #"Device Idx": device_idx,
                 "Adaptive LR Scheme": alr
                 }
 
@@ -144,7 +143,11 @@ if not os.path.exists(save_dir):
 
 # Load Dataset - Split into training and validation set in a stratified way
 #----------------------------------------------------------------------------------------------------
-dataset = IG_Dataset(data_dir, embedding=embedding, edge_features=edge_features)
+
+# Location of the training data
+train_dir = f'{data_dir}/training_data/'
+
+dataset = IG_Dataset(train_dir, embedding=embedding, edge_features=edge_features)
 print(dataset)
 
 node_feat_dim = dataset[0].x_prot_emb.shape[1]
@@ -230,12 +233,20 @@ def count_parameters(model, trainable=True):
     return sum(p.numel() for p in model.parameters() if p.requires_grad or not trainable)
 
 
+# # Device Settings
+# num_threads = torch.get_num_threads() // 2
+# torch.set_num_threads(num_threads)
+
+# torch.cuda.set_device(device_idx)
+# device = torch.device(f'cuda:{device_idx}' if torch.cuda.is_available() else 'cpu')
+# print(device, torch.cuda.current_device(), torch.cuda.get_device_name())
+
 # Device Settings
-num_threads = torch.get_num_threads() // 2
+num_threads = int(os.environ.get('OMP_NUM_THREADS', torch.get_num_threads()))
 torch.set_num_threads(num_threads)
 
-torch.cuda.set_device(device_idx)
-device = torch.device(f'cuda:{device_idx}' if torch.cuda.is_available() else 'cpu')
+# Since SLURM sets CUDA_VISIBLE_DEVICES for us, the first available GPU will be "cuda:0" from this script's perspective.
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 print(device, torch.cuda.current_device(), torch.cuda.get_device_name())
 
 
@@ -389,6 +400,7 @@ def evaluate(Model, loader, criterion, device):
 # Initialize WandB tracking with config dictionary
 #-----------------------------------------------------------------------------------
 if wandb_tracking:
+    wandb.login()
     wandb.init(project=project_name, name = run_name, config=config, dir=wandb_dir)
     
     wandb.log({"Training Labels": wandb.Image(hist_training_labels),
@@ -488,9 +500,6 @@ val_loss, val_r2, *_ = evaluate(Model, eval_loader_val, criterion, device)
 printout = f'Before Train: Train Loss: {train_loss:6.3f}|  R2:{train_r2:6.3f}|  -- Val Loss: {val_loss:6.3f}|  R2:{val_r2:6.3f}| '
 print(printout)
 
-# with open(f'{save_dir}/{run_name}_saving_log.txt', 'a') as f:
-#         f.write(f'{printout} \n')
-
 if wandb_tracking:
     wandb.log({
             "Epoch": epoch,
@@ -548,8 +557,6 @@ for epoch in range(epoch+1, num_epochs+1):
         torch.save(Model.state_dict(), f'{save_dir}/{run_name}_stdict_{epoch}.pt')
     
     print(log_string, flush=True)
-    # with open(f'{save_dir}/{run_name}_saving_log.txt', 'a') as f:
-    #     f.write(f'{printout}{log_string} \n')
 
 
     # Evaluation
@@ -573,11 +580,9 @@ for epoch in range(epoch+1, num_epochs+1):
         val_loss, val_r2, val_y_true, val_y_pred = evaluate(eval_model, eval_loader_val, criterion, device)
 
         # Plot the predictions
-        #axislim = int(0.5 + max( train_y_true + train_y_pred + val_y_true + val_y_pred))
         predictions = plot_predictions( train_y_true, train_y_pred,
                                         val_y_true, val_y_pred,
                                         f"{run_name}: Epoch {epoch}\nTrain R2 = {train_r2:.3f}, Validation R2 = {val_r2:.3f}\nTrain Loss = {train_loss:.3f}, Validation Loss = {val_loss:.3f}")
-#                                        axislim)
         
 
 
@@ -596,11 +601,9 @@ for epoch in range(epoch+1, num_epochs+1):
             val_loss, val_r2, val_y_true, val_y_pred = evaluate(eval_model, eval_loader_val, criterion, device)
 
             # Plot the predictions
-            #axislim = int(0.5 + max( train_y_true + train_y_pred + val_y_true + val_y_pred))
             best_predictions = plot_predictions( train_y_true, train_y_pred,
                                     val_y_true, val_y_pred,
                                     f"{run_name}: Epoch {last_saved_epoch}\nTrain R2 = {train_r2:.3f}, Validation R2 = {val_r2:.3f}\nTrain Loss = {train_loss:.3f}, Validation Loss = {val_loss:.3f}")
-#                                    axislim)
 
             residuals = residuals_plot(train_y_true, train_y_pred, val_y_true, val_y_pred, 
                                        f"{run_name}: Epoch {last_saved_epoch}\nTrain R2 = {train_r2:.3f}, Validation R2 = {val_r2:.3f}\nTrain Loss = {train_loss:.3f}, Validation Loss = {val_loss:.3f}")     
