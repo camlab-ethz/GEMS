@@ -1,3 +1,4 @@
+import argparse
 import numpy as np
 from rdkit import Chem
 from rdkit.Chem import AllChem
@@ -8,6 +9,13 @@ import pickle
 from torch_geometric.utils import to_undirected, add_self_loops
 from rdkit.Chem.MolStandardize import rdMolStandardize  
 from torch_geometric.data import Data, Batch
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Inputs to Graph Generation Script")
+    parser.add_argument("--embedding", required=True, help="The embedding that should be used [esm2_t6_8M, esm2_t12_35M, esm2_t30_150M, esm2_t33_650M]")
+    return parser.parse_args()
+
+args = parse_args()
 
 
 def parse_sdf_file(file_path):
@@ -210,7 +218,7 @@ def edge_index_and_attr(mol, pos, undirected = True, self_loops = True):
 #------------------------------------------------------------------------------------------------------------- 
 
 # Choose the esm embedding that should be used:
-embedding_descriptor = 'esm2_t6_8M'
+embedding_descriptor = args.embedding
 num_atomfeatures = 71
 num_edgefeatures = 17
 output_folder = f'/data/grbv/PDBbind/DTI_1/input_graphs_{embedding_descriptor}/'
