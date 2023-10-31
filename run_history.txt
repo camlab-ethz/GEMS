@@ -51,7 +51,7 @@ The Performance between the folds has very low variability.
 I think it is ok to experiment with only one fold.
 --------------------------------------------------------
 
-TRY WITH MORE ATTENTION HEADS IN THE THREE CONVOLUTIONAL LAYERS
+TRY WITH MORE ATTENTION HEADS IN THE THREE CONVOLUTIONAL LAYERS (AT THE MOMENT WITH AVG INSTEAD OF CONCAT)
 
 r022_GAT1mp_t61_bs2_lr4_MSE
 r023_GAT2mp_t61_bs2_lr4_MSE
