@@ -39,14 +39,14 @@ class GAT0mp(torch.nn.Module):
 
 
 '''
-# MODEL ARCHITECTURE SMALL WITH TWO ATTENTION HEADS IN THE FIRST LAYER AND GLOBAL MEAN POOL 
+# MODEL ARCHITECTURE SMALL WITH TWO ATTENTION HEADS (WITH AVERAGING) IN THE FIRST LAYER AND GLOBAL MEAN POOL 
 '''
 class GAT1mp(torch.nn.Module):
     def __init__(self, dropout_prob, in_channels, edge_dim):
         super(GAT1mp, self).__init__()
 
         #Convolutional Layers
-        self.conv1 = GATv2Conv(in_channels, 512, edge_dim=edge_dim, heads=2)
+        self.conv1 = GATv2Conv(in_channels, 512, edge_dim=edge_dim, heads=2, concat=False)
         self.conv2 = GATv2Conv(512, 1024, edge_dim=edge_dim)
         self.conv3 = GATv2Conv(1024, 256, edge_dim=edge_dim)
         self.dropout_layer = torch.nn.Dropout(dropout_prob)
@@ -74,15 +74,15 @@ class GAT1mp(torch.nn.Module):
     
 
 '''
-# MODEL ARCHITECTURE SMALL WITH TWO ATTENTION HEADS IN THE FIRST TWO LAYERS AND GLOBAL MEAN POOL 
+# MODEL ARCHITECTURE SMALL WITH TWO ATTENTION HEADS (WITH AVERAGING) IN THE FIRST TWO LAYERS AND GLOBAL MEAN POOL 
 '''
 class GAT2mp(torch.nn.Module):
     def __init__(self, dropout_prob, in_channels, edge_dim):
         super(GAT2mp, self).__init__()
 
         #Convolutional Layers
-        self.conv1 = GATv2Conv(in_channels, 512, edge_dim=edge_dim, heads=2)
-        self.conv2 = GATv2Conv(512, 1024, edge_dim=edge_dim, heads=2)
+        self.conv1 = GATv2Conv(in_channels, 512, edge_dim=edge_dim, heads=2, concat=False)
+        self.conv2 = GATv2Conv(512, 1024, edge_dim=edge_dim, heads=2, concat=False)
         self.conv3 = GATv2Conv(1024, 256, edge_dim=edge_dim)
         self.dropout_layer = torch.nn.Dropout(dropout_prob)
         self.fc1 = torch.nn.Linear(256, 64)
@@ -111,16 +111,16 @@ class GAT2mp(torch.nn.Module):
 
 
 '''
-# MODEL ARCHITECTURE SMALL WITH TWO ATTENTION HEADS IN ALL THREE LAYERS AND GLOBAL MEAN POOL 
+# MODEL ARCHITECTURE SMALL WITH TWO ATTENTION HEADS (WITH AVERAGING) IN ALL THREE LAYERS AND GLOBAL MEAN POOL 
 '''
 class GAT3mp(torch.nn.Module):
     def __init__(self, dropout_prob, in_channels, edge_dim):
         super(GAT3mp, self).__init__()
 
         #Convolutional Layers
-        self.conv1 = GATv2Conv(in_channels, 512, edge_dim=edge_dim, heads=2)
-        self.conv2 = GATv2Conv(512, 1024, edge_dim=edge_dim, heads=2)
-        self.conv3 = GATv2Conv(1024, 256, edge_dim=edge_dim, heads=2)
+        self.conv1 = GATv2Conv(in_channels, 512, edge_dim=edge_dim, heads=2, concat=False)
+        self.conv2 = GATv2Conv(512, 1024, edge_dim=edge_dim, heads=2, concat=False)
+        self.conv3 = GATv2Conv(1024, 256, edge_dim=edge_dim, heads=2, concat=False)
         self.dropout_layer = torch.nn.Dropout(dropout_prob)
         self.fc1 = torch.nn.Linear(256, 64)
         self.fc2 = torch.nn.Linear(64, 1)
