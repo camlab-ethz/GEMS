@@ -58,3 +58,46 @@ r023_GAT2mp_t61_bs2_lr4_MSE
 r024_GAT3mp_t61_bs2_lr4_MSE
 
 for i in $(seq -w 22 24); do sbatch r0${i}.sh; done
+The Performance becomes worse
+
+----------------------------------------------------------
+
+TRY AGAIN BUT THIS TIME WITH CONCAT (DECREASED NUM CHANNELS SO THAT N PARAMETERS ROUGHLY THE SAME)
+
+r025_GAT1ccmp_t61_bs2_lr4_MSE
+r026_GAT2ccmp_t61_bs2_lr4_MSE
+r027_GAT3ccmp_t61_bs2_lr4_MSE
+
+for i in $(seq -w 25 27); do sbatch r0${i}.sh; done
+The Performance is exactly the same as with heads=1
+
+------------------------------------------------------------
+
+TRY AGAIN BUT WITH HEADS=4 (AND ALLOW LARGER MODELS)
+
+r028_GAT4mp_t61_bs2_lr4_MSE
+r029_GAT5mp_t61_bs2_lr4_MSE
+r030_GAT6mp_t61_bs2_lr4_MSE
+
+for i in $(seq -w 28 30); do sbatch r0${i}.sh; done
+--------------------------------------------------------------
+
+r031_GAT6mp_t61_bs2_lr4_MSE --> RUN THIS ONE FOR 1000 EPOCHS
+r032_GAT0mp_t61_bs2_lr4_MSE --> RUN THE BASELINE ALSO FOR 1000 EPOCHS
+
+TRY DIFFERENT LOSS FUNCTIONS
+
+r033_GAT0mp_t61_bs2_lr4_RMSE
+r034_GAT0mp_t61_bs2_lr4_L1
+r035_GAT0mp_t61_bs2_lr4_Huber
+r036_GAT0mp_t61_bs2_lr4_wMSE
+
+for i in $(seq -w 31 36); do sbatch r0${i}.sh; done
+
+----------------------------------------------------------------
+
+TRY OTHER BASELINE MODELS WITH 2 OR 4 LAYERS
+
+r037_GAT00mp_t61_bs2_lr4_MSE
+r038_GAT000mp_t61_bs2_lr4_MSE
+
