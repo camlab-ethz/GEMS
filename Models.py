@@ -39,6 +39,11 @@ class GAT0mp(torch.nn.Module):
 
 
 
+
+
+
+
+
 '''
 # MODEL ARCHITECTURE SMALL BASELINE WITH 2 LAYERS AND GLOBAL MEAN POOL 
 '''
@@ -70,6 +75,7 @@ class GAT00mp(torch.nn.Module):
         x = F.relu(x)
         x = self.fc2(x)
         return x
+    
 
 
 
@@ -81,9 +87,9 @@ class GAT000mp(torch.nn.Module):
         super(GAT000mp, self).__init__()
 
         #Convolutional Layers
-        self.conv1 = GATv2Conv(in_channels, 512, edge_dim=edge_dim)
-        self.conv2 = GATv2Conv(512, 1024, edge_dim=edge_dim)
-        self.conv3 = GATv2Conv(1024, 512, edge_dim=edge_dim)
+        self.conv1 = GATv2Conv(in_channels, 512, edge_dim=edge_dim, heads=3)
+        self.conv2 = GATv2Conv(1536, 512, edge_dim=edge_dim, heads=2)
+        self.conv3 = GATv2Conv(1024, 256, edge_dim=edge_dim, heads=2)
         self.conv4 = GATv2Conv(512, 256, edge_dim=edge_dim)
         self.dropout_layer = torch.nn.Dropout(dropout_prob)
         self.fc1 = torch.nn.Linear(256, 64)
@@ -409,7 +415,7 @@ class GAT5mp(torch.nn.Module):
 
 
 '''
-# MODEL ARCHITECTURE SMALL WITH 3 ATTENTION HEADS (WITH CONCAT) IN ALL THREE LAYERS AND GLOBAL MEAN POOL 
+# MODEL ARCHITECTURE SMALL WITH 4 ATTENTION HEADS (WITH CONCAT) IN ALL THREE LAYERS AND GLOBAL MEAN POOL 
 '''
 class GAT6mp(torch.nn.Module):
     def __init__(self, dropout_prob, in_channels, edge_dim):
@@ -419,6 +425,41 @@ class GAT6mp(torch.nn.Module):
         self.conv1 = GATv2Conv(in_channels, 256, edge_dim=edge_dim, heads=4)
         self.conv2 = GATv2Conv(1024, 128, edge_dim=edge_dim, heads=4)
         self.conv3 = GATv2Conv(512, 64, edge_dim=edge_dim, heads=4)
+        self.dropout_layer = torch.nn.Dropout(dropout_prob)
+        self.fc1 = torch.nn.Linear(256, 64)
+        self.fc2 = torch.nn.Linear(64, 1)
+
+    def forward(self, graphbatch):
+        
+        x = self.conv1(graphbatch.x, graphbatch.edge_index, graphbatch.edge_attr)
+        x = F.relu(x)
+        x = self.conv2(x, graphbatch.edge_index, graphbatch.edge_attr)
+        x = F.relu(x)
+        x = self.conv3(x, graphbatch.edge_index, graphbatch.edge_attr)
+        x = F.relu(x)
+
+        # Pool the nodes of each interaction graph
+        x = global_mean_pool(x, batch=graphbatch.batch)
+        x = self.dropout_layer(x)
+
+        # Fully-Connected Layers
+        x = self.fc1(x)
+        x = F.relu(x)
+        x = self.fc2(x)
+        return x
+    
+
+'''
+# MODEL ARCHITECTURE SMALL WITH 4 ATTENTION HEADS (WITH CONCAT) IN ALL THREE LAYERS AND GLOBAL MEAN POOL 
+'''
+class GAT6lmp(torch.nn.Module):
+    def __init__(self, dropout_prob, in_channels, edge_dim):
+        super(GAT6lmp, self).__init__()
+
+        #Convolutional Layers
+        self.conv1 = GATv2Conv(in_channels, in_channels, edge_dim=edge_dim, heads=4)
+        self.conv2 = GATv2Conv(in_channels*4, 256, edge_dim=edge_dim, heads=4)
+        self.conv3 = GATv2Conv(1024, 256, edge_dim=edge_dim)
         self.dropout_layer = torch.nn.Dropout(dropout_prob)
         self.fc1 = torch.nn.Linear(256, 64)
         self.fc2 = torch.nn.Linear(64, 1)
