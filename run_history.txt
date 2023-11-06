@@ -101,3 +101,55 @@ TRY OTHER BASELINE MODELS WITH 2 OR 4 LAYERS
 r037_GAT00mp_t61_bs2_lr4_MSE
 r038_GAT000mp_t61_bs2_lr4_MSE
 
+TRY THE BASELINE WITH THREE LAYERS WITH DIFFERENT EMBEDDINGS
+
+r039_GAT0mp_t121_bs2_lr4_MSE
+r040_GAT0mp_t301_bs2_lr4_MSE
+r041_GAT0mp_t331_bs2_lr4_MSE
+
+----------------------------------------------------------------
+DTI_2
+----------------------------------------------------------------
+
+BASELINE MODELS WITH 2,3 AND 4 CONVOLUTIONAL LAYERS, SIMILAR NUMBER OF PARAMETERS
+
+r001_GAT0mp_t61_bs2_lr4_MSE
+r002_GAT02_t61_bs2_lr4_MSE
+r003_GAT04_t61_bs2_lr4_MSE
+
+ALL SHOW SIMILAR Performance
+SEE IF THIS HOLDS ALSO WITH MORE PARAMETERS
+
+r004_GAT0t_t61_bs2_lr4_MSE
+r005_GAT04t_t61_bs2_lr4_MSE
+r006_GAT02t_t61_bs2_lr4_MSE
+
+
+-------------------------------------------------------------------
+
+Simple Architecture, but with RMSE Loss
+
+r007_GAT0tmp_t61_bs2_lr4_RMSE_d00
+r008_GAT0tmp_t61_bs2_lr4_RMSE_d05
+r009_GAT0tmp_t61_bs2_lr4_RMSE_d07
+
+ADD POOL INSTEAD OF MEAN POOL
+r010_GAT0tap_t61_bs2_lr4_RMSE_d00
+r011_GAT0tap_t61_bs2_lr4_RMSE_d05
+r012_GAT0tap_t61_bs2_lr4_RMSE_d07
+r013_GAT0tap_t61_bs2_lr4_RMSE_d03
+
+for i in $(seq -w 7 13); do sbatch r0${i}.sh; done
+-------------------------------------------------------------------
+Great Results WITH ADDPOOL. TRY INTERMEDIATE DROPOUT RATES
+r017_GAT0tap_t61_bs2_lr4_RMSE_d02
+r018_GAT0tap_t61_bs2_lr4_RMSE_d04
+
+See if this gets even better with larger embedding
+
+r014_GAT0tap_t121_bs2_lr4_RMSE_d00
+r015_GAT0tap_t121_bs2_lr4_RMSE_d03
+r016_GAT0tap_t121_bs2_lr4_RMSE_d05
+r019_GAT0tap_t121_bs2_lr4_RMSE_d04
+
+
