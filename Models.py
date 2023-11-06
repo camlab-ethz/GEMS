@@ -36,11 +36,238 @@ class GAT0mp(torch.nn.Module):
         x = F.relu(x)
         x = self.fc2(x)
         return x
+    
+
+
+class GAT0t(torch.nn.Module): # Not sure about the exact numbers anymore
+    def __init__(self, dropout_prob, in_channels, edge_dim):
+        super(GAT0t, self).__init__()
+
+        #Convolutional Layers
+        self.conv1 = GATv2Conv(in_channels, 256, edge_dim=edge_dim, heads=5)
+        self.conv2 = GATv2Conv(1024, 64, edge_dim=edge_dim, heads=4)
+        self.conv3 = GATv2Conv(512, 1024, edge_dim=edge_dim)
+
+        
+        self.dropout_layer = torch.nn.Dropout(dropout_prob)
+        self.fc1 = torch.nn.Linear(256, 64)
+        self.fc2 = torch.nn.Linear(64, 1)
+
+    def forward(self, graphbatch):
+        
+        x = self.conv1(graphbatch.x, graphbatch.edge_index, graphbatch.edge_attr)
+        x = F.relu(x)
+        x = self.conv2(x, graphbatch.edge_index, graphbatch.edge_attr)
+        x = F.relu(x)
+
+        # Pool the nodes of each interaction graph
+        x = global_mean_pool(x, batch=graphbatch.batch)
+        x = self.dropout_layer(x)
+
+        # Fully-Connected Layers
+        x = self.fc1(x)
+        x = F.relu(x)
+        x = self.fc2(x)
+        return x
+    
+
+class GAT0tmp(torch.nn.Module):
+    def __init__(self, dropout_prob, in_channels, edge_dim):
+        super(GAT0tmp, self).__init__()
+
+        #Convolutional Layers
+        self.conv1 = GATv2Conv(in_channels, 256, edge_dim=edge_dim, heads=4)
+        self.conv2 = GATv2Conv(1024, 64, edge_dim=edge_dim, heads=4)
+        
+        self.dropout_layer = torch.nn.Dropout(dropout_prob)
+        self.fc1 = torch.nn.Linear(256, 64)
+        self.fc2 = torch.nn.Linear(64, 1)
+
+    def forward(self, graphbatch):
+        
+        x = self.conv1(graphbatch.x, graphbatch.edge_index, graphbatch.edge_attr)
+        x = F.relu(x)
+        x = self.conv2(x, graphbatch.edge_index, graphbatch.edge_attr)
+        x = F.relu(x)
+
+        # Pool the nodes of each interaction graph
+        x = global_mean_pool(x, batch=graphbatch.batch)
+        x = self.dropout_layer(x)
+
+        # Fully-Connected Layers
+        x = self.fc1(x)
+        x = F.relu(x)
+        x = self.fc2(x)
+        return x
+    
+
+class GAT0tap(torch.nn.Module):
+    def __init__(self, dropout_prob, in_channels, edge_dim):
+        super(GAT0tap, self).__init__()
+
+        #Convolutional Layers
+        self.conv1 = GATv2Conv(in_channels, 256, edge_dim=edge_dim, heads=4)
+        self.conv2 = GATv2Conv(1024, 64, edge_dim=edge_dim, heads=4)
+        
+        self.dropout_layer = torch.nn.Dropout(dropout_prob)
+        self.fc1 = torch.nn.Linear(256, 64)
+        self.fc2 = torch.nn.Linear(64, 1)
+
+    def forward(self, graphbatch):
+        
+        x = self.conv1(graphbatch.x, graphbatch.edge_index, graphbatch.edge_attr)
+        x = F.relu(x)
+        x = self.conv2(x, graphbatch.edge_index, graphbatch.edge_attr)
+        x = F.relu(x)
+
+        # Pool the nodes of each interaction graph
+        x = global_add_pool(x, batch=graphbatch.batch)
+        x = self.dropout_layer(x)
+
+        # Fully-Connected Layers
+        x = self.fc1(x)
+        x = F.relu(x)
+        x = self.fc2(x)
+        return x
+    
+
+
+'''
+# MODEL ARCHITECTURE SMALL BASELINE WITH 4 LAYERS AND GLOBAL MEAN POOL 
+'''
+class GAT04(torch.nn.Module):
+    def __init__(self, dropout_prob, in_channels, edge_dim):
+        super(GAT04, self).__init__()
+
+        #Convolutional Layers
+        self.conv1 = GATv2Conv(in_channels, 256, edge_dim=edge_dim)
+        self.conv2 = GATv2Conv(256, 512, edge_dim=edge_dim)
+        self.conv3 = GATv2Conv(512, 1024, edge_dim=edge_dim)
+        self.conv4 = GATv2Conv(1024, 256, edge_dim=edge_dim)
+        self.dropout_layer = torch.nn.Dropout(dropout_prob)
+        self.fc1 = torch.nn.Linear(256, 64)
+        self.fc2 = torch.nn.Linear(64, 1)
+
+    def forward(self, graphbatch):
+        
+        x = self.conv1(graphbatch.x, graphbatch.edge_index, graphbatch.edge_attr)
+        x = F.relu(x)
+        x = self.conv2(x, graphbatch.edge_index, graphbatch.edge_attr)
+        x = F.relu(x)
+        x = self.conv3(x, graphbatch.edge_index, graphbatch.edge_attr)
+        x = F.relu(x)
+        x = self.conv4(x, graphbatch.edge_index, graphbatch.edge_attr)
+        x = F.relu(x)
+
+        # Pool the nodes of each interaction graph
+        x = global_mean_pool(x, batch=graphbatch.batch)
+        x = self.dropout_layer(x)
+
+        # Fully-Connected Layers
+        x = self.fc1(x)
+        x = F.relu(x)
+        x = self.fc2(x)
+        return x
+    
+
+
+class GAT04t(torch.nn.Module):
+    def __init__(self, dropout_prob, in_channels, edge_dim):
+        super(GAT04t, self).__init__()
+
+        #Convolutional Layers
+        self.conv1 = GATv2Conv(in_channels, 128, edge_dim=edge_dim, heads=5)
+        self.conv2 = GATv2Conv(640, 640, edge_dim=edge_dim)
+        self.conv3 = GATv2Conv(640, 1024, edge_dim=edge_dim)
+        self.conv4 = GATv2Conv(1024, 256, edge_dim=edge_dim)
+        self.dropout_layer = torch.nn.Dropout(dropout_prob)
+        self.fc1 = torch.nn.Linear(256, 64)
+        self.fc2 = torch.nn.Linear(64, 1)
+
+    def forward(self, graphbatch):
+        
+        x = self.conv1(graphbatch.x, graphbatch.edge_index, graphbatch.edge_attr)
+        x = F.relu(x)
+        x = self.conv2(x, graphbatch.edge_index, graphbatch.edge_attr)
+        x = F.relu(x)
+        x = self.conv3(x, graphbatch.edge_index, graphbatch.edge_attr)
+        x = F.relu(x)
+        x = self.conv4(x, graphbatch.edge_index, graphbatch.edge_attr)
+        x = F.relu(x)
+
+        # Pool the nodes of each interaction graph
+        x = global_mean_pool(x, batch=graphbatch.batch)
+        x = self.dropout_layer(x)
+
+        # Fully-Connected Layers
+        x = self.fc1(x)
+        x = F.relu(x)
+        x = self.fc2(x)
+        return x
 
 
 
+'''
+# MODEL ARCHITECTURE SMALL BASELINE WITH 2 LAYERS AND GLOBAL MEAN POOL 
+'''
+class GAT02(torch.nn.Module):
+    def __init__(self, dropout_prob, in_channels, edge_dim):
+        super(GAT02, self).__init__()
 
+        #Convolutional Layers
+        self.conv1 = GATv2Conv(in_channels, 1564, edge_dim=edge_dim)
+        self.conv2 = GATv2Conv(1564, 256, edge_dim=edge_dim)
 
+        self.dropout_layer = torch.nn.Dropout(dropout_prob)
+        self.fc1 = torch.nn.Linear(256, 64)
+        self.fc2 = torch.nn.Linear(64, 1)
+
+    def forward(self, graphbatch):
+        
+        x = self.conv1(graphbatch.x, graphbatch.edge_index, graphbatch.edge_attr)
+        x = F.relu(x)
+        x = self.conv2(x, graphbatch.edge_index, graphbatch.edge_attr)
+        x = F.relu(x)
+
+        # Pool the nodes of each interaction graph
+        x = global_mean_pool(x, batch=graphbatch.batch)
+        x = self.dropout_layer(x)
+
+        # Fully-Connected Layers
+        x = self.fc1(x)
+        x = F.relu(x)
+        x = self.fc2(x)
+        return x
+    
+
+class GAT02t(torch.nn.Module):
+    def __init__(self, dropout_prob, in_channels, edge_dim):
+        super(GAT02t, self).__init__()
+
+        #Convolutional Layers
+        self.conv1 = GATv2Conv(in_channels, 782, edge_dim=edge_dim, heads=5)
+        self.conv2 = GATv2Conv(3910, 256, edge_dim=edge_dim)
+
+        self.dropout_layer = torch.nn.Dropout(dropout_prob)
+        self.fc1 = torch.nn.Linear(256, 64)
+        self.fc2 = torch.nn.Linear(64, 1)
+
+    def forward(self, graphbatch):
+        
+        x = self.conv1(graphbatch.x, graphbatch.edge_index, graphbatch.edge_attr)
+        x = F.relu(x)
+        x = self.conv2(x, graphbatch.edge_index, graphbatch.edge_attr)
+        x = F.relu(x)
+
+        # Pool the nodes of each interaction graph
+        x = global_mean_pool(x, batch=graphbatch.batch)
+        x = self.dropout_layer(x)
+
+        # Fully-Connected Layers
+        x = self.fc1(x)
+        x = F.relu(x)
+        x = self.fc2(x)
+        return x
 
 
 
