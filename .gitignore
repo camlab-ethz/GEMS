@@ -1,0 +1,34 @@
+# Ignore all folders with data
+experiments/DTI_1/*/
+experiments/DTI_2/*/
+input_graphs*/
+wandb/
+Slurm*/
+
+#Ignore test_files
+*_old.py
+testfiles/
+test*
+
+# Ignore system files
+.DS_Store
+__pycache__
+
+
+# Ignore bash scripts
+*.sh
+
+# Ignore log files
+*.log
+
+# Ignore Node.js modules
+node_modules/
+
+# Ignore Python virtual environments
+venv/
+
+# Ignore database files
+db.sqlite
+
+# Ignore editor-specific files
+.vscode/
