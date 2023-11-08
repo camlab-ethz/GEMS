@@ -384,7 +384,7 @@ def train(Model, loader, criterion, optimizer, device):
     criter = RMSELoss()
     rmse = criter(predictions_unscaled, true_labels_unscaled)
 
-    return avg_loss, r, rmse, r2_score
+    return avg_loss, r, rmse, r2_score, y_true, y_pred
 #-------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -533,18 +533,17 @@ def residuals_plot(train_y_true, train_y_pred, val_y_true, val_y_pred, title):
 
 
 
-lowest_val_loss = 1000
-plotted_epochs = []
+
 
 
 # Training and Validation Set Performance BEFORE Training
 #-------------------------------------------------------------------------------------------------------------------------------
 
-train_loss, train_r, train_rmse, train_r2, *_ = evaluate(Model, eval_loader_train, criterion, device)
-val_loss, val_r, val_rmse, val_r2, *_ = evaluate(Model, eval_loader_val, criterion, device)
+train_loss, train_r, train_rmse, train_r2, train_y_true, train_y_pred = evaluate(Model, eval_loader_train, criterion, device)
+val_loss, val_r, val_rmse, val_r2, val_y_true, val_y_pred = evaluate(Model, eval_loader_val, criterion, device)
 
-printout = f'Before Train: Train Loss: {train_loss:6.3f}|  Pearson:{train_r:6.3f}|  R2:{train_r2:6.3f}|  RMSE:{train_rmse:6.3f}|  -- Val Loss: {val_loss:6.3f}|  Pearson:{val_r:6.3f}|  R2:{val_r2:6.3f}|  RMSE:{val_rmse:6.3f}| '
-print(printout)
+log_string = f'Before Train: Train Loss: {train_loss:6.3f}|  Pearson:{train_r:6.3f}|  R2:{train_r2:6.3f}|  RMSE:{train_rmse:6.3f}|  -- Val Loss: {val_loss:6.3f}|  Pearson:{val_r:6.3f}|  R2:{val_r2:6.3f}|  RMSE:{val_rmse:6.3f}| '
+print(log_string)
 
 if wandb_tracking:
     wandb.log({
@@ -561,21 +560,30 @@ if wandb_tracking:
             })
 #-------------------------------------------------------------------------------------------------------------------------------
 
+# Initialize dictionary to store the current best epochs metrics
+best_val_loss = val_loss
+best_metrics = {'val': (val_loss, val_r, val_rmse, val_r2, val_y_true, val_y_pred),
+                'train': (train_loss, train_r, train_rmse, train_r2, train_y_true, train_y_pred)}
+
+
+plotted = []
+last_saved_epoch = 0
+
 
 
 #===============================================================================================================================================
-# Training
+# Training and Evaluation
 #===============================================================================================================================================
 for epoch in range(epoch+1, num_epochs+1):
 
-    train_loss, train_r, train_rmse, train_r2, *_ = train(Model, train_loader, criterion, optimizer, device)
+    train_loss, train_r, train_rmse, train_r2, train_y_true, train_y_pred = train(Model, train_loader, criterion, optimizer, device)
 
 
     # Validation Set Performance Between Training Epochs
     #-------------------------------------------------------------------------------------------------------------------------------    
-    val_loss, val_r, val_rmse, val_r2, *_ = evaluate(Model, eval_loader_val, criterion, device)
+    val_loss, val_r, val_rmse, val_r2, val_y_true, val_y_pred = evaluate(Model, eval_loader_val, criterion, device)
 
-    printout = f'Epoch {epoch:05d}:  Train Loss: {train_loss:6.3f}|  Pearson:{train_r:6.3f}|  R2:{train_r2:6.3f}|  RMSE:{train_rmse:6.3f}|  -- Val Loss: {val_loss:6.3f}|  Pearson:{val_r:6.3f}|  R2:{val_r2:6.3f}|  RMSE:{val_rmse:6.3f}| '
+    log_string = f'Epoch {epoch:05d}:  Train Loss: {train_loss:6.3f}|  Pearson:{train_r:6.3f}|  R2:{train_r2:6.3f}|  RMSE:{train_rmse:6.3f}|  -- Val Loss: {val_loss:6.3f}|  Pearson:{val_r:6.3f}|  R2:{val_r2:6.3f}|  RMSE:{val_rmse:6.3f}| '
 
     if wandb_tracking:
         wandb.log({
@@ -595,65 +603,43 @@ for epoch in range(epoch+1, num_epochs+1):
     if alr_plateau: plat_scheduler.step(val_loss)
     if alr_lin: lin_scheduler.step()
     if alr_mult: mult_scheduler.step()
-    #-------------------------------------------------------------------------------------------------------------------------------
 
 
-    # Determine if the model should be saved
-    log_string = printout
-
-    if save:= val_loss <= lowest_val_loss:
-        lowest_val_loss = val_loss
+    # If the previous best val_loss is beaten, save the model and update the best metrics dict
+    if val_loss < best_val_loss: 
+        torch.save(Model.state_dict(), f'{save_dir}/{run_name}_stdict_{epoch}.pt')
         log_string += ' Saved'
         last_saved_epoch = epoch
 
-    if save or epoch % (num_epochs/20) == 0:
-        torch.save(Model.state_dict(), f'{save_dir}/{run_name}_stdict_{epoch}.pt')
-    
+        best_val_loss = val_loss
+        best_metrics['val'] = (val_loss, val_r, val_rmse, val_r2, val_y_true, val_y_pred)
+        best_metrics['train'] = (train_loss, train_r, train_rmse, train_r2, train_y_true, train_y_pred)
+
+
     print(log_string, flush=True)
+    #-------------------------------------------------------------------------------------------------------------------------------
 
 
-    # Evaluation
+
+    # After regular intervals, plot the predictions of the current and the best model
     #-------------------------------------------------------------------------------------------------------------------------------
     
-
-    if epoch % (num_epochs/20) == 0 or epoch==1:
-
-
-        # Evaluate the model at the current epoch
-        #-------------------------------------------------------------------------------------------------------------------------------
-        
-        # Initialize the models
-        eval_model = model_class(dropout_prob=dropout_prob, in_channels=node_feat_dim, edge_dim=edge_feat_dim).to(device)
-        eval_model = eval_model.double()
-
-        state_dict_path = f'{save_dir}/{run_name}_stdict_{epoch}.pt'
-        eval_model.load_state_dict(torch.load(state_dict_path))
-        
-        train_loss, train_r, train_rmse, train_r2, train_y_true, train_y_pred = evaluate(eval_model, eval_loader_train, criterion, device)
-        val_loss, val_r, val_rmse, val_r2, val_y_true, val_y_pred = evaluate(eval_model, eval_loader_val, criterion, device)
+    if epoch % 50 == 0 or epoch==1:
 
         # Plot the predictions
         predictions = plot_predictions( train_y_true, train_y_pred,
                                         val_y_true, val_y_pred,
                                         f"{run_name}: Epoch {epoch}\nTrain R = {train_r:.3f}, Validation R = {val_r:.3f}\n Train RMSE = {train_rmse:.3f}, Validation RMSE = {val_rmse:.3f}")
-        
 
 
-        # Check if there has been a new best epoch, if yes, plot the predictions
-        #-------------------------------------------------------------------------------------------------------------------------------
-        
-        if last_saved_epoch not in plotted_epochs:
+        # If there has been a new best epoch in the last interval of epochs, plot the predictions of this model      
+        if last_saved_epoch not in plotted:
             
-            eval_model = model_class(dropout_prob=dropout_prob, in_channels=node_feat_dim, edge_dim=edge_feat_dim).to(device)
-            eval_model = eval_model.double()
+            # Load the current best metrics from dict
+            val_loss, val_r, val_rmse, val_r2, val_y_true, val_y_pred = best_metrics['val']
+            train_loss, train_r, train_rmse, train_r2, train_y_true, train_y_pred = best_metrics['train']
 
-            state_dict_path = f'{save_dir}/{run_name}_stdict_{last_saved_epoch}.pt'
-            eval_model.load_state_dict(torch.load(state_dict_path))
-
-            train_loss, train_r, train_rmse, train_r2, train_y_true, train_y_pred = evaluate(eval_model, eval_loader_train, criterion, device)
-            val_loss, train_r, val_rmse, val_r2, val_y_true, val_y_pred = evaluate(eval_model, eval_loader_val, criterion, device)
-
-            # Plot the predictions
+            # Plot the predictions and the residuals plot
             best_predictions = plot_predictions( train_y_true, train_y_pred,
                                     val_y_true, val_y_pred,
                                     f"{run_name}: Epoch {last_saved_epoch}\nTrain R = {train_r:.3f}, Validation R = {val_r:.3f}\nTrain RMSE = {train_rmse:.3f}, Validation RMSE = {val_rmse:.3f}")
@@ -661,7 +647,7 @@ for epoch in range(epoch+1, num_epochs+1):
             residuals = residuals_plot(train_y_true, train_y_pred, val_y_true, val_y_pred, 
                                     f"{run_name}: Epoch {last_saved_epoch}\nTrain R = {train_r:.3f}, Validation R = {val_r:.3f}\nTrain RMSE = {train_rmse:.3f}, Validation RMSE = {val_rmse:.3f}")     
             
-            plotted_epochs.append(last_saved_epoch)
+            plotted.append(last_saved_epoch)
 
             
         plt.close('all')
