@@ -142,14 +142,29 @@ r013_GAT0tap_t61_bs2_lr4_RMSE_d03
 for i in $(seq -w 7 13); do sbatch r0${i}.sh; done
 -------------------------------------------------------------------
 Great Results WITH ADDPOOL. TRY INTERMEDIATE DROPOUT RATES
+r022_GAT0tap_t61_bs2_lr4_RMSE_d01
 r017_GAT0tap_t61_bs2_lr4_RMSE_d02
 r018_GAT0tap_t61_bs2_lr4_RMSE_d04
 
 See if this gets even better with larger embedding
 
 r014_GAT0tap_t121_bs2_lr4_RMSE_d00
+r021_GAT0tap_t121_bs2_lr4_RMSE_d01
+r020_GAT0tap_t121_bs2_lr4_RMSE_d02
 r015_GAT0tap_t121_bs2_lr4_RMSE_d03
 r016_GAT0tap_t121_bs2_lr4_RMSE_d05
 r019_GAT0tap_t121_bs2_lr4_RMSE_d04
+
+
+See if it gets better with the t30 embedding
+
+r023_GAT0tap_t301_bs2_lr4_RMSE_d00
+r024_GAT0tap_t301_bs2_lr4_RMSE_d01
+r025_GAT0tap_t301_bs2_lr4_RMSE_d02
+r026_GAT0tap_t301_bs2_lr4_RMSE_d03
+r027_GAT0tap_t301_bs2_lr4_RMSE_d04
+r028_GAT0tap_t301_bs2_lr4_RMSE_d05
+
+
 
 
