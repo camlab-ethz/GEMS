@@ -167,4 +167,25 @@ r028_GAT0tap_t301_bs2_lr4_RMSE_d05
 
 
 
+OTHER OPTIMIZERS (FROM HERE ON WITH NEW TRAIN FUNCTION TRAIN_2.PY)
+
+ADAGRAD
+r029_GAT0tap_t61_bs2_lr2ag_RMSE_d00
+r030_GAT0tap_t61_bs2_lr3ag_RMSE_d00
+r031_GAT0tap_t61_bs2_lr4ag_RMSE_d00
+
+SGD
+r032_GAT0tap_t61_bs2_lr2sgd_RMSE_d00
+r033_GAT0tap_t61_bs2_lr3sgd_RMSE_d00
+r034_GAT0tap_t61_bs2_lr4sgd_RMSE_d00
+
+for i in $(seq -w 29 34); do sbatch r0${i}.sh; done
+
+
+
+
+
+
+
+
 
