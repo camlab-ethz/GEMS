@@ -21,6 +21,7 @@ def parse_args():
     parser.add_argument("--embedding", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Wheter or not ESM embedding should be used")
     parser.add_argument("--edge_features", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Wheter or not Edge Features should be used")
     parser.add_argument("--loss_func", default='MSE', help="The loss function that will be used ['MSE', 'RMSE', 'wMSE', 'L1', 'Huber']")
+    parser.add_argument("--optim", default='Adam', help="The optimizer that will be used ['Adam', 'Adagrad', 'SGD']")
     parser.add_argument("--wandb", default=True, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Wheter or not the run should be streamed to Weights and Biases")
     parser.add_argument("--project_name", help="Project Name for the saving of run data to Weights and Biases")
     parser.add_argument("--run_name", required=True, help="Name of the Run to display in saved data and in Weights and Biases (string)")
@@ -80,6 +81,7 @@ loss_function = args.loss_func
 num_epochs = args.num_epochs
 learning_rate = args.learning_rate
 weight_decay = args.weight_decay
+optim = args.optim
 batch_size = args.batch_size
 dropout_prob = args.dropout
 
@@ -260,7 +262,10 @@ parameters = count_parameters(Model)
 if wandb_tracking: config['Number of Parameters'] = parameters
 print(f'Model architecture {model_arch} with {parameters} parameters')
 
-optimizer = torch.optim.Adam(list(Model.parameters()),lr=learning_rate, weight_decay=weight_decay)
+if optim == 'Adam': optimizer = torch.optim.Adam(list(Model.parameters()),lr=learning_rate, weight_decay=weight_decay)
+elif optim == 'Adagrad': optimizer = torch.optim.Adagrad(Model.parameters(), learning_rate, weight_decay=weight_decay)
+elif optim == 'SGD': optimizer = torch.optim.SGD(Model.parameters(), lr=learning_rate, momentum=0.9, weight_decay=weight_decay)
+
 
 
 # Apply adaptive learning rate (alr) scheme
@@ -318,25 +323,6 @@ else:
     print(f'Loss Function: MSE Loss')
 
 #----------------------------------------------------------------------------------------------------
-
-
-
-# # Training Function for 1 Epoch
-# #-------------------------------------------------------------------------------------------------------------------------------
-# def train(Model, loader, criterion, optimizer, device):
-#     Model.train()
-                
-#     for graphbatch in loader:
-#         graphbatch.to(device)
-#         targets = graphbatch.affinity
-
-#         # Forward pass
-#         optimizer.zero_grad()
-#         output = Model(graphbatch).view(-1)
-#         loss = criterion(output, targets)
-#         loss.backward()
-#         optimizer.step()
-# #-------------------------------------------------------------------------------------------------------------------------------
 
 
 
