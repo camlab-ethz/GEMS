@@ -1,7 +1,8 @@
 # Ignore all folders with data
 experiments/DTI_1/*/
 experiments/DTI_2/*/
-input_graphs*/
+experiments/DTI_2b/*/
+data/DTI_1/input_graphs*/
 wandb/
 Slurm*/
 
