@@ -12,7 +12,7 @@ from torch.utils.data import Subset
 from Models import *
 
 
-from Dataset2 import IG_Dataset
+from Dataset import IG_Dataset
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Training Parameters and Input Dataset Control")
@@ -155,7 +155,7 @@ print(dataset)
 node_feat_dim = dataset[0].x_prot_emb.shape[1]
 edge_feat_dim = dataset[0].edge_attr.shape[1]
 
-labels = [graph.affinity.item() for graph in dataset]
+labels = [graph.y.item() for graph in dataset]
 print(max(labels), len(labels))
 
 
@@ -192,8 +192,8 @@ eval_loader_val = DataLoader(dataset = val_dataset, batch_size=512, shuffle=True
 
 # Plot the distributions of the datasets
 #----------------------------------------------------------------------------------------------------
-training_labels = [graph.affinity.item() for graph in train_dataset]
-validation_labels = [graph.affinity.item() for graph in val_dataset]
+training_labels = [graph.y.item() for graph in train_dataset]
+validation_labels = [graph.y.item() for graph in val_dataset]
 highest_label = max([max(training_labels), max(validation_labels)])
 
 def create_histogram(data, title, xlim, num_bins=50):
@@ -338,7 +338,7 @@ def train(Model, loader, criterion, optimizer, device):
                 
     for graphbatch in loader:
         graphbatch.to(device)
-        targets = graphbatch.affinity
+        targets = graphbatch.y
 
         # Forward pass
         optimizer.zero_grad()
@@ -389,7 +389,7 @@ def evaluate(Model, loader, criterion, device):
         for graphbatch in loader:
 
             graphbatch.to(device)
-            targets = graphbatch.affinity
+            targets = graphbatch.y
 
             # Forward pass
             output = Model(graphbatch).view(-1)
@@ -592,7 +592,7 @@ for epoch in range(epoch+1, num_epochs+1):
 
 
     # If the previous best val_loss is beaten, save the model and update the best metrics dict
-    if val_r < best_epoch: 
+    if val_r > best_epoch: 
         torch.save(Model.state_dict(), f'{save_dir}/{run_name}_stdict_{epoch}.pt')
         log_string += ' Saved'
         last_saved_epoch = epoch
