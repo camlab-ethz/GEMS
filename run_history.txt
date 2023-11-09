@@ -181,6 +181,27 @@ r034_GAT0tap_t61_bs2_lr4sgd_RMSE_d00
 
 for i in $(seq -w 29 34); do sbatch r0${i}.sh; done
 
+Repeat r029 with dropout:
+r035_GAT0tap_t61_bs2_lr2ag_RMSE_d01
+r036_GAT0tap_t61_bs2_lr2ag_RMSE_d02
+r037_GAT0tap_t61_bs2_lr2ag_RMSE_d03
+
+Repeat r032 with dropout:
+r038_GAT0tap_t61_bs2_lr2sgd_RMSE_d01
+r039_GAT0tap_t61_bs2_lr2sgd_RMSE_d02
+r040_GAT0tap_t61_bs2_lr2sgd_RMSE_d03
+
+Repeat r033 with dropout:
+r041_GAT0tap_t61_bs2_lr3sgd_RMSE_d01
+r042_GAT0tap_t61_bs2_lr3sgd_RMSE_d02
+r043_GAT0tap_t61_bs2_lr3sgd_RMSE_d03
+
+for i in $(seq -w 35 43); do sbatch r0${i}.sh; done
+
+r044_GAT0tap_t61_bs2_lr3sgd_RMSE_d005
+r045_GAT0tap_t61_bs2_lr3sgd_RMSE_d015
+
+
 
 
 
