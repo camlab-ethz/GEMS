@@ -12,7 +12,7 @@ from torch.utils.data import Subset
 from Models import *
 
 
-from Dataset import IG_Dataset
+from Dataset2 import IG_Dataset
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Training Parameters and Input Dataset Control")
@@ -547,7 +547,7 @@ if wandb_tracking:
 #-------------------------------------------------------------------------------------------------------------------------------
 
 # Initialize dictionary to store the current best epochs metrics
-best_val_loss = val_loss
+best_epoch = val_r
 best_metrics = {'val': (val_loss, val_r, val_rmse, val_r2, val_y_true, val_y_pred),
                 'train': (train_loss, train_r, train_rmse, train_r2, train_y_true, train_y_pred)}
 
@@ -592,12 +592,12 @@ for epoch in range(epoch+1, num_epochs+1):
 
 
     # If the previous best val_loss is beaten, save the model and update the best metrics dict
-    if val_loss < best_val_loss: 
+    if val_r < best_epoch: 
         torch.save(Model.state_dict(), f'{save_dir}/{run_name}_stdict_{epoch}.pt')
         log_string += ' Saved'
         last_saved_epoch = epoch
 
-        best_val_loss = val_loss
+        best_epoch = val_r
         best_metrics['val'] = (val_loss, val_r, val_rmse, val_r2, val_y_true, val_y_pred)
         best_metrics['train'] = (train_loss, train_r, train_rmse, train_r2, train_y_true, train_y_pred)
 
