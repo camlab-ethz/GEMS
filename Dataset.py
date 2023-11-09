@@ -12,17 +12,22 @@ class IG_Dataset(Dataset):
         self.embedding = embedding
 
         self.filepaths = [os.path.join(self.data_dir, file) for file in os.listdir(self.data_dir)]
-        self.input_data = {ind:torch.load(filepath) for ind, filepath in enumerate(self.filepaths)}
-
+        #self.input_data = {ind:torch.load(filepath) for ind, filepath in enumerate(self.filepaths)}
+        
+        self.input_data = {}
+        
         # Process the input graphs
-        min = 2
-        max = 30
-        for ind in self.input_data:
-            grph = self.input_data[ind]
+        ind = 0
+        for file in self.filepaths:
+            
+            grph = torch.load(file)
 
-            # Transform labels to negative log space, clip and min-max scale
-            log = torch.clamp(-torch.log(grph.affinity), min, max)
-            grph.affinity = (log - min) / (max - min)
+            # Transform labels to negative log space and min-max scale
+            min = 0
+            max = 16
+            pK = -torch.log10(grph.affinity)
+            pK_scaled = (pK - min) / (max - min)
+            grph.y = pK_scaled
             
             if self.embedding:
                 grph.x = torch.cat((grph.x_lig, grph.x_prot_emb), axis=0)
@@ -35,6 +40,7 @@ class IG_Dataset(Dataset):
                 grph.edge_attr_prot = grph.edge_attr_prot[:,3].view(-1,1)
 
             self.input_data[ind] = grph
+            ind += 1
 
 
     def len(self):
