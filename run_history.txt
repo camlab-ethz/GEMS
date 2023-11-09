@@ -207,15 +207,31 @@ The new train_3.py function was implemented with
     - New Dataset class, calculating pK values correctly with log10, and followingly
       new normalization between 0 and 16. No clamping was performed.
     - Saving not when the val_loss is improved, but when the sum of val_r and val_rmse is improved
+    - Data is saved into new experiment and project DTI_2b
 
 Take the best working model parameters and test them with the new train script and dataset class: 
 ------------------------------------------------------------------------------------------------------
 
+For 2000 epochs: (Approximately 4h)
 
+r001_GAT0tmp_t61_bs2_lr4adam_RMSE_d0
+r002_GAT0tmp_t61_bs2_lr4adam_RMSE_d1
+r003_GAT0tmp_t61_bs2_lr4adam_RMSE_d2
+r004_GAT0tmp_t61_bs2_lr4adam_RMSE_d3
 
-r022_GAT0tap_t61_bs2_lr4_RMSE_d01
+r005_GAT0tap_t61_bs2_lr4adam_RMSE_d0
+r006_GAT0tap_t61_bs2_lr4adam_RMSE_d1
+r007_GAT0tap_t61_bs2_lr4adam_RMSE_d2
+r008_GAT0tap_t61_bs2_lr4adam_RMSE_d3
 
+r009_GAT0tap_t61_bs2_lr2adag_RMSE_d0
+r010_GAT0tap_t61_bs2_lr2adag_RMSE_d1
+r011_GAT0tap_t61_bs2_lr2adag_RMSE_d2
+r012_GAT0tap_t61_bs2_lr2adag_RMSE_d3
 
+r013_GAT0tap_t61_bs2_lr3sgd_RMSE_d0
+r014_GAT0tap_t61_bs2_lr3sgd_RMSE_d1
+r015_GAT0tap_t61_bs2_lr3sgd_RMSE_d2
+r016_GAT0tap_t61_bs2_lr3sgd_RMSE_d3
 
-
-
+for i in $(seq -w 1 16); do sbatch r0${i}.sh; done
