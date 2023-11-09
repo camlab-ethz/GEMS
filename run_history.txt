@@ -202,9 +202,18 @@ r044_GAT0tap_t61_bs2_lr3sgd_RMSE_d005
 r045_GAT0tap_t61_bs2_lr3sgd_RMSE_d015
 
 
+------------------------------------------------------------------------------------------------------
+The new train_3.py function was implemented with
+    - New Dataset class, calculating pK values correctly with log10, and followingly
+      new normalization between 0 and 16. No clamping was performed.
+    - Saving not when the val_loss is improved, but when the sum of val_r and val_rmse is improved
+
+Take the best working model parameters and test them with the new train script and dataset class: 
+------------------------------------------------------------------------------------------------------
 
 
 
+r022_GAT0tap_t61_bs2_lr4_RMSE_d01
 
 
 
