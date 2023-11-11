@@ -235,3 +235,69 @@ r015_GAT0tap_t61_bs2_lr3sgd_RMSE_d2
 r016_GAT0tap_t61_bs2_lr3sgd_RMSE_d3
 
 for i in $(seq -w 1 16); do sbatch r0${i}.sh; done
+
+Lets see if the same architecture with fewer parameters is able to achieve the same (GAT0taps for small)
+
+r017_GAT0taps_t61_bs2_lr4adam_RMSE_d0
+r018_GAT0taps_t61_bs2_lr4adam_RMSE_d1
+r019_GAT0taps_t61_bs2_lr4adam_RMSE_d2
+r020_GAT0taps_t61_bs2_lr2adag_RMSE_d0
+r021_GAT0taps_t61_bs2_lr2adag_RMSE_d1
+r022_GAT0taps_t61_bs2_lr2adag_RMSE_d2
+r023_GAT0taps_t61_bs2_lr3sgd_RMSE_d0
+r024_GAT0taps_t61_bs2_lr3sgd_RMSE_d1
+r025_GAT0taps_t61_bs2_lr3sgd_RMSE_d2
+
+for i in $(seq -w 20 25); do sbatch r0${i}.sh; done
+
+
+
+
+--------------------------------------------------------------------------------------------------------
+Best architecture, but with mean and add pooling combined (1'103'617)
+
+r026_GAT0tamp_t61_bs2_lr4adam_RMSE_d0
+r027_GAT0tamp_t61_bs2_lr4adam_RMSE_d1
+r028_GAT0tamp_t61_bs2_lr4adam_RMSE_d2
+
+r029_GAT0tamp_t61_bs2_lr3sgd_RMSE_d0
+r030_GAT0tamp_t61_bs2_lr3sgd_RMSE_d1
+r031_GAT0tamp_t61_bs2_lr3sgd_RMSE_d2
+
+----------------------------------------------------------------------------------------------------------
+
+Wishful Thinking Architecture
+
+r032_WishfulThinking_t61_bs2_lr4adam_RMSE_d0
+r033_WishfulThinking_t61_bs2_lr4adam_RMSE_d1
+r034_WishfulThinking_t61_bs2_lr4adam_RMSE_d2
+
+r035_WishfulThinking_JK_t61_bs2_lr4adam_RMSE_d0
+r036_WishfulThinking_JK_t61_bs2_lr4adam_RMSE_d1
+r037_WishfulThinking_JK_t61_bs2_lr4adam_RMSE_d2
+
+
+
+Having enough parameters in the second conv layer seems to be important (GAT0tamp worse than GAT0tap)
+Repeat GAT0tamp with original size second conv layer (GAT0tampo)
+
+r038_GAT0tampo_t61_bs2_lr4adam_RMSE_d0
+r039_GAT0tampo_t61_bs2_lr4adam_RMSE_d1
+r040_GAT0tampo_t61_bs2_lr4adam_RMSE_d2
+
+r041_GAT0tampo_t61_bs2_lr3sgd_RMSE_d0
+r042_GAT0tampo_t61_bs2_lr3sgd_RMSE_d1
+r043_GAT0tampo_t61_bs2_lr3sgd_RMSE_d2
+
+
+Lets see if the same architecture as GAT0tap with a medium number of parameters is better (GAT0tapm for medium)
+
+r0xx_GAT0tapm_t61_bs2_lr4adam_RMSE_d0
+r0xx_GAT0tapm_t61_bs2_lr4adam_RMSE_d1
+r0xx_GAT0tapm_t61_bs2_lr4adam_RMSE_d2
+r0xx_GAT0tapm_t61_bs2_lr2adag_RMSE_d0
+r0xx_GAT0tapm_t61_bs2_lr2adag_RMSE_d1
+r0xx_GAT0tapm_t61_bs2_lr2adag_RMSE_d2
+r0xx_GAT0tapm_t61_bs2_lr3sgd_RMSE_d0
+r0xx_GAT0tapm_t61_bs2_lr3sgd_RMSE_d1
+r0xx_GAT0tapm_t61_bs2_lr3sgd_RMSE_d2
