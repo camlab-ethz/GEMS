@@ -75,8 +75,30 @@ def one_of_k_encoding(x, allowable_set):
             x, allowable_set))
     return list(map(lambda s: x == s, allowable_set))
 
+all_atoms = ['B', 'C', 'N', 'O', 'P', 'S', 'Se', 'metal', 'halogen']
+halogens = ['F', 'Cl', 'Br', 'I', 'At'] #Halogen atoms Fluorine (F), Chlorine (Cl), Bromine (Br), Iodine (I), and Astatine (At)
+metals = [
+    # Alkali Metals
+    'Li', 'Na', 'K', 'Rb', 'Cs', 'Fr',
+    # Alkaline Earth Metals
+    'Be', 'Mg', 'Ca', 'Sr', 'Ba', 'Ra',
+    # Transition Metals
+    'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn',
+    'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd',
+    'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg',
+    'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn',
+    'Nh', 'Fl', 'Mc', 'Lv',
+    # Lanthanides
+    'La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 
+    'Ho', 'Er', 'Tm', 'Yb', 'Lu',
+    # Actinides
+    'Ac', 'Th', 'Pa', 'U', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf', 
+    'Es', 'Fm', 'Md', 'No', 'Lr',
+    # Post-Transition Metals
+    'Al', 'Ga', 'In', 'Sn', 'Tl', 'Pb', 'Bi', 'Nh', 'Fl', 'Mc', 'Lv'
+]
 
-all_atoms = ['H','Li','B','C','N','O','F','Na','Mg','Si','P','S','Cl','K','Ca','V','Mn','Fe','Co','Ni','Cu','Zn','Ga','As','Se','Br','Rb','Sr','Ru','Rh','Cd','In','Sb','Te','I','Cs','Ba','Os','Ir','Pt','Au','Hg'] #42
+#all_atoms = ['H','Li','B','C','N','O','F','Na','Mg','Si','P','S','Cl','K','Ca','V','Mn','Fe','Co','Ni','Cu','Zn','Ga','As','Se','Br','Rb','Sr','Ru','Rh','Cd','In','Sb','Te','I','Cs','Ba','Os','Ir','Pt','Au','Hg'] #42
 #ligand_atoms = ['H','C','N','O','F','Mg','P','S','Cl','Br','I']
 
 amino_acids = ["ALA", "ARG", "ASN", "ASP", "CYS", "GLN", "GLU", "GLY", "HIS", "ILE", "LEU",
@@ -119,6 +141,12 @@ def atom_features(mol, padding_len): # padding: first append n zeros (length of 
 
         padding = [0 for n in range(padding_len)]
         symbol = atom.GetSymbol()
+
+        if symbol in metals: 
+            symbol = 'metal'
+        elif symbol in halogens:
+            symbol = 'halogen'
+        
         ringm = [atom.IsInRing()]
         hybr = atom.GetHybridization()
         charge = [float(atom.GetFormalCharge())] 
@@ -219,9 +247,9 @@ def edge_index_and_attr(mol, pos, undirected = True, self_loops = True):
 
 # Choose the esm embedding that should be used:
 embedding_descriptor = args.embedding
-num_atomfeatures = 71
+num_atomfeatures = 38
 num_edgefeatures = 17
-output_folder = f'/data/grbv/PDBbind/DTI_1/input_graphs_{embedding_descriptor}/'
+output_folder = f'/data/grbv/PDBbind/DTI_3/input_graphs_{embedding_descriptor}/'
 
 
 # GET THE PREPROCESSED DATA
@@ -236,13 +264,21 @@ affinity_dict = load_object('/data/grbv/PDBbind/DTI_1/v2020_general_affinity_dic
 # -------------------------------------------------------------------------------
 
 
-# CHECK WHICH COMPLEXES ARE PART OF THE TEST DATASETS (CASF2013 and CASF2016)
+# CHECK WHICH COMPLEXES ARE PART OF THE TEST DATASETS (CASF2013 and CASF2016) AND WHICH ARE PART OF REFINED SET
 # -------------------------------------------------------------------------------
 casf_2013_dir = '/data/grbv/PDBbind/raw_data/CASF-2013/coreset'
 casf_2016_dir = '/data/grbv/PDBbind/raw_data/CASF-2016/coreset'
 
+
+
 casf_2013_complexes = [subfolder for subfolder in os.listdir(casf_2013_dir) if len(subfolder) ==4 and subfolder[0].isdigit()]
 casf_2016_complexes = [subfolder for subfolder in os.listdir(casf_2016_dir) if len(subfolder) ==4 and subfolder[0].isdigit()]
+
+data_dir_general = '/data/grbv/PDBbind/raw_data/v2020_general_san'
+data_dir_refined = '/data/grbv/PDBbind/raw_data/v2020_refined_san'
+
+general_complexes = [protein for protein in os.listdir(data_dir_general) if len(protein)==4 and protein[0].isdigit()]
+refined_complexes = [protein for protein in os.listdir(data_dir_refined) if len(protein)==4 and protein[0].isdigit()]
 
 
 # Are all 2013 complexes present in the preprocessed data? 
@@ -274,8 +310,9 @@ for folder in [train_folder, test_folder, casf2013_folder, casf2016_folder]:
 # Initialize Log:
 # -------------------------------------------------------------------------------
 log_folder = output_folder + '.logs/'
+
 if not os.path.exists(log_folder): os.makedirs(log_folder)
-log_file_path = os.path.join(log_folder, "graph_generation.txt")
+log_file_path = os.path.join(log_folder, f"graph_generation_{embedding_descriptor}.txt")
 log = open(log_file_path, 'a')
 log.write("Generation of Featurized Interaction Graphs - Log File:\n")
 log.write("Data: PDBbind v2020 refined and general set merged\n")
@@ -290,8 +327,8 @@ torch.set_num_threads(num_threads)
 
 # Here start a loop over the mutants
 #----------------------------------------------------------
-# ind = complexes.index('1bcu')
-# for complex_id, folder_path, protein_path, ligand_path in zip(complexes[ind:ind+10], folder_paths[ind:ind+10], protein_paths[ind:ind+10], ligand_paths[ind:ind+10]):
+# ind = complexes.index('2r1w')
+# for complex_id, folder_path, protein_path, ligand_path in zip(complexes[ind:ind+1], folder_paths[ind:ind+1], protein_paths[ind:ind+1], ligand_paths[ind:ind+1]):
 
 for complex_id, folder_path, protein_path, ligand_path in zip(complexes, folder_paths, protein_paths, ligand_paths):
     
@@ -416,20 +453,19 @@ for complex_id, folder_path, protein_path, ligand_path in zip(complexes, folder_
             x_prot_emb = np.vstack((x_prot_emb, hetatm_features))
             x_prot_aa = np.vstack((x_prot_aa, hetatm_features))
 
-            # # Add feature vector to prot_emb matrix and prot_aa matrix
-            # padding = np.zeros((1, esm_emb_len))
-            # #padding = np.array([0 for _ in range(esm_emb_len)])[np.newaxis,:]
-            # features = np.concatenate((padding, feat), axis=1)
-            # x_prot_emb = np.vstack((x_prot_emb, features))
-            # x_prot_aa = np.vstack((x_prot_aa, features))
-
-            # # Add feature vector to prot_aa matrix
-            # padding = np.array([0 for _ in range(len(amino_acids))])[np.newaxis,:]
-            # features = np.concatenate((padding, feat), axis=1)
-            # x_prot_aa = np.vstack((x_prot_aa, features))
-
         new_indeces.append(count)
         count +=1
+
+
+    # MASTER NODE
+    # add master node features (ones) to x_prot and add a point with mean of ligand coordinates to pos
+
+    master_node_features = np.zeros([1, esm_emb_len + num_atomfeatures], dtype=np.float64)
+    x_prot_aa = np.vstack((x_prot_aa, master_node_features))
+    x_prot_emb = np.vstack((x_prot_emb, master_node_features))
+
+    pos = np.vstack((pos, np.mean(pos[:x_lig.shape[0],:], axis=0)))
+    
     #------------------------------------------------------------------------------------------
 
 
@@ -490,7 +526,7 @@ for complex_id, folder_path, protein_path, ligand_path in zip(complexes, folder_
     #------------------------------------------------------------------------------------------
 
 
-    # Merging the two edge_indeces and edge_attrs
+    # Merging the two edge_indeces and edge_attrs into an overall edge_index and edge_attr
     edge_index = torch.concatenate( [edge_index_lig, edge_index_prot], axis=1 )
     edge_attr = torch.concatenate( [edge_attr_lig, edge_attr_prot], axis=0 )
 
@@ -500,6 +536,12 @@ for complex_id, folder_path, protein_path, ligand_path in zip(complexes, folder_
     edge_index_prot, edge_attr_prot = make_undirected_with_self_loops(edge_index_prot, edge_attr_prot)
     edge_index_lig, edge_attr_lig = make_undirected_with_self_loops(edge_index_lig, edge_attr_lig)
 
+    # Master Node edge index. Connect all ligand nodes to a hypothetical master node in a directed way
+    # (information flows only from the ligand nodes into the master node)
+    n_normal_nodes = x_lig.shape[0] + x_prot_emb.shape[0] - 1 
+    edge_index_master = [[i for i in range(x_lig.shape[0])],
+                         [n_normal_nodes for _ in range(x_lig.shape[0])]]
+    edge_index_master = torch.tensor(edge_index_master, dtype=torch.int64)
 
 
     # Check the shapes of the input tensors
@@ -510,31 +552,37 @@ for complex_id, folder_path, protein_path, ligand_path in zip(complexes, folder_
         if pos.shape[1] != 3:
             log_string += f'Skipped - POS has shape {pos.shape}'
             log.write(log_string + "\n")
+            skipped.append(complex_id)
             continue
 
         if x_lig.shape[1] != num_atomfeatures+esm_emb_len:
             log_string += f'Skipped - x_lig has shape {x_lig.shape}'
             log.write(log_string + "\n")
+            skipped.append(complex_id)
             continue
 
         if x_prot_emb.shape[1] != esm_emb_len + num_atomfeatures:
             log_string += f'Skipped - x_prot_emb has shape {x_prot_emb.shape}'
             log.write(log_string + "\n")
+            skipped.append(complex_id)
             continue
 
         if x_prot_aa.shape[1] != esm_emb_len + num_atomfeatures:
             log_string += f'Skipped - x_prot_aa has shape {x_prot_aa.shape}'
             log.write(log_string + "\n")
+            skipped.append(complex_id)
             continue
 
         if x_prot_aa.shape[0] != x_prot_emb.shape[0]:
             log_string += f'Skipped - Dimension 0 of x_prot_emb {x_prot_aa.shape} and x_prot_aa {x_prot_aa.shape} not identical '
             log.write(log_string + "\n")
+            skipped.append(complex_id)
             continue
 
         if x_prot_aa.shape[0] + x_lig.shape[0] != pos.shape[0]:
             log_string += f'Skipped - x_lig {x_prot_aa.shape} and x_prot {x_prot_aa.shape} not consistent with POS {pos.shape} '
             log.write(log_string + "\n")
+            skipped.append(complex_id)
             continue
         
         for edge_ind, edge_at in [(edge_index.shape, edge_attr.shape),(edge_index_lig.shape, edge_attr_lig.shape),(edge_index_prot.shape, edge_attr_prot.shape)]:
@@ -552,22 +600,64 @@ for complex_id, folder_path, protein_path, ligand_path in zip(complexes, folder_
         shape_inconsistency = True
             
     if shape_inconsistency:
+        skipped.append(complex_id)
         continue
     #------------------------------------------------------------------------------------------
 
 
 
-    # Retrieve the binding affinity of the complex
-    
+    # Retrieve the binding affinity and other metadata of the complex
+    # -------------------------------------------------------------------------------------------
+    affmetric_encoding = {'Ki':1., 'Kd':2.,'IC50':3.}
+
     if 'Ki' in affinity_dict[complex_id].keys():
         affinity = affinity_dict[complex_id]['Ki']
-
+        affinity_metric = 'Ki'
+        resolution = affinity_dict[complex_id]['resolution']
+        
     elif 'Kd' in affinity_dict[complex_id].keys():
         affinity = affinity_dict[complex_id]['Kd']
+        affinity_metric = 'Kd'
+        resolution = affinity_dict[complex_id]['resolution']
 
     elif 'IC50' in affinity_dict[complex_id].keys():
         affinity = affinity_dict[complex_id]['IC50']
+        affinity_metric = 'IC50'
+        resolution = affinity_dict[complex_id]['resolution']
 
+    try: resolution = float(resolution)
+    except ValueError: resolution = 0
+
+
+
+    # Find out if the graph is part of the test or training data and save into the corresponding folder: 
+    # -------------------------------------------------------------------------------------------
+
+    log_string += 'Successful - Saved in '
+    save_folders = []
+
+    in_casf_2013 = False
+    in_casf_2016 = False
+    in_refined = False
+
+    if complex_id in casf_2013_complexes:
+        in_casf_2013 = True
+        log_string += 'CASF2013 '
+        save_folders.append(casf2013_folder)
+        
+    if complex_id in casf_2016_complexes:
+        in_casf_2016 = True
+        log_string += 'CASF2016 '
+        save_folders.append(casf2016_folder)
+
+    if (not in_casf_2013) and (not in_casf_2016):
+        log_string += 'Training Data'
+        save_folders.append(train_folder)
+        in_refined = complex_id in refined_complexes
+
+
+
+    metadata = [in_refined, affmetric_encoding[affinity_metric], resolution]
     
     graph = Data(
         
@@ -578,6 +668,7 @@ for complex_id, folder_path, protein_path, ligand_path in zip(complexes, folder_
             edge_index = edge_index,
             edge_index_lig = edge_index_lig,
             edge_index_prot = edge_index_prot,
+            edge_index_master = edge_index_master,
 
             edge_attr = edge_attr,
             edge_attr_lig = edge_attr_lig,
@@ -586,30 +677,17 @@ for complex_id, folder_path, protein_path, ligand_path in zip(complexes, folder_
             pos = torch.tensor(pos, dtype=torch.float64),
             affinity= torch.tensor(affinity, dtype=torch.float64),
 
-            id = complex_id
+            id = complex_id,
+            data = torch.tensor(metadata, dtype=torch.float64)
             )
-            #sizes = (lig_size, x.shape[0]-lig_size)
     
-    log_string += 'Successfully - Saved in '
 
-    # Save the graph in test or training data folder: 
-    # -------------------------------------------------------------------------------------------
-    in_casf_2013 = False
-    in_casf_2016 = False
+    # Save the Graph
+    for save_folder in save_folders:
+        torch.save(graph, os.path.join(save_folder, f'{complex_id}_graph_{embedding_descriptor}.pt'))
+    
 
-    if complex_id in casf_2013_complexes:
-        in_casf_2013 = True
-        log_string += 'CASF2013 '
-        torch.save(graph, os.path.join(casf2013_folder, f'{complex_id}_graph_{embedding_descriptor}.pt'))
 
-    if complex_id in casf_2016_complexes:
-        in_casf_2016 = True
-        log_string += 'CASF2016 '
-        torch.save(graph, os.path.join(casf2016_folder, f'{complex_id}_graph_{embedding_descriptor}.pt'))
-
-    if (not in_casf_2013) and (not in_casf_2016):
-        log_string += 'Training Data'
-        torch.save(graph, os.path.join(train_folder, f'{complex_id}_graph_{embedding_descriptor}.pt'))
 
 
     log.write(log_string + "\n")
