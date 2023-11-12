@@ -290,8 +290,22 @@ r042_GAT0tampo_t61_bs2_lr3sgd_RMSE_d1
 r043_GAT0tampo_t61_bs2_lr3sgd_RMSE_d2
 
 
-Lets see if the same architecture as GAT0tap with a medium number of parameters is better (GAT0tapm for medium)
 
+Other combinations of mean, max, and add pooling
+
+r044_GAT0tmmxpo_t61_bs2_lr4adam_RMSE_d1
+r045_GAT0tmmxpo_t61_bs2_lr4adam_RMSE_d2
+r046_GAT0tamxpo_t61_bs2_lr4adam_RMSE_d1
+r047_GAT0tamxpo_t61_bs2_lr4adam_RMSE_d2
+
+r048_GAT0tmmxpo_t61_bs2_lr3sgd_RMSE_d1
+r049_GAT0tmmxpo_t61_bs2_lr3sgd_RMSE_d2
+r050_GAT0tamxpo_t61_bs2_lr3sgd_RMSE_d1
+r051_GAT0tamxpo_t61_bs2_lr3sgd_RMSE_d2
+
+
+Lets see if the same architecture as GAT0tap with a medium number of parameters is better (GAT0tapm for medium)
+(
 r0xx_GAT0tapm_t61_bs2_lr4adam_RMSE_d0
 r0xx_GAT0tapm_t61_bs2_lr4adam_RMSE_d1
 r0xx_GAT0tapm_t61_bs2_lr4adam_RMSE_d2
@@ -301,3 +315,39 @@ r0xx_GAT0tapm_t61_bs2_lr2adag_RMSE_d2
 r0xx_GAT0tapm_t61_bs2_lr3sgd_RMSE_d0
 r0xx_GAT0tapm_t61_bs2_lr3sgd_RMSE_d1
 r0xx_GAT0tapm_t61_bs2_lr3sgd_RMSE_d2
+)
+
+
+
+--------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------
+DTI 3
+--------------------------------------------------------------------------------------------------------------
+
+r001_GAT0tap_t61_bs2_lr4adam_RMSE_d0
+r002_GAT0tap_t61_bs2_lr4adam_RMSE_d1
+r003_GAT0tap_t61_bs2_lr4adam_RMSE_d2
+
+r004_GAT0tap_t61_bs2_lr3sgd_RMSE_d0
+r005_GAT0tap_t61_bs2_lr3sgd_RMSE_d1
+r006_GAT0tap_t61_bs2_lr3sgd_RMSE_d2
+
+
+r007_GAT0tampo_t61_bs2_lr3sgd_RMSE_d0
+r008_GAT0tampo_t61_bs2_lr3sgd_RMSE_d1
+r009_GAT0tampo_t61_bs2_lr3sgd_RMSE_d2
+
+r010_GAT0tampo_t61_bs2_lr4adam_RMSE_d0
+r011_GAT0tampo_t61_bs2_lr4adam_RMSE_d1
+r012_GAT0tampo_t61_bs2_lr4adam_RMSE_d2
+
+
+r013_GAT0tmaster2_t61_bs2_lr4adam_RMSE_d1
+r014_GAT0tmaster2_t61_bs2_lr3sgd_RMSE_d1
+
+
+r015_GAT0tapfc1_t61_bs2_lr4adam_RMSE_d1
+r016_GAT0tapfc1_t61_bs2_lr4adam_RMSE_d2
+
+r017_GAT0tapfc1_t61_bs2_lr3sgd_RMSE_d1
+r018_GAT0tapfc1_t61_bs2_lr3sgd_RMSE_d2
