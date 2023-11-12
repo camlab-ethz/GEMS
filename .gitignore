@@ -2,7 +2,9 @@
 experiments/DTI_1/*/
 experiments/DTI_2/*/
 experiments/DTI_2b/*/
+experiments/DTI_3/*/
 data/DTI_1/input_graphs*/
+data/DTI_3/input_graphs*/
 wandb/
 Slurm*/
 
