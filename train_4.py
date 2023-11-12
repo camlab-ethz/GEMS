@@ -9,7 +9,7 @@ import wandb
 from torch_geometric.loader import DataLoader
 from sklearn.model_selection import StratifiedKFold
 from torch.utils.data import Subset
-from Models import *
+from Models_DTI3 import *
 
 
 from Dataset import IG_Dataset
