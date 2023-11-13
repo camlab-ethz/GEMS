@@ -103,6 +103,42 @@ class GAT0tampo(torch.nn.Module):
 
 '''BEST ARCHITECTURE TRY POOLING LAYER WITH MASTER NODE'''
 
+class GAT0tmasterfast(torch.nn.Module):
+    def __init__(self, dropout_prob, in_channels, edge_dim):
+        super(GAT0tmasterfast, self).__init__()
+
+        #Convolutional Layers
+        self.conv1 = GATv2Conv(in_channels, 256, edge_dim=edge_dim, heads=4)
+        self.conv2 = GATv2Conv(1024, 64, edge_dim=edge_dim, heads=4)
+        self.poolconv = GATv2Conv(256, 64, edge_dim=edge_dim, heads=4)
+        
+        self.dropout_layer = torch.nn.Dropout(dropout_prob)
+        self.fc1 = torch.nn.Linear(256, 64)
+        self.fc2 = torch.nn.Linear(64, 1)
+
+    def forward(self, graphbatch):
+        
+        x = self.conv1(graphbatch.x, graphbatch.edge_index, graphbatch.edge_attr)
+        x = F.relu(x)
+        x = self.conv2(x, graphbatch.edge_index, graphbatch.edge_attr)
+        x = F.relu(x)
+        x = self.poolconv(x, graphbatch.edge_index_master)
+
+        # Pool the nodes of each interaction graph
+        
+        last_node_indeces = graphbatch.n_nodes.cumsum(dim=0) - 1
+        master_node_features = x[last_node_indeces]
+
+        x = self.dropout_layer(master_node_features)
+
+        # Fully-Connected Layers
+        x = self.fc1(x)
+        x = F.relu(x)
+        x = self.fc2(x)
+        return x
+
+
+
 class GAT0tmaster(torch.nn.Module):
     def __init__(self, dropout_prob, in_channels, edge_dim):
         super(GAT0tmaster, self).__init__()
