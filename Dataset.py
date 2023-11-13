@@ -39,6 +39,8 @@ class IG_Dataset(Dataset):
                 grph.edge_attr_lig = grph.edge_attr_lig[:,3].view(-1,1)
                 grph.edge_attr_prot = grph.edge_attr_prot[:,3].view(-1,1)
 
+            grph.n_nodes = grph.x.shape[0]
+
             self.input_data[ind] = grph
             ind += 1
 
