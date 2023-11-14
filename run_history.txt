@@ -341,13 +341,27 @@ r010_GAT0tampo_t61_bs2_lr4adam_RMSE_d0
 r011_GAT0tampo_t61_bs2_lr4adam_RMSE_d1
 r012_GAT0tampo_t61_bs2_lr4adam_RMSE_d2
 
-
-r013_GAT0tmaster2_t61_bs2_lr4adam_RMSE_d1
-r014_GAT0tmaster2_t61_bs2_lr3sgd_RMSE_d1
-
-
 r015_GAT0tapfc1_t61_bs2_lr4adam_RMSE_d1
 r016_GAT0tapfc1_t61_bs2_lr4adam_RMSE_d2
 
 r017_GAT0tapfc1_t61_bs2_lr3sgd_RMSE_d1
 r018_GAT0tapfc1_t61_bs2_lr3sgd_RMSE_d2
+
+# Test different master node architectures
+---------------------------------------------
+r013_GAT0tmaster2_t61_bs2_lr4adam_RMSE_d1
+r014_GAT0tmaster2_t61_bs2_lr3sgd_RMSE_d1
+
+r013_1a_GAT0tmaster_t61_bs2_lr4adam_RMSE_d0
+r013_1b_GAT0tmasterb_t61_bs2_lr4adam_RMSE_d0
+r013_1c_GAT0tmasterc_t61_bs2_lr4adam_RMSE_d0
+r013_2a_GAT0tmaster2_t61_bs2_lr4adam_RMSE_d0
+r013_2b_GAT0tmaster2b_t61_bs2_lr4adam_RMSE_d0
+r013_2c_GAT0tmaster2c_t61_bs2_lr4adam_RMSE_d0
+
+r014_1a_GAT0tmaster_t61_bs2_lr3sgd_RMSE_d0
+r014_1b_GAT0tmasterb_t61_bs2_lr3sgd_RMSE_d0
+r014_1c_GAT0tmasterc_t61_bs2_lr3sgd_RMSE_d0
+r014_2a_GAT0tmaster2_t61_bs2_lr3sgd_RMSE_d0
+r014_2b_GAT0tmaster2b_t61_bs2_lr3sgd_RMSE_d0
+r014_2c_GAT0tmaster2c_t61_bs2_lr3sgd_RMSE_d0
