@@ -43,11 +43,16 @@ class IG_Dataset(Dataset):
 
             grph.data = grph.data.reshape(1, 3)
 
-            # Introduce a master node for the protein nodes
+            
+
+            # Introduce a master node for the protein nodes and name it edge_index_master, so that the architectures
+            # dont need to be changed to try pooling with the protein nodes.  
             eim = grph.edge_index_master
             source = [i for i in range( max(eim[0])+1, max(eim[1]) )]
             dest = [max(eim[1]).item() for i in range(len(source))]
-            grph.edge_index_master_prot = torch.tensor([source, dest], dtype=torch.int64)
+
+            grph.edge_index_master_lig = grph.edge_index_master
+            grph.edge_index_master = torch.tensor([source, dest], dtype=torch.int64)
 
             self.input_data[ind] = grph
             ind += 1
