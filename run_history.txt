@@ -365,3 +365,45 @@ r014_1c_GAT0tmasterc_t61_bs2_lr3sgd_RMSE_d0
 r014_2a_GAT0tmaster2_t61_bs2_lr3sgd_RMSE_d0
 r014_2b_GAT0tmaster2b_t61_bs2_lr3sgd_RMSE_d0
 r014_2c_GAT0tmaster2c_t61_bs2_lr3sgd_RMSE_d0
+
+
+
+
+Test r013 again, but this time with a master node connected to all protein nodes
+For this I didn't change the architectures, but just made the model training with train5.py
+, which uses a dataset_edited.py class. This edited Dataset.py introduces a protein node masternode
+and names it edge_index_master, so that the architectures don't need to be changed. 
+----------------------------------------------------------------------------------------
+r013_1ap_GAT0tmaster_t61_bs2_lr4adam_RMSE_d0
+r013_1bp_GAT0tmasterb_t61_bs2_lr4adam_RMSE_d0
+r013_1cp_GAT0tmasterc_t61_bs2_lr4adam_RMSE_d0
+r013_2ap_GAT0tmaster2_t61_bs2_lr4adam_RMSE_d0
+r013_2bp_GAT0tmaster2b_t61_bs2_lr4adam_RMSE_d0
+r013_2cp_GAT0tmaster2c_t61_bs2_lr4adam_RMSE_d0
+
+
+
+Test r014 again with a higher learning rate
+-----------------------------------------------------------------------------------------
+r014_1a_GAT0tmaster_t61_bs2_lr2sgd_RMSE_d0
+r014_1b_GAT0tmasterb_t61_bs2_lr2sgd_RMSE_d0
+r014_1c_GAT0tmasterc_t61_bs2_lr2sgd_RMSE_d0
+r014_2a_GAT0tmaster2_t61_bs2_lr2sgd_RMSE_d0
+r014_2b_GAT0tmaster2b_t61_bs2_lr2sgd_RMSE_d0
+r014_2c_GAT0tmaster2c_t61_bs2_lr2sgd_RMSE_d0
+
+
+
+r002 --> r019_GAT0tap_d1_t61_bs2_lr4adam_RMSE_d1
+r003 --> r020_GAT0tap_d1_t61_bs2_lr4adam_RMSE_d2
+r011 --> r025_GAT0tampo_d1_t61_bs2_lr4adam_RMSE_d1
+r012 --> r026_GAT0tampo_d1_t61_bs2_lr4adam_RMSE_d2
+
+r005 --> r021_GAT0tap_d1_t61_bs2_lr3sgd_RMSE_d1
+r006 --> r022_GAT0tap_d1_t61_bs2_lr3sgd_RMSE_d2
+r008 --> r023_GAT0tampo_d1_t61_bs2_lr3sgd_RMSE_d1
+r009 --> r024_GAT0tampo_d1_t61_bs2_lr3sgd_RMSE_d2
+
+
+
+
