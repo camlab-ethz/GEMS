@@ -1,6 +1,6 @@
 import cupy as cp
 
-def connect_to_accessible_aa(pos, sel, n_vectors=5000, step=0.1, initial_len=1.5, max_len=4, device_idx=0):
+def connect_to_accessible_aa(pos, sel, n_vectors=5000, step=0.1, initial_len=1.5, max_len=4):
 
     '''
     Inputs: pos = Coordinate Matrix of the substrate atoms
@@ -14,7 +14,7 @@ def connect_to_accessible_aa(pos, sel, n_vectors=5000, step=0.1, initial_len=1.5
     n_iter = int((max_len-initial_len)/step) # starlines can only grow until n_iter * step (threshold for closeness)
     n_stars = pos.shape[0]
 
-    with cp.cuda.Device(device_idx): #Move the arrays to the GPU with CuPy
+    with cp.cuda.Device(2): #Move the arrays to the GPU with CuPy
 
         # Access default memory pool instance
         mempool = cp.get_default_memory_pool()
