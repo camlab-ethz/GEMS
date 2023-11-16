@@ -11,7 +11,7 @@ Slurm*/
 #Ignore test_files
 *_old.py
 testfiles/
-test*
+*test*
 
 # Ignore system files
 .DS_Store
