@@ -393,7 +393,8 @@ r014_2b_GAT0tmaster2b_t61_bs2_lr2sgd_RMSE_d0
 r014_2c_GAT0tmaster2c_t61_bs2_lr2sgd_RMSE_d0
 
 
-
+Run the best models with dropout 0.1 in the Conv LAYERS
+--------------------------------------------------------------------
 r002 --> r019_GAT0tap_d1_t61_bs2_lr4adam_RMSE_d1
 r003 --> r020_GAT0tap_d1_t61_bs2_lr4adam_RMSE_d2
 r011 --> r025_GAT0tampo_d1_t61_bs2_lr4adam_RMSE_d1
@@ -404,6 +405,20 @@ r006 --> r022_GAT0tap_d1_t61_bs2_lr3sgd_RMSE_d2
 r008 --> r023_GAT0tampo_d1_t61_bs2_lr3sgd_RMSE_d1
 r009 --> r024_GAT0tampo_d1_t61_bs2_lr3sgd_RMSE_d2
 
+Dropout 0.2 in the Conv LAYERS
+--------------------------------------------------------------------
+  r002 --> r019_GAT0tap_d2_t61_bs2_lr4adam_RMSE_d1
+  r003 --> r020_GAT0tap_d2_t61_bs2_lr4adam_RMSE_d2
+r011 --> r025_GAT0tampo_d2_t61_bs2_lr4adam_RMSE_d1
+r012 --> r026_GAT0tampo_d2_t61_bs2_lr4adam_RMSE_d2
+
+  r005 --> r021_GAT0tap_d2_t61_bs2_lr3sgd_RMSE_d1
+  r006 --> r022_GAT0tap_d2_t61_bs2_lr3sgd_RMSE_d2
+  r008 --> r023_GAT0tampo_d2_t61_bs2_lr3sgd_RMSE_d1
+r009 --> r024_GAT0tampo_d2_t61_bs2_lr3sgd_RMSE_d2
+
+BEFORE RESTARTING R024 - R026 CHECK THAT THE RIGHT DROPOUT RATE IS SET IN MODELS_DTI3.PY
+--------------------------------------------------------------------
 
 
 
