@@ -7,6 +7,7 @@ data/DTI_1/input_graphs*/
 data/DTI_3/input_graphs*/
 wandb/
 Slurm*/
+export/
 
 #Ignore test_files
 *_old.py
