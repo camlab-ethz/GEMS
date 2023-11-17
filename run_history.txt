@@ -407,18 +407,31 @@ r009 --> r024_GAT0tampo_d1_t61_bs2_lr3sgd_RMSE_d2
 
 Dropout 0.2 in the Conv LAYERS
 --------------------------------------------------------------------
-  r002 --> r019_GAT0tap_d2_t61_bs2_lr4adam_RMSE_d1
-  r003 --> r020_GAT0tap_d2_t61_bs2_lr4adam_RMSE_d2
+r002 --> r019_GAT0tap_d2_t61_bs2_lr4adam_RMSE_d1
+r003 --> r020_GAT0tap_d2_t61_bs2_lr4adam_RMSE_d2
 r011 --> r025_GAT0tampo_d2_t61_bs2_lr4adam_RMSE_d1
 r012 --> r026_GAT0tampo_d2_t61_bs2_lr4adam_RMSE_d2
 
-  r005 --> r021_GAT0tap_d2_t61_bs2_lr3sgd_RMSE_d1
-  r006 --> r022_GAT0tap_d2_t61_bs2_lr3sgd_RMSE_d2
-  r008 --> r023_GAT0tampo_d2_t61_bs2_lr3sgd_RMSE_d1
+r005 --> r021_GAT0tap_d2_t61_bs2_lr3sgd_RMSE_d1
+r006 --> r022_GAT0tap_d2_t61_bs2_lr3sgd_RMSE_d2
+r008 --> r023_GAT0tampo_d2_t61_bs2_lr3sgd_RMSE_d1
 r009 --> r024_GAT0tampo_d2_t61_bs2_lr3sgd_RMSE_d2
 
-BEFORE RESTARTING R024 - R026 CHECK THAT THE RIGHT DROPOUT RATE IS SET IN MODELS_DTI3.PY
+Dropout 0.3 in the Conv LAYERS (include also D0 models)
 --------------------------------------------------------------------
 
+r001_GAT0tap_d3_t61_bs2_lr4adam_RMSE_d0
+r019_GAT0tap_d3_t61_bs2_lr4adam_RMSE_d1
+r020_GAT0tap_d3_t61_bs2_lr4adam_RMSE_d2
 
+r010_GAT0tampo_d3_t61_bs2_lr4adam_RMSE_d0
+r025_GAT0tampo_d3_t61_bs2_lr4adam_RMSE_d1
+r026_GAT0tampo_d3_t61_bs2_lr4adam_RMSE_d2
 
+r004_GAT0tap_d3_t61_bs2_lr3sgd_RMSE_d0
+r021_GAT0tap_d3_t61_bs2_lr3sgd_RMSE_d1
+r022_GAT0tap_d3_t61_bs2_lr3sgd_RMSE_d2
+
+r007_GAT0tampo_d3_t61_bs2_lr3sgd_RMSE_d0
+r023_GAT0tampo_d3_t61_bs2_lr3sgd_RMSE_d1
+r024_GAT0tampo_d3_t61_bs2_lr3sgd_RMSE_d
