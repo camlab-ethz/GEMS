@@ -11,8 +11,8 @@ class GAT0tap(torch.nn.Module):
         super(GAT0tap, self).__init__()
 
         #Convolutional Layers
-        self.conv1 = GATv2Conv(in_channels, 256, edge_dim=edge_dim, heads=4, dropout=0.1)
-        self.conv2 = GATv2Conv(1024, 64, edge_dim=edge_dim, heads=4, dropout=0.1)
+        self.conv1 = GATv2Conv(in_channels, 256, edge_dim=edge_dim, heads=4)
+        self.conv2 = GATv2Conv(1024, 64, edge_dim=edge_dim, heads=4)
         
         self.dropout_layer = torch.nn.Dropout(dropout_prob)
         self.fc1 = torch.nn.Linear(256, 64)
