@@ -11,8 +11,8 @@ class GAT0tap(torch.nn.Module):
         super(GAT0tap, self).__init__()
 
         #Convolutional Layers
-        self.conv1 = GATv2Conv(in_channels, 256, edge_dim=edge_dim, heads=4)
-        self.conv2 = GATv2Conv(1024, 64, edge_dim=edge_dim, heads=4)
+        self.conv1 = GATv2Conv(in_channels, 256, edge_dim=edge_dim, heads=4, dropout=0.3)
+        self.conv2 = GATv2Conv(1024, 64, edge_dim=edge_dim, heads=4, dropout=0.3)
         
         self.dropout_layer = torch.nn.Dropout(dropout_prob)
         self.fc1 = torch.nn.Linear(256, 64)
@@ -42,8 +42,8 @@ class GAT0tampo(torch.nn.Module):
         super(GAT0tampo, self).__init__()
 
         #Convolutional Layers
-        self.conv1 = GATv2Conv(in_channels, 256, edge_dim=edge_dim, heads=4, dropout=0.2)
-        self.conv2 = GATv2Conv(1024, 64, edge_dim=edge_dim, heads=4, dropout=0.2)
+        self.conv1 = GATv2Conv(in_channels, 256, edge_dim=edge_dim, heads=4, dropout=0.3)
+        self.conv2 = GATv2Conv(1024, 64, edge_dim=edge_dim, heads=4, dropout=0.3)
         
         self.dropout_layer = torch.nn.Dropout(dropout_prob)
         self.fc1 = torch.nn.Linear(512, 64)
