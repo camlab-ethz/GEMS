@@ -1,0 +1,4 @@
+/cfs/earth/scratch/grbv/.conda/envs/PYG/lib/python3.10/site-packages/torch_geometric/typing.py:47: UserWarning: An issue occurred while importing 'pyg-lib'. Disabling its usage. Stacktrace: /lib64/libm.so.6: version `GLIBC_2.29' not found (required by /cfs/earth/scratch/grbv/.conda/envs/PYG/lib/python3.10/site-packages/libpyg.so)
+  warnings.warn(f"An issue occurred while importing 'pyg-lib'. "
+/cfs/earth/scratch/grbv/.conda/envs/PYG/lib/python3.10/site-packages/torch_geometric/typing.py:101: UserWarning: An issue occurred while importing 'torch-sparse'. Disabling its usage. Stacktrace: /lib64/libm.so.6: version `GLIBC_2.29' not found (required by /cfs/earth/scratch/grbv/.conda/envs/PYG/lib/python3.10/site-packages/torch_sparse/_metis_cuda.so)
+  warnings.warn(f"An issue occurred while importing 'torch-sparse'. "
