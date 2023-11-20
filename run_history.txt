@@ -435,3 +435,34 @@ r022_GAT0tap_d3_t61_bs2_lr3sgd_RMSE_d2
 r007_GAT0tampo_d3_t61_bs2_lr3sgd_RMSE_d0
 r023_GAT0tampo_d3_t61_bs2_lr3sgd_RMSE_d1
 r024_GAT0tampo_d3_t61_bs2_lr3sgd_RMSE_d
+
+
+
+ESM CHECKPOINT T12:
+------------------------------------------------------------------------
+r025_GAT0tampo_d1_t121_bs2_lr4adam_RMSE_d1
+r026_GAT0tampo_d1_t121_bs2_lr4adam_RMSE_d2
+r021_GAT0tap_d1_t121_bs2_lr3sgd_RMSE_d1
+r022_GAT0tap_d1_t121_bs2_lr3sgd_RMSE_d2
+
+r025_GAT0tampo_d2_t121_bs2_lr4adam_RMSE_d1
+r026_GAT0tampo_d2_t121_bs2_lr4adam_RMSE_d2
+r021_GAT0tap_d2_t121_bs2_lr3sgd_RMSE_d1
+r022_GAT0tap_d2_t121_bs2_lr3sgd_RMSE_d2
+
+r025_GAT0tampo_d3_t121_bs2_lr4adam_RMSE_d1
+r026_GAT0tampo_d3_t121_bs2_lr4adam_RMSE_d2
+r021_GAT0tap_d3_t121_bs2_lr3sgd_RMSE_d1
+r022_GAT0tap_d3_t121_bs2_lr3sgd_RMSE_d2
+
+
+
+
+
+
+
+Adaptive Learning Rate (mult 10 0.997)
+------------------------------------------------------------------------
+
+r026_GAT0tampo_d2_t61_bs2_multlr4adam_RMSE_d2
+r022_GAT0tap_d2_t61_bs2_multlr3sgd_RMSE_d2
