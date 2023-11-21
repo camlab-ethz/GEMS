@@ -456,6 +456,24 @@ r021_GAT0tap_d3_t121_bs2_lr3sgd_RMSE_d1
 r022_GAT0tap_d3_t121_bs2_lr3sgd_RMSE_d2
 
 
+ESM CHECKPOINT T30:
+------------------------------------------------------------------------
+r025_GAT0tampo_d1_t301_bs2_lr4adam_RMSE_d1
+r026_GAT0tampo_d1_t301_bs2_lr4adam_RMSE_d2
+r021_GAT0tap_d1_t301_bs2_lr3sgd_RMSE_d1
+r022_GAT0tap_d1_t301_bs2_lr3sgd_RMSE_d2
+
+r025_GAT0tampo_d2_t301_bs2_lr4adam_RMSE_d1
+r026_GAT0tampo_d2_t301_bs2_lr4adam_RMSE_d2
+r021_GAT0tap_d2_t301_bs2_lr3sgd_RMSE_d1
+r022_GAT0tap_d2_t301_bs2_lr3sgd_RMSE_d2
+
+r025_GAT0tampo_d3_t301_bs2_lr4adam_RMSE_d1
+r026_GAT0tampo_d3_t301_bs2_lr4adam_RMSE_d2
+r021_GAT0tap_d3_t301_bs2_lr3sgd_RMSE_d1
+r022_GAT0tap_d3_t301_bs2_lr3sgd_RMSE_d2
+
+
 
 
 
