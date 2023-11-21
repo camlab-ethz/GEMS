@@ -7,12 +7,12 @@ from torch_geometric.data import Batch
 
 '''BEST ARCHITECTURE SO FAR'''
 class GAT0tap(torch.nn.Module):
-    def __init__(self, dropout_prob, in_channels, edge_dim):
+    def __init__(self, dropout_prob, in_channels, edge_dim, conv_dropout_prob):
         super(GAT0tap, self).__init__()
 
         #Convolutional Layers
-        self.conv1 = GATv2Conv(in_channels, 256, edge_dim=edge_dim, heads=4, dropout=0.2)
-        self.conv2 = GATv2Conv(1024, 64, edge_dim=edge_dim, heads=4, dropout=0.2)
+        self.conv1 = GATv2Conv(in_channels, 256, edge_dim=edge_dim, heads=4, dropout=conv_dropout_prob)
+        self.conv2 = GATv2Conv(1024, 64, edge_dim=edge_dim, heads=4, dropout=conv_dropout_prob)
         
         self.dropout_layer = torch.nn.Dropout(dropout_prob)
         self.fc1 = torch.nn.Linear(256, 64)
@@ -38,12 +38,12 @@ class GAT0tap(torch.nn.Module):
     
 '''BEST ARCHITECTURE WITH GLOBAL MEAN AND GLOBAL ADD POOL (original GAT0tap size)'''
 class GAT0tampo(torch.nn.Module):
-    def __init__(self, dropout_prob, in_channels, edge_dim):
+    def __init__(self, dropout_prob, in_channels, edge_dim, conv_dropout_prob):
         super(GAT0tampo, self).__init__()
 
         #Convolutional Layers
-        self.conv1 = GATv2Conv(in_channels, 256, edge_dim=edge_dim, heads=4, dropout=0.2)
-        self.conv2 = GATv2Conv(1024, 64, edge_dim=edge_dim, heads=4, dropout=0.2)
+        self.conv1 = GATv2Conv(in_channels, 256, edge_dim=edge_dim, heads=4, dropout=conv_dropout_prob)
+        self.conv2 = GATv2Conv(1024, 64, edge_dim=edge_dim, heads=4, dropout=conv_dropout_prob)
         
         self.dropout_layer = torch.nn.Dropout(dropout_prob)
         self.fc1 = torch.nn.Linear(512, 64)
