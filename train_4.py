@@ -31,6 +31,7 @@ def parse_args():
     parser.add_argument("--batch_size", default=256, type=int, help="The Batch Size that should be used for training (int)")
     parser.add_argument("--learning_rate", default=0.01, type=float, help="The learning rate with which the model should train (float)")
     parser.add_argument("--weight_decay", default=0.001, type=float, help="The weight decay parameter with which the model should train (float)")
+    parser.add_argument("--conv_dropout", default=0, type=float, help="The dropout probability that should be applied in the convolutional layers")
     parser.add_argument("--dropout", default=0, type=float, help="The dropout probability that should be applied in the dropout layer")
     #parser.add_argument("--device", default=1, type=int, help="The device index of the device on which the code should run")
 
@@ -42,7 +43,7 @@ def parse_args():
 
     # If the learning rate should be adaptive MULTIPLICATIVE
     parser.add_argument("--alr_mult",  default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Multiplicative learning rate reduction scheme will be used")
-    parser.add_argument("--factor", default=0.99, help="Factor by which the learning rate will be reduced. new_lr = lr * factor.")
+    parser.add_argument("--factor", default=0.99, type=float, help="Factor by which the learning rate will be reduced. new_lr = lr * factor.")
 
     # If the learning rate should be adaptive REDUCEONPLATEAU
     parser.add_argument("--alr_plateau",  default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Adaptive learning rate reduction REDUCELRONPLATEAU scheme will be used")
@@ -84,6 +85,7 @@ weight_decay = args.weight_decay
 optim = args.optim
 batch_size = args.batch_size
 dropout_prob = args.dropout
+conv_dropout_prob = args.conv_dropout
 
 n_folds = args.n_folds
 fold_to_train = args.fold_to_train
@@ -127,6 +129,7 @@ if wandb_tracking:
                 "Batch Size": batch_size,
                 "Splitting Random Seed":random_seed,
                 "Dropout Probability": dropout_prob,
+                "Dropout Prob Convolutional Layers":conv_dropout_prob,
                 #"Device Idx": device_idx,
                 "Adaptive LR Scheme": alr
                 }
@@ -254,7 +257,7 @@ print(device, torch.cuda.current_device(), torch.cuda.get_device_name())
 
 # Initialize the model and optimizer
 model_class = getattr(sys.modules[__name__], args.model)
-Model = model_class(dropout_prob=dropout_prob, in_channels=node_feat_dim, edge_dim=edge_feat_dim).to(device)
+Model = model_class(dropout_prob=dropout_prob, in_channels=node_feat_dim, edge_dim=edge_feat_dim, conv_dropout_prob=conv_dropout_prob).to(device)
 Model = Model.double()
 torch.save(Model, f'{save_dir}/model_configuration.pt')
 
