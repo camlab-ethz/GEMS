@@ -438,6 +438,15 @@ r024_GAT0tampo_d3_t61_bs2_lr3sgd_RMSE_d
 
 
 
+ESM CHECKPOINT T6: Now with dropout 0.4 in the Conv LAYERS
+------------------------------------------------------------------------
+
+r021_GAT0tap_d4_t61_bs2_lr3sgd_RMSE_d1
+r022_GAT0tap_d4_t61_bs2_lr3sgd_RMSE_d2
+r025_GAT0tampo_d4_t61_bs2_lr4adam_RMSE_d1
+r026_GAT0tampo_d4_t61_bs2_lr4adam_RMSE_d2
+
+
 ESM CHECKPOINT T12:
 ------------------------------------------------------------------------
 r025_GAT0tampo_d1_t121_bs2_lr4adam_RMSE_d1
@@ -454,6 +463,11 @@ r025_GAT0tampo_d3_t121_bs2_lr4adam_RMSE_d1
 r026_GAT0tampo_d3_t121_bs2_lr4adam_RMSE_d2
 r021_GAT0tap_d3_t121_bs2_lr3sgd_RMSE_d1
 r022_GAT0tap_d3_t121_bs2_lr3sgd_RMSE_d2
+
+r025_GAT0tampo_d4_t121_bs2_lr4adam_RMSE_d1
+r026_GAT0tampo_d4_t121_bs2_lr4adam_RMSE_d2
+r021_GAT0tap_d4_t121_bs2_lr3sgd_RMSE_d1
+r022_GAT0tap_d4_t121_bs2_lr3sgd_RMSE_d2
 
 
 ESM CHECKPOINT T30:
@@ -473,7 +487,10 @@ r026_GAT0tampo_d3_t301_bs2_lr4adam_RMSE_d2
 r021_GAT0tap_d3_t301_bs2_lr3sgd_RMSE_d1
 r022_GAT0tap_d3_t301_bs2_lr3sgd_RMSE_d2
 
-
+r025_GAT0tampo_d4_t301_bs2_lr4adam_RMSE_d1
+r026_GAT0tampo_d4_t301_bs2_lr4adam_RMSE_d2
+r021_GAT0tap_d4_t301_bs2_lr3sgd_RMSE_d1
+r022_GAT0tap_d4_t301_bs2_lr3sgd_RMSE_d2
 
 
 
