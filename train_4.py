@@ -605,7 +605,7 @@ for epoch in range(epoch+1, num_epochs+1):
         best_metrics['train'] = (train_loss, train_r, train_rmse, train_r2, train_y_true, train_y_pred)
 
 
-    print(log_string, flush=True)
+    print(log_string)
     #-------------------------------------------------------------------------------------------------------------------------------
 
 
