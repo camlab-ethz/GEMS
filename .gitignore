@@ -5,6 +5,7 @@ experiments/DTI_2b/*/
 experiments/DTI_3/*/
 data/DTI_1/input_graphs*/
 data/DTI_3/input_graphs*/
+training_data/
 wandb/
 Slurm*/
 export/
