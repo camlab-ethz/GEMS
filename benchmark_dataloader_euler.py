@@ -3,11 +3,13 @@ import numpy as np
 import torch
 from torch_geometric.data import Dataset
 import argparse
+from torch_geometric.loader import DataLoader
+import time
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Training Parameters and Input Dataset Control")
-    parser.add_argument("--data_path", required=True, help="The source path of the data")
+    parser.add_argument("--data_dir", required=True, help="The source path of the data")
     return parser.parse_args()
 
 args = parse_args()
@@ -77,7 +79,7 @@ class IG_Dataset(Dataset):
     
 
 
-data_dir = args.data_path
+data_dir = args.data_dir
 
 
 
@@ -95,20 +97,30 @@ def benchmark_two_versions (num_workers, persistent_workers, pin_memory):
 
 
 tests = [   ('Base Case', 0, False, False),
+
+            ('Num workers 2', 2, False, False),
+            ('Num workers 2 persistent', 2, True, False),
+            ('Num workers 2 persistent pin', 2, True, True),
+
             ('Num workers 4', 4, False, False),
             ('Num workers 4 persistent', 4, True, False),
+            ('Num workers 4 persistent pin', 4, True, True),
 
             ('Num workers 6', 6, False, False),
             ('Num workers 6 persistent', 6, True, False),
+            ('Num workers 6 persistent pin', 6, True, True),
 
             ('Num workers 8', 8, False, False),
             ('Num workers 8 persistent', 8, True, False),
+            ('Num workers 8 persistent pin', 8, True, True),
 
             ('Num workers 10', 10, False, False),
             ('Num workers 10 persistent', 10, True, False),
+            ('Num workers 10 persistent pin', 10, True, True),
 
             ('Num workers 12', 12, False, False),
             ('Num workers 12 persistent', 12, True, False),
+            ('Num workers 12 persistent pin', 12, True, True),
         ]
 
 
