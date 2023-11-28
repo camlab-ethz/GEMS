@@ -72,6 +72,11 @@ def benchmark_two_versions (num_workers, persistent_workers, pin_memory):
 
 
 tests = [   ('Base Case', 0, False, False),
+         
+            ('Num workers 2', 2, False, False),
+            ('Num workers 2 persistent', 2, True, False),
+            ('Num workers 2 persistent pin', 2, True, True),
+         
             ('Num workers 4', 4, False, False),
             ('Num workers 4 persistent', 4, True, False),
             ('Num workers 4 persistent pin', 4, True, True),
