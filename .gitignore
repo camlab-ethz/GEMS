@@ -7,6 +7,7 @@ data/DTI_1/input_graphs*/
 data/DTI_3/input_graphs*/
 training_data/
 wandb/
+slurm*
 Slurm*/
 export/
 
