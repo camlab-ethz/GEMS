@@ -9,7 +9,7 @@ import wandb
 from torch_geometric.loader import DataLoader
 from sklearn.model_selection import StratifiedKFold
 from torch.utils.data import Subset
-from Models_DTI3 import *
+from Models_DTI4 import *
 
 
 from Dataset import IG_Dataset
@@ -17,7 +17,8 @@ from Dataset import IG_Dataset
 def parse_args():
     parser = argparse.ArgumentParser(description="Training Parameters and Input Dataset Control")
     parser.add_argument("--model", required=True, help="The name of the model architecture")
-    parser.add_argument("--data_path", required=True, help="The source path of the data e.g. '/cfs/earth/scratch/grbv/DTI/input_graphs_esm2_t6'")
+    parser.add_argument("--data_dir", required=True, help="The source path of the data e.g.")
+    parser.add_argument("--log_path", required=True, help="The path for saving results and logs.")
     parser.add_argument("--embedding", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Wheter or not ESM embedding should be used")
     parser.add_argument("--edge_features", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Wheter or not Edge Features should be used")
     parser.add_argument("--loss_func", default='MSE', help="The loss function that will be used ['MSE', 'RMSE', 'wMSE', 'L1', 'Huber']")
@@ -68,12 +69,13 @@ torch.manual_seed(0)
 # Architecture and run settings
 model_arch = args.model
 data_dir = args.data_path
+log_path = args.log_path
 embedding = args.embedding
 edge_features = args.edge_features
 project_name = args.project_name
+
 run_name = args.run_name
 wandb_tracking = args.wandb
-#device_idx = args.device
 if wandb_tracking: print(f'Saving into Project Folder {project_name}')
 
 random_seed = 42
@@ -90,8 +92,8 @@ conv_dropout_prob = args.conv_dropout
 n_folds = args.n_folds
 fold_to_train = args.fold_to_train
 
-save_dir = f'experiments/{project_name}/{run_name}/Fold{fold_to_train}'
-wandb_dir = '/cfs/earth/scratch/grbv/DTI/wandb'
+save_dir = log_path
+wandb_dir = os.path.join(log_path, 'wandb/')
 
 run_name = f'{run_name}_f{fold_to_train}' 
 
@@ -130,7 +132,6 @@ if wandb_tracking:
                 "Splitting Random Seed":random_seed,
                 "Dropout Probability": dropout_prob,
                 "Dropout Prob Convolutional Layers":conv_dropout_prob,
-                #"Device Idx": device_idx,
                 "Adaptive LR Scheme": alr
                 }
 
