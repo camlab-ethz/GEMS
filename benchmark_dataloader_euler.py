@@ -16,14 +16,21 @@ args = parse_args()
 
 
 
+import os
+import numpy as np
+import torch
+from torch_geometric.data import Dataset
+
+
 class IG_Dataset(Dataset):
-    def __init__(self, root, embedding=False, edge_features=False, atom_features=False):
+    def __init__(self, root, embedding=False, edge_features=False):
         super().__init__(root)
 
         self.data_dir = root
         self.embedding = embedding
 
         self.filepaths = [os.path.join(self.data_dir, file) for file in os.listdir(self.data_dir)]
+        #self.input_data = {ind:torch.load(filepath) for ind, filepath in enumerate(self.filepaths)}
         
         self.input_data = {}
         
@@ -45,27 +52,13 @@ class IG_Dataset(Dataset):
             else:
                 grph.x = torch.cat((grph.x_lig, grph.x_prot_aa), axis=0)
 
-
             if not edge_features:
                 grph.edge_attr = grph.edge_attr[:,3].view(-1,1)
                 grph.edge_attr_lig = grph.edge_attr_lig[:,3].view(-1,1)
                 grph.edge_attr_prot = grph.edge_attr_prot[:,3].view(-1,1)
 
-            if not atom_features:
-                grph.x[:, -31:] = 0
-
-
             grph.n_nodes = grph.x.shape[0]
-            grph.data = grph.data.reshape(1, 3)
 
-            
-            # Merge the edge_index_master_lig and the edge_index_master_prot into a overall master node edge_index
-            grph.edge_index_master_prot_lig = torch.cat([grph.edge_index_master_prot, grph.edge_index_master_lig], axis = 1)
-
-            # Create an edge_index with all possible edges, convalent, non-covalent and directed master node connections
-            grph.edge_index_master = torch.cat([grph.edge_index, grph.edge_index_master_prot_lig], axis = 1)
-            
-            
             self.input_data[ind] = grph
             ind += 1
 
@@ -108,19 +101,19 @@ tests = [   ('Base Case', 0, False, False),
 
             ('Num workers 6', 6, False, False),
             ('Num workers 6 persistent', 6, True, False),
-            ('Num workers 6 persistent pin', 6, True, True),
+            ('Num workers 6 persistent pin', 6, True, True)
 
-            ('Num workers 8', 8, False, False),
-            ('Num workers 8 persistent', 8, True, False),
-            ('Num workers 8 persistent pin', 8, True, True),
+            # ('Num workers 8', 8, False, False),
+            # ('Num workers 8 persistent', 8, True, False),
+            # ('Num workers 8 persistent pin', 8, True, True)
 
-            ('Num workers 10', 10, False, False),
-            ('Num workers 10 persistent', 10, True, False),
-            ('Num workers 10 persistent pin', 10, True, True),
+            # ('Num workers 10', 10, False, False),
+            # ('Num workers 10 persistent', 10, True, False),
+            # ('Num workers 10 persistent pin', 10, True, True),
 
-            ('Num workers 12', 12, False, False),
-            ('Num workers 12 persistent', 12, True, False),
-            ('Num workers 12 persistent pin', 12, True, True),
+            # ('Num workers 12', 12, False, False),
+            # ('Num workers 12 persistent', 12, True, False),
+            # ('Num workers 12 persistent pin', 12, True, True),
         ]
 
 

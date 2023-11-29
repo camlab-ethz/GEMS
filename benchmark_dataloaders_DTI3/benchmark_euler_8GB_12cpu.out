@@ -1,0 +1,24 @@
+Training Data moved to /scratch/tmp.37603107.dagraber
+Training Data unpacked
+Starting computation
+Base Case
+--- Time for 10 epochs: 34.54009556770325
+
+Num workers 2
+--- Time for 10 epochs: 88.45295453071594
+
+Num workers 2 persistent
+--- Time for 10 epochs: 69.31167578697205
+
+Num workers 2 persistent pin
+--- Time for 10 epochs: 105.28338599205017
+
+Num workers 4
+--- Time for 10 epochs: 81.34770035743713
+
+Num workers 4 persistent
+--- Time for 10 epochs: 71.5276894569397
+
+Num workers 4 persistent pin
+slurmstepd: error: *** JOB 37603107 ON eu-g3-057 CANCELLED AT 2023-11-28T19:28:25 ***
+Results are copied to /cluster/work/math/dagraber/DTI/experiments/DTI3/benchmark_dataloaders_euler/Fold0/

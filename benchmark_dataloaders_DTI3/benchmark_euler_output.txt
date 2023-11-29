@@ -1,0 +1,34 @@
+Base Case
+--- Time for 10 epochs: 43.754399061203
+
+Num workers 1
+--- Time for 10 epochs: 99.92327499389648
+
+Num workers 1 persistent
+--- Time for 10 epochs: 78.38998603820801
+
+Num workers 2
+--- Time for 10 epochs: 55.96043610572815
+
+Num workers 2 persistent
+--- Time for 10 epochs: 45.736783266067505
+
+Num workers 4
+--- Time for 10 epochs: 37.880964517593384
+
+Num workers 4 persistent
+--- Time for 10 epochs: 29.850571155548096
+
+Num workers 6
+--- Time for 10 epochs: 38.12238574028015
+
+Num workers 6 persistent
+--- Time for 10 epochs: 24.33823323249817
+
+Num workers 8
+--- Time for 10 epochs: 41.59649467468262
+
+Num workers 8 persistent
+--- Time for 10 epochs: 25.26338243484497
+
+Num workers 10
