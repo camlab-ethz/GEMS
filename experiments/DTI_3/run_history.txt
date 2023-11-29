@@ -1,0 +1,503 @@
+----------------------------------------------------
+Grid Search to optimize LR and BS 
+
+r001_GAT0mp_t61_bs1_lr1_MSE
+r002_GAT0mp_t61_bs1_lr2_MSE
+r003_GAT0mp_t61_bs1_lr3_MSE
+r004_GAT0mp_t61_bs1_lr4_MSE
+
+r005_GAT0mp_t61_bs2_lr1_MSE
+r006_GAT0mp_t61_bs2_lr2_MSE
+r007_GAT0mp_t61_bs2_lr3_MSE
+r008_GAT0mp_t61_bs2_lr4_MSE
+
+r009_GAT0mp_t61_bs5_lr1_MSE
+r010_GAT0mp_t61_bs5_lr2_MSE
+r011_GAT0mp_t61_bs5_lr3_MSE
+r012_GAT0mp_t61_bs5_lr4_MSE
+
+for i in $(seq -w 1 12); do sbatch r0${i}.sh; done
+
+-----------------------------------------------------
+Test even lower learning rate and a larger batch size
+r013_GAT0mp_t61_bs6_lr3_MSE
+r014_GAT0mp_t61_bs6_lr4_MSE
+r015_GAT0mp_t61_bs6_lr5_MSE
+
+r016_GAT0mp_t61_bs1_lr5_MSE
+r017_GAT0mp_t61_bs2_lr5_MSE
+r018_GAT0mp_t61_bs5_lr5_MSE
+
+for i in $(seq -w 13 18); do sbatch r0${i}.sh; done
+
+------------------------------------------------------
+Run the best runs with linear LR scheduler (1-0.01-500)
+r019_GAT0mp_t61_bs2_lr3_MSElin
+r020_GAT0mp_t61_bs5_lr3_MSElin
+r021_GAT0mp_t61_bs6_lr3_MSElin
+for i in $(seq -w 19 21); do sbatch r0${i}.sh; done
+
+The runs with adaptive learning rate are not better
+------------------------------------------------------
+
+LR 0.0001 is the best. Complete 5fold CV for the runs with LR 0.0004 (4, 8, 12)
+r004_GAT0mp_t61_bs1_lr4_MSE
+r008_GAT0mp_t61_bs2_lr4_MSE
+r012_GAT0mp_t61_bs5_lr4_MSE
+
+for i in 04 08 12; do sbatch r0${i}_cv.sh; done
+
+The Performance between the folds has very low variability. 
+I think it is ok to experiment with only one fold.
+--------------------------------------------------------
+
+TRY WITH MORE ATTENTION HEADS IN THE THREE CONVOLUTIONAL LAYERS (AT THE MOMENT WITH AVG INSTEAD OF CONCAT)
+
+r022_GAT1mp_t61_bs2_lr4_MSE
+r023_GAT2mp_t61_bs2_lr4_MSE
+r024_GAT3mp_t61_bs2_lr4_MSE
+
+for i in $(seq -w 22 24); do sbatch r0${i}.sh; done
+The Performance becomes worse
+
+----------------------------------------------------------
+
+TRY AGAIN BUT THIS TIME WITH CONCAT (DECREASED NUM CHANNELS SO THAT N PARAMETERS ROUGHLY THE SAME)
+
+r025_GAT1ccmp_t61_bs2_lr4_MSE
+r026_GAT2ccmp_t61_bs2_lr4_MSE
+r027_GAT3ccmp_t61_bs2_lr4_MSE
+
+for i in $(seq -w 25 27); do sbatch r0${i}.sh; done
+The Performance is exactly the same as with heads=1
+
+------------------------------------------------------------
+
+TRY AGAIN BUT WITH HEADS=4 (AND ALLOW LARGER MODELS)
+
+r028_GAT4mp_t61_bs2_lr4_MSE
+r029_GAT5mp_t61_bs2_lr4_MSE
+r030_GAT6mp_t61_bs2_lr4_MSE
+
+for i in $(seq -w 28 30); do sbatch r0${i}.sh; done
+--------------------------------------------------------------
+
+r031_GAT6mp_t61_bs2_lr4_MSE --> RUN THIS ONE FOR 1000 EPOCHS
+r032_GAT0mp_t61_bs2_lr4_MSE --> RUN THE BASELINE ALSO FOR 1000 EPOCHS
+
+TRY DIFFERENT LOSS FUNCTIONS
+
+r033_GAT0mp_t61_bs2_lr4_RMSE
+r034_GAT0mp_t61_bs2_lr4_L1
+r035_GAT0mp_t61_bs2_lr4_Huber
+r036_GAT0mp_t61_bs2_lr4_wMSE
+
+for i in $(seq -w 31 36); do sbatch r0${i}.sh; done
+
+----------------------------------------------------------------
+
+TRY OTHER BASELINE MODELS WITH 2 OR 4 LAYERS
+
+r037_GAT00mp_t61_bs2_lr4_MSE
+r038_GAT000mp_t61_bs2_lr4_MSE
+
+TRY THE BASELINE WITH THREE LAYERS WITH DIFFERENT EMBEDDINGS
+
+r039_GAT0mp_t121_bs2_lr4_MSE
+r040_GAT0mp_t301_bs2_lr4_MSE
+r041_GAT0mp_t331_bs2_lr4_MSE
+
+----------------------------------------------------------------
+DTI_2
+----------------------------------------------------------------
+
+BASELINE MODELS WITH 2,3 AND 4 CONVOLUTIONAL LAYERS, SIMILAR NUMBER OF PARAMETERS
+
+r001_GAT0mp_t61_bs2_lr4_MSE
+r002_GAT02_t61_bs2_lr4_MSE
+r003_GAT04_t61_bs2_lr4_MSE
+
+ALL SHOW SIMILAR Performance
+SEE IF THIS HOLDS ALSO WITH MORE PARAMETERS
+
+r004_GAT0t_t61_bs2_lr4_MSE
+r005_GAT04t_t61_bs2_lr4_MSE
+r006_GAT02t_t61_bs2_lr4_MSE
+
+
+-------------------------------------------------------------------
+
+Simple Architecture, but with RMSE Loss
+
+r007_GAT0tmp_t61_bs2_lr4_RMSE_d00
+r008_GAT0tmp_t61_bs2_lr4_RMSE_d05
+r009_GAT0tmp_t61_bs2_lr4_RMSE_d07
+
+ADD POOL INSTEAD OF MEAN POOL
+r010_GAT0tap_t61_bs2_lr4_RMSE_d00
+r011_GAT0tap_t61_bs2_lr4_RMSE_d05
+r012_GAT0tap_t61_bs2_lr4_RMSE_d07
+r013_GAT0tap_t61_bs2_lr4_RMSE_d03
+
+for i in $(seq -w 7 13); do sbatch r0${i}.sh; done
+-------------------------------------------------------------------
+Great Results WITH ADDPOOL. TRY INTERMEDIATE DROPOUT RATES
+r022_GAT0tap_t61_bs2_lr4_RMSE_d01
+r017_GAT0tap_t61_bs2_lr4_RMSE_d02
+r018_GAT0tap_t61_bs2_lr4_RMSE_d04
+
+See if this gets even better with larger embedding
+
+r014_GAT0tap_t121_bs2_lr4_RMSE_d00
+r021_GAT0tap_t121_bs2_lr4_RMSE_d01
+r020_GAT0tap_t121_bs2_lr4_RMSE_d02
+r015_GAT0tap_t121_bs2_lr4_RMSE_d03
+r016_GAT0tap_t121_bs2_lr4_RMSE_d05
+r019_GAT0tap_t121_bs2_lr4_RMSE_d04
+
+
+See if it gets better with the t30 embedding
+
+r023_GAT0tap_t301_bs2_lr4_RMSE_d00
+r024_GAT0tap_t301_bs2_lr4_RMSE_d01
+r025_GAT0tap_t301_bs2_lr4_RMSE_d02
+r026_GAT0tap_t301_bs2_lr4_RMSE_d03
+r027_GAT0tap_t301_bs2_lr4_RMSE_d04
+r028_GAT0tap_t301_bs2_lr4_RMSE_d05
+
+
+
+OTHER OPTIMIZERS (FROM HERE ON WITH NEW TRAIN FUNCTION TRAIN_2.PY)
+
+ADAGRAD
+r029_GAT0tap_t61_bs2_lr2ag_RMSE_d00
+r030_GAT0tap_t61_bs2_lr3ag_RMSE_d00
+r031_GAT0tap_t61_bs2_lr4ag_RMSE_d00
+
+SGD
+r032_GAT0tap_t61_bs2_lr2sgd_RMSE_d00
+r033_GAT0tap_t61_bs2_lr3sgd_RMSE_d00
+r034_GAT0tap_t61_bs2_lr4sgd_RMSE_d00
+
+for i in $(seq -w 29 34); do sbatch r0${i}.sh; done
+
+Repeat r029 with dropout:
+r035_GAT0tap_t61_bs2_lr2ag_RMSE_d01
+r036_GAT0tap_t61_bs2_lr2ag_RMSE_d02
+r037_GAT0tap_t61_bs2_lr2ag_RMSE_d03
+
+Repeat r032 with dropout:
+r038_GAT0tap_t61_bs2_lr2sgd_RMSE_d01
+r039_GAT0tap_t61_bs2_lr2sgd_RMSE_d02
+r040_GAT0tap_t61_bs2_lr2sgd_RMSE_d03
+
+Repeat r033 with dropout:
+r041_GAT0tap_t61_bs2_lr3sgd_RMSE_d01
+r042_GAT0tap_t61_bs2_lr3sgd_RMSE_d02
+r043_GAT0tap_t61_bs2_lr3sgd_RMSE_d03
+
+for i in $(seq -w 35 43); do sbatch r0${i}.sh; done
+
+r044_GAT0tap_t61_bs2_lr3sgd_RMSE_d005
+r045_GAT0tap_t61_bs2_lr3sgd_RMSE_d015
+
+
+------------------------------------------------------------------------------------------------------
+The new train_3.py function was implemented with
+    - New Dataset class, calculating pK values correctly with log10, and followingly
+      new normalization between 0 and 16. No clamping was performed.
+    - Saving not when the val_loss is improved, but when the sum of val_r and val_rmse is improved
+    - Data is saved into new experiment and project DTI_2b
+
+Take the best working model parameters and test them with the new train script and dataset class: 
+------------------------------------------------------------------------------------------------------
+
+For 2000 epochs: (Approximately 4h)
+
+r001_GAT0tmp_t61_bs2_lr4adam_RMSE_d0
+r002_GAT0tmp_t61_bs2_lr4adam_RMSE_d1
+r003_GAT0tmp_t61_bs2_lr4adam_RMSE_d2
+r004_GAT0tmp_t61_bs2_lr4adam_RMSE_d3
+
+r005_GAT0tap_t61_bs2_lr4adam_RMSE_d0
+r006_GAT0tap_t61_bs2_lr4adam_RMSE_d1
+r007_GAT0tap_t61_bs2_lr4adam_RMSE_d2
+r008_GAT0tap_t61_bs2_lr4adam_RMSE_d3
+
+r009_GAT0tap_t61_bs2_lr2adag_RMSE_d0
+r010_GAT0tap_t61_bs2_lr2adag_RMSE_d1
+r011_GAT0tap_t61_bs2_lr2adag_RMSE_d2
+r012_GAT0tap_t61_bs2_lr2adag_RMSE_d3
+
+r013_GAT0tap_t61_bs2_lr3sgd_RMSE_d0
+r014_GAT0tap_t61_bs2_lr3sgd_RMSE_d1
+r015_GAT0tap_t61_bs2_lr3sgd_RMSE_d2
+r016_GAT0tap_t61_bs2_lr3sgd_RMSE_d3
+
+for i in $(seq -w 1 16); do sbatch r0${i}.sh; done
+
+Lets see if the same architecture with fewer parameters is able to achieve the same (GAT0taps for small)
+
+r017_GAT0taps_t61_bs2_lr4adam_RMSE_d0
+r018_GAT0taps_t61_bs2_lr4adam_RMSE_d1
+r019_GAT0taps_t61_bs2_lr4adam_RMSE_d2
+r020_GAT0taps_t61_bs2_lr2adag_RMSE_d0
+r021_GAT0taps_t61_bs2_lr2adag_RMSE_d1
+r022_GAT0taps_t61_bs2_lr2adag_RMSE_d2
+r023_GAT0taps_t61_bs2_lr3sgd_RMSE_d0
+r024_GAT0taps_t61_bs2_lr3sgd_RMSE_d1
+r025_GAT0taps_t61_bs2_lr3sgd_RMSE_d2
+
+for i in $(seq -w 20 25); do sbatch r0${i}.sh; done
+
+
+
+
+--------------------------------------------------------------------------------------------------------
+Best architecture, but with mean and add pooling combined (1'103'617)
+
+r026_GAT0tamp_t61_bs2_lr4adam_RMSE_d0
+r027_GAT0tamp_t61_bs2_lr4adam_RMSE_d1
+r028_GAT0tamp_t61_bs2_lr4adam_RMSE_d2
+
+r029_GAT0tamp_t61_bs2_lr3sgd_RMSE_d0
+r030_GAT0tamp_t61_bs2_lr3sgd_RMSE_d1
+r031_GAT0tamp_t61_bs2_lr3sgd_RMSE_d2
+
+----------------------------------------------------------------------------------------------------------
+
+Wishful Thinking Architecture
+
+r032_WishfulThinking_t61_bs2_lr4adam_RMSE_d0
+r033_WishfulThinking_t61_bs2_lr4adam_RMSE_d1
+r034_WishfulThinking_t61_bs2_lr4adam_RMSE_d2
+
+r035_WishfulThinking_JK_t61_bs2_lr4adam_RMSE_d0
+r036_WishfulThinking_JK_t61_bs2_lr4adam_RMSE_d1
+r037_WishfulThinking_JK_t61_bs2_lr4adam_RMSE_d2
+
+
+
+Having enough parameters in the second conv layer seems to be important (GAT0tamp worse than GAT0tap)
+Repeat GAT0tamp with original size second conv layer (GAT0tampo)
+
+r038_GAT0tampo_t61_bs2_lr4adam_RMSE_d0
+r039_GAT0tampo_t61_bs2_lr4adam_RMSE_d1
+r040_GAT0tampo_t61_bs2_lr4adam_RMSE_d2
+
+r041_GAT0tampo_t61_bs2_lr3sgd_RMSE_d0
+r042_GAT0tampo_t61_bs2_lr3sgd_RMSE_d1
+r043_GAT0tampo_t61_bs2_lr3sgd_RMSE_d2
+
+
+
+Other combinations of mean, max, and add pooling
+
+r044_GAT0tmmxpo_t61_bs2_lr4adam_RMSE_d1
+r045_GAT0tmmxpo_t61_bs2_lr4adam_RMSE_d2
+r046_GAT0tamxpo_t61_bs2_lr4adam_RMSE_d1
+r047_GAT0tamxpo_t61_bs2_lr4adam_RMSE_d2
+
+r048_GAT0tmmxpo_t61_bs2_lr3sgd_RMSE_d1
+r049_GAT0tmmxpo_t61_bs2_lr3sgd_RMSE_d2
+r050_GAT0tamxpo_t61_bs2_lr3sgd_RMSE_d1
+r051_GAT0tamxpo_t61_bs2_lr3sgd_RMSE_d2
+
+
+Lets see if the same architecture as GAT0tap with a medium number of parameters is better (GAT0tapm for medium)
+(
+r0xx_GAT0tapm_t61_bs2_lr4adam_RMSE_d0
+r0xx_GAT0tapm_t61_bs2_lr4adam_RMSE_d1
+r0xx_GAT0tapm_t61_bs2_lr4adam_RMSE_d2
+r0xx_GAT0tapm_t61_bs2_lr2adag_RMSE_d0
+r0xx_GAT0tapm_t61_bs2_lr2adag_RMSE_d1
+r0xx_GAT0tapm_t61_bs2_lr2adag_RMSE_d2
+r0xx_GAT0tapm_t61_bs2_lr3sgd_RMSE_d0
+r0xx_GAT0tapm_t61_bs2_lr3sgd_RMSE_d1
+r0xx_GAT0tapm_t61_bs2_lr3sgd_RMSE_d2
+)
+
+
+
+--------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------
+DTI 3
+--------------------------------------------------------------------------------------------------------------
+
+r001_GAT0tap_t61_bs2_lr4adam_RMSE_d0
+r002_GAT0tap_t61_bs2_lr4adam_RMSE_d1
+r003_GAT0tap_t61_bs2_lr4adam_RMSE_d2
+
+r004_GAT0tap_t61_bs2_lr3sgd_RMSE_d0
+r005_GAT0tap_t61_bs2_lr3sgd_RMSE_d1
+r006_GAT0tap_t61_bs2_lr3sgd_RMSE_d2
+
+
+r007_GAT0tampo_t61_bs2_lr3sgd_RMSE_d0
+r008_GAT0tampo_t61_bs2_lr3sgd_RMSE_d1
+r009_GAT0tampo_t61_bs2_lr3sgd_RMSE_d2
+
+r010_GAT0tampo_t61_bs2_lr4adam_RMSE_d0
+r011_GAT0tampo_t61_bs2_lr4adam_RMSE_d1
+r012_GAT0tampo_t61_bs2_lr4adam_RMSE_d2
+
+r015_GAT0tapfc1_t61_bs2_lr4adam_RMSE_d1
+r016_GAT0tapfc1_t61_bs2_lr4adam_RMSE_d2
+
+r017_GAT0tapfc1_t61_bs2_lr3sgd_RMSE_d1
+r018_GAT0tapfc1_t61_bs2_lr3sgd_RMSE_d2
+
+# Test different master node architectures
+---------------------------------------------
+r013_GAT0tmaster2_t61_bs2_lr4adam_RMSE_d1
+r014_GAT0tmaster2_t61_bs2_lr3sgd_RMSE_d1
+
+r013_1a_GAT0tmaster_t61_bs2_lr4adam_RMSE_d0
+r013_1b_GAT0tmasterb_t61_bs2_lr4adam_RMSE_d0
+r013_1c_GAT0tmasterc_t61_bs2_lr4adam_RMSE_d0
+r013_2a_GAT0tmaster2_t61_bs2_lr4adam_RMSE_d0
+r013_2b_GAT0tmaster2b_t61_bs2_lr4adam_RMSE_d0
+r013_2c_GAT0tmaster2c_t61_bs2_lr4adam_RMSE_d0
+
+r014_1a_GAT0tmaster_t61_bs2_lr3sgd_RMSE_d0
+r014_1b_GAT0tmasterb_t61_bs2_lr3sgd_RMSE_d0
+r014_1c_GAT0tmasterc_t61_bs2_lr3sgd_RMSE_d0
+r014_2a_GAT0tmaster2_t61_bs2_lr3sgd_RMSE_d0
+r014_2b_GAT0tmaster2b_t61_bs2_lr3sgd_RMSE_d0
+r014_2c_GAT0tmaster2c_t61_bs2_lr3sgd_RMSE_d0
+
+
+
+
+Test r013 again, but this time with a master node connected to all protein nodes
+For this I didn't change the architectures, but just made the model training with train5.py
+, which uses a dataset_edited.py class. This edited Dataset.py introduces a protein node masternode
+and names it edge_index_master, so that the architectures don't need to be changed. 
+----------------------------------------------------------------------------------------
+r013_1ap_GAT0tmaster_t61_bs2_lr4adam_RMSE_d0
+r013_1bp_GAT0tmasterb_t61_bs2_lr4adam_RMSE_d0
+r013_1cp_GAT0tmasterc_t61_bs2_lr4adam_RMSE_d0
+r013_2ap_GAT0tmaster2_t61_bs2_lr4adam_RMSE_d0
+r013_2bp_GAT0tmaster2b_t61_bs2_lr4adam_RMSE_d0
+r013_2cp_GAT0tmaster2c_t61_bs2_lr4adam_RMSE_d0
+
+
+
+Test r014 again with a higher learning rate
+-----------------------------------------------------------------------------------------
+r014_1a_GAT0tmaster_t61_bs2_lr2sgd_RMSE_d0
+r014_1b_GAT0tmasterb_t61_bs2_lr2sgd_RMSE_d0
+r014_1c_GAT0tmasterc_t61_bs2_lr2sgd_RMSE_d0
+r014_2a_GAT0tmaster2_t61_bs2_lr2sgd_RMSE_d0
+r014_2b_GAT0tmaster2b_t61_bs2_lr2sgd_RMSE_d0
+r014_2c_GAT0tmaster2c_t61_bs2_lr2sgd_RMSE_d0
+
+
+Run the best models with dropout 0.1 in the Conv LAYERS
+--------------------------------------------------------------------
+r002 --> r019_GAT0tap_d1_t61_bs2_lr4adam_RMSE_d1
+r003 --> r020_GAT0tap_d1_t61_bs2_lr4adam_RMSE_d2
+r011 --> r025_GAT0tampo_d1_t61_bs2_lr4adam_RMSE_d1
+r012 --> r026_GAT0tampo_d1_t61_bs2_lr4adam_RMSE_d2
+
+r005 --> r021_GAT0tap_d1_t61_bs2_lr3sgd_RMSE_d1
+r006 --> r022_GAT0tap_d1_t61_bs2_lr3sgd_RMSE_d2
+r008 --> r023_GAT0tampo_d1_t61_bs2_lr3sgd_RMSE_d1
+r009 --> r024_GAT0tampo_d1_t61_bs2_lr3sgd_RMSE_d2
+
+Dropout 0.2 in the Conv LAYERS
+--------------------------------------------------------------------
+r002 --> r019_GAT0tap_d2_t61_bs2_lr4adam_RMSE_d1
+r003 --> r020_GAT0tap_d2_t61_bs2_lr4adam_RMSE_d2
+r011 --> r025_GAT0tampo_d2_t61_bs2_lr4adam_RMSE_d1
+r012 --> r026_GAT0tampo_d2_t61_bs2_lr4adam_RMSE_d2
+
+r005 --> r021_GAT0tap_d2_t61_bs2_lr3sgd_RMSE_d1
+r006 --> r022_GAT0tap_d2_t61_bs2_lr3sgd_RMSE_d2
+r008 --> r023_GAT0tampo_d2_t61_bs2_lr3sgd_RMSE_d1
+r009 --> r024_GAT0tampo_d2_t61_bs2_lr3sgd_RMSE_d2
+
+Dropout 0.3 in the Conv LAYERS (include also D0 models)
+--------------------------------------------------------------------
+
+r001_GAT0tap_d3_t61_bs2_lr4adam_RMSE_d0
+r019_GAT0tap_d3_t61_bs2_lr4adam_RMSE_d1
+r020_GAT0tap_d3_t61_bs2_lr4adam_RMSE_d2
+
+r010_GAT0tampo_d3_t61_bs2_lr4adam_RMSE_d0
+r025_GAT0tampo_d3_t61_bs2_lr4adam_RMSE_d1
+r026_GAT0tampo_d3_t61_bs2_lr4adam_RMSE_d2
+
+r004_GAT0tap_d3_t61_bs2_lr3sgd_RMSE_d0
+r021_GAT0tap_d3_t61_bs2_lr3sgd_RMSE_d1
+r022_GAT0tap_d3_t61_bs2_lr3sgd_RMSE_d2
+
+r007_GAT0tampo_d3_t61_bs2_lr3sgd_RMSE_d0
+r023_GAT0tampo_d3_t61_bs2_lr3sgd_RMSE_d1
+r024_GAT0tampo_d3_t61_bs2_lr3sgd_RMSE_d
+
+
+
+ESM CHECKPOINT T6: Now with dropout 0.4 in the Conv LAYERS
+------------------------------------------------------------------------
+
+r021_GAT0tap_d4_t61_bs2_lr3sgd_RMSE_d1
+r022_GAT0tap_d4_t61_bs2_lr3sgd_RMSE_d2
+r025_GAT0tampo_d4_t61_bs2_lr4adam_RMSE_d1
+r026_GAT0tampo_d4_t61_bs2_lr4adam_RMSE_d2
+
+
+ESM CHECKPOINT T12:
+------------------------------------------------------------------------
+r025_GAT0tampo_d1_t121_bs2_lr4adam_RMSE_d1
+r026_GAT0tampo_d1_t121_bs2_lr4adam_RMSE_d2
+r021_GAT0tap_d1_t121_bs2_lr3sgd_RMSE_d1
+r022_GAT0tap_d1_t121_bs2_lr3sgd_RMSE_d2
+
+r025_GAT0tampo_d2_t121_bs2_lr4adam_RMSE_d1
+r026_GAT0tampo_d2_t121_bs2_lr4adam_RMSE_d2
+r021_GAT0tap_d2_t121_bs2_lr3sgd_RMSE_d1
+r022_GAT0tap_d2_t121_bs2_lr3sgd_RMSE_d2
+
+r025_GAT0tampo_d3_t121_bs2_lr4adam_RMSE_d1
+r026_GAT0tampo_d3_t121_bs2_lr4adam_RMSE_d2
+r021_GAT0tap_d3_t121_bs2_lr3sgd_RMSE_d1
+r022_GAT0tap_d3_t121_bs2_lr3sgd_RMSE_d2
+
+r025_GAT0tampo_d4_t121_bs2_lr4adam_RMSE_d1
+r026_GAT0tampo_d4_t121_bs2_lr4adam_RMSE_d2
+r021_GAT0tap_d4_t121_bs2_lr3sgd_RMSE_d1
+r022_GAT0tap_d4_t121_bs2_lr3sgd_RMSE_d2
+
+
+ESM CHECKPOINT T30:
+------------------------------------------------------------------------
+r025_GAT0tampo_d1_t301_bs2_lr4adam_RMSE_d1
+r026_GAT0tampo_d1_t301_bs2_lr4adam_RMSE_d2
+r021_GAT0tap_d1_t301_bs2_lr3sgd_RMSE_d1
+r022_GAT0tap_d1_t301_bs2_lr3sgd_RMSE_d2
+
+r025_GAT0tampo_d2_t301_bs2_lr4adam_RMSE_d1
+r026_GAT0tampo_d2_t301_bs2_lr4adam_RMSE_d2
+r021_GAT0tap_d2_t301_bs2_lr3sgd_RMSE_d1
+r022_GAT0tap_d2_t301_bs2_lr3sgd_RMSE_d2
+
+r025_GAT0tampo_d3_t301_bs2_lr4adam_RMSE_d1
+r026_GAT0tampo_d3_t301_bs2_lr4adam_RMSE_d2
+r021_GAT0tap_d3_t301_bs2_lr3sgd_RMSE_d1
+r022_GAT0tap_d3_t301_bs2_lr3sgd_RMSE_d2
+
+r025_GAT0tampo_d4_t301_bs2_lr4adam_RMSE_d1
+r026_GAT0tampo_d4_t301_bs2_lr4adam_RMSE_d2
+r021_GAT0tap_d4_t301_bs2_lr3sgd_RMSE_d1
+r022_GAT0tap_d4_t301_bs2_lr3sgd_RMSE_d2
+
+
+
+
+
+Adaptive Learning Rate (mult 10 0.997)
+------------------------------------------------------------------------
+
+r026_GAT0tampo_d2_t61_bs2_multlr4adam_RMSE_d2
+r022_GAT0tap_d2_t61_bs2_multlr3sgd_RMSE_d2
