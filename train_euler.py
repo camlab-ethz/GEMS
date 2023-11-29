@@ -68,7 +68,7 @@ torch.manual_seed(0)
 
 # Architecture and run settings
 model_arch = args.model
-data_dir = args.data_path
+data_dir = args.data_dir
 log_path = args.log_path
 embedding = args.embedding
 edge_features = args.edge_features
@@ -151,7 +151,7 @@ if not os.path.exists(save_dir):
 #----------------------------------------------------------------------------------------------------
 
 # Location of the training data
-train_dir = f'{data_dir}/training_data/'
+train_dir = data_dir
 
 dataset = IG_Dataset(train_dir, embedding=embedding, edge_features=edge_features)
 print(dataset)
@@ -164,7 +164,7 @@ print(max(labels), len(labels))
 
 
 # Initialize StratifiedKFold
-skf = StratifiedKFold(n_splits=n_folds, random_state=random_seed, shuffle=True)
+skf = StratifiedKFold(n_splits=n_folds, random_state=random_seed, shufse=True)
 
 group_assignment = np.array( [round(lab) for lab in labels] )
 
@@ -439,8 +439,8 @@ if wandb_tracking:
     wandb.login()
     wandb.init(project=project_name, name = run_name, config=config, dir=wandb_dir)
     
-    wandb.log({"Training Labels": wandb.Image(hist_training_labels),
-               "Validation Labels": wandb.Image(hist_validation_labels)})
+    # wandb.log({"Training Labels": wandb.Image(hist_training_labels),
+    #            "Validation Labels": wandb.Image(hist_validation_labels)})
 
 
 if pretrained:
@@ -606,7 +606,7 @@ for epoch in range(epoch+1, num_epochs+1):
         best_metrics['train'] = (train_loss, train_r, train_rmse, train_r2, train_y_true, train_y_pred)
 
 
-    print(log_string)
+    print(log_string, flush=True)
     #-------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -614,40 +614,40 @@ for epoch in range(epoch+1, num_epochs+1):
     # After regular intervals, plot the predictions of the current and the best model
     #-------------------------------------------------------------------------------------------------------------------------------
     
-    if epoch % 50 == 0 or epoch==1:
+    # if epoch % 50 == 0 or epoch==1:
 
-        # Plot the predictions
-        predictions = plot_predictions( train_y_true, train_y_pred,
-                                        val_y_true, val_y_pred,
-                                        f"{run_name}: Epoch {epoch}\nTrain R = {train_r:.3f}, Validation R = {val_r:.3f}\n Train RMSE = {train_rmse:.3f}, Validation RMSE = {val_rmse:.3f}")
+    #     # Plot the predictions
+    #     predictions = plot_predictions( train_y_true, train_y_pred,
+    #                                     val_y_true, val_y_pred,
+    #                                     f"{run_name}: Epoch {epoch}\nTrain R = {train_r:.3f}, Validation R = {val_r:.3f}\n Train RMSE = {train_rmse:.3f}, Validation RMSE = {val_rmse:.3f}")
 
 
-        # If there has been a new best epoch in the last interval of epochs, plot the predictions of this model      
-        if last_saved_epoch not in plotted:
+    #     # If there has been a new best epoch in the last interval of epochs, plot the predictions of this model      
+    #     if last_saved_epoch not in plotted:
             
-            # Load the current best metrics from dict
-            val_loss, val_r, val_rmse, val_r2, val_y_true, val_y_pred = best_metrics['val']
-            train_loss, train_r, train_rmse, train_r2, train_y_true, train_y_pred = best_metrics['train']
+    #         # Load the current best metrics from dict
+    #         val_loss, val_r, val_rmse, val_r2, val_y_true, val_y_pred = best_metrics['val']
+    #         train_loss, train_r, train_rmse, train_r2, train_y_true, train_y_pred = best_metrics['train']
 
-            # Plot the predictions and the residuals plot
-            best_predictions = plot_predictions( train_y_true, train_y_pred,
-                                    val_y_true, val_y_pred,
-                                    f"{run_name}: Epoch {last_saved_epoch}\nTrain R = {train_r:.3f}, Validation R = {val_r:.3f}\nTrain RMSE = {train_rmse:.3f}, Validation RMSE = {val_rmse:.3f}")
+    #         # Plot the predictions and the residuals plot
+    #         best_predictions = plot_predictions( train_y_true, train_y_pred,
+    #                                 val_y_true, val_y_pred,
+    #                                 f"{run_name}: Epoch {last_saved_epoch}\nTrain R = {train_r:.3f}, Validation R = {val_r:.3f}\nTrain RMSE = {train_rmse:.3f}, Validation RMSE = {val_rmse:.3f}")
 
-            residuals = residuals_plot(train_y_true, train_y_pred, val_y_true, val_y_pred, 
-                                    f"{run_name}: Epoch {last_saved_epoch}\nTrain R = {train_r:.3f}, Validation R = {val_r:.3f}\nTrain RMSE = {train_rmse:.3f}, Validation RMSE = {val_rmse:.3f}")     
+    #         residuals = residuals_plot(train_y_true, train_y_pred, val_y_true, val_y_pred, 
+    #                                 f"{run_name}: Epoch {last_saved_epoch}\nTrain R = {train_r:.3f}, Validation R = {val_r:.3f}\nTrain RMSE = {train_rmse:.3f}, Validation RMSE = {val_rmse:.3f}")     
             
-            plotted.append(last_saved_epoch)
-
-            
-        plt.close('all')
+    #         plotted.append(last_saved_epoch)
 
             
-        if wandb_tracking: 
+    #     plt.close('all')
+
             
-            wandb.log({ "Predictions Scatterplot": wandb.Image(predictions),
-                        "Best Predictions Scatterplot": wandb.Image(best_predictions),
-                        "Residuals Plot":wandb.Image(residuals)
-                        })
+    #     if wandb_tracking: 
+            
+    #         wandb.log({ "Predictions Scatterplot": wandb.Image(predictions),
+    #                     "Best Predictions Scatterplot": wandb.Image(best_predictions),
+    #                     "Residuals Plot":wandb.Image(residuals)
+    #                     })
 
 if wandb_tracking: wandb.finish()
