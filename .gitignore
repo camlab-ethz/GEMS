@@ -11,6 +11,8 @@ slurm*
 Slurm*/
 export/
 
+benchmark_dataloaders_euler/*
+
 #Ignore test_files
 *_old.py
 testfiles/
