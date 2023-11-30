@@ -5,7 +5,7 @@ from torch_geometric.data import Dataset
 
 
 class IG_Dataset(Dataset):
-    def __init__(self, root, embedding=False, edge_features=False, atom_features=False):
+    def __init__(self, root, embedding=False, edge_features=False, atom_features=False, masternode=None):
         super().__init__(root)
 
         self.data_dir = root
@@ -33,20 +33,25 @@ class IG_Dataset(Dataset):
             else:
                 grph.x = torch.cat((grph.x_lig, grph.x_prot_aa), axis=0)
 
-
             if not edge_features:
-                grph.edge_attr = grph.edge_attr[:,3].view(-1,1)
-                grph.edge_attr_lig = grph.edge_attr_lig[:,3].view(-1,1)
-                grph.edge_attr_prot = grph.edge_attr_prot[:,3].view(-1,1)
+                grph.edge_attr = grph.edge_attr[:,:3].view(-1,1)
+                grph.edge_attr_lig = grph.edge_attr_lig[:,:3].view(-1,1)
+                grph.edge_attr_prot = grph.edge_attr_prot[:,:3].view(-1,1)
 
             if not atom_features:
                 grph.x[:, -31:] = 0
-
 
             grph.n_nodes = grph.x.shape[0]
             grph.data = grph.data.reshape(1, 3)
 
             
+            # 
+            if masternode == 'all':
+            
+
+            if masternode == 'ligand'
+
+            if masternode == 'protein'
 
             # Merge the edge_index_master_lig and the edge_index_master_prot into a overall master node edge_index
             grph.edge_index_master_prot_lig = torch.cat([grph.edge_index_master_prot, grph.edge_index_master_lig], axis = 1)
@@ -67,4 +72,26 @@ class IG_Dataset(Dataset):
         return graph
 
 
-# 
+#     graph = Data(
+        
+            x_lig = torch.tensor(x_lig, dtype=torch.float64),
+            x_prot_emb = torch.tensor(x_prot_emb, dtype=torch.float64),
+            x_prot_aa = torch.tensor(x_prot_aa, dtype=torch.float64),
+                 
+            edge_index = edge_index,
+            edge_index_lig = edge_index_lig,
+            edge_index_prot = edge_index_prot,
+
+            edge_index_master_lig = edge_index_master_lig,
+            edge_index_master_prot = edge_index_master_prot,
+
+            edge_attr = edge_attr,
+            edge_attr_lig = edge_attr_lig,
+            edge_attr_prot = edge_attr_prot,
+
+            pos = torch.tensor(pos, dtype=torch.float64),
+            affinity= torch.tensor(affinity, dtype=torch.float64),
+
+            id = complex_id,
+            data = torch.tensor(metadata, dtype=torch.float64)
+            )
