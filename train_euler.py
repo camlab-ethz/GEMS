@@ -5,6 +5,7 @@ import torch
 import matplotlib.pyplot as plt
 import numpy as np
 import wandb
+import time
 
 from torch_geometric.loader import DataLoader
 from sklearn.model_selection import StratifiedKFold
@@ -93,7 +94,7 @@ n_folds = args.n_folds
 fold_to_train = args.fold_to_train
 
 save_dir = log_path
-wandb_dir = os.path.join(log_path, 'wandb/')
+wandb_dir = log_path
 
 run_name = f'{run_name}_f{fold_to_train}' 
 
@@ -164,7 +165,7 @@ print(max(labels), len(labels))
 
 
 # Initialize StratifiedKFold
-skf = StratifiedKFold(n_splits=n_folds, random_state=random_seed, shufse=True)
+skf = StratifiedKFold(n_splits=n_folds, random_state=random_seed, shuffle=True)
 
 group_assignment = np.array( [round(lab) for lab in labels] )
 
@@ -564,6 +565,7 @@ last_saved_epoch = 0
 #===============================================================================================================================================
 # Training and Evaluation
 #===============================================================================================================================================
+tic = time.time()
 for epoch in range(epoch+1, num_epochs+1):
 
     train_loss, train_r, train_rmse, train_r2, train_y_true, train_y_pred = train(Model, train_loader, criterion, optimizer, device)
@@ -607,47 +609,56 @@ for epoch in range(epoch+1, num_epochs+1):
 
 
     print(log_string, flush=True)
+
+    if epoch % 50 == 0:
+        print(f'Time: {((time.time() - tic)/60):5.0f}')
     #-------------------------------------------------------------------------------------------------------------------------------
 
 
 
     # After regular intervals, plot the predictions of the current and the best model
-    #-------------------------------------------------------------------------------------------------------------------------------
+    # -------------------------------------------------------------------------------------------------------------------------------
     
-    # if epoch % 50 == 0 or epoch==1:
+    if epoch % 100 == 0 or epoch == (num_epochs-1):
 
-    #     # Plot the predictions
-    #     predictions = plot_predictions( train_y_true, train_y_pred,
-    #                                     val_y_true, val_y_pred,
-    #                                     f"{run_name}: Epoch {epoch}\nTrain R = {train_r:.3f}, Validation R = {val_r:.3f}\n Train RMSE = {train_rmse:.3f}, Validation RMSE = {val_rmse:.3f}")
+        # Plot the predictions
+        # predictions = plot_predictions( train_y_true, train_y_pred,
+        #                                 val_y_true, val_y_pred,
+        #                                 f"{run_name}: Epoch {epoch}\nTrain R = {train_r:.3f}, Validation R = {val_r:.3f}\n Train RMSE = {train_rmse:.3f}, Validation RMSE = {val_rmse:.3f}")
 
 
-    #     # If there has been a new best epoch in the last interval of epochs, plot the predictions of this model      
-    #     if last_saved_epoch not in plotted:
+        # If there has been a new best epoch in the last interval of epochs, plot the predictions of this model      
+        if last_saved_epoch not in plotted:
             
-    #         # Load the current best metrics from dict
-    #         val_loss, val_r, val_rmse, val_r2, val_y_true, val_y_pred = best_metrics['val']
-    #         train_loss, train_r, train_rmse, train_r2, train_y_true, train_y_pred = best_metrics['train']
+            # Load the current best metrics from dict
+            val_loss, val_r, val_rmse, val_r2, val_y_true, val_y_pred = best_metrics['val']
+            train_loss, train_r, train_rmse, train_r2, train_y_true, train_y_pred = best_metrics['train']
 
-    #         # Plot the predictions and the residuals plot
-    #         best_predictions = plot_predictions( train_y_true, train_y_pred,
-    #                                 val_y_true, val_y_pred,
-    #                                 f"{run_name}: Epoch {last_saved_epoch}\nTrain R = {train_r:.3f}, Validation R = {val_r:.3f}\nTrain RMSE = {train_rmse:.3f}, Validation RMSE = {val_rmse:.3f}")
+            # Plot the predictions and the residuals plot
+            best_predictions = plot_predictions( train_y_true, train_y_pred,
+                                    val_y_true, val_y_pred,
+                                    f"{run_name}: Epoch {last_saved_epoch}\nTrain R = {train_r:.3f}, Validation R = {val_r:.3f}\nTrain RMSE = {train_rmse:.3f}, Validation RMSE = {val_rmse:.3f}")
+            best_predictions.savefig(f'{save_dir}/predictions.png')
 
-    #         residuals = residuals_plot(train_y_true, train_y_pred, val_y_true, val_y_pred, 
-    #                                 f"{run_name}: Epoch {last_saved_epoch}\nTrain R = {train_r:.3f}, Validation R = {val_r:.3f}\nTrain RMSE = {train_rmse:.3f}, Validation RMSE = {val_rmse:.3f}")     
+            residuals = residuals_plot(train_y_true, train_y_pred, val_y_true, val_y_pred, 
+                                    f"{run_name}: Epoch {last_saved_epoch}\nTrain R = {train_r:.3f}, Validation R = {val_r:.3f}\nTrain RMSE = {train_rmse:.3f}, Validation RMSE = {val_rmse:.3f}")     
+            residuals.savefig(f'{save_dir}/residuals.png')
+
+            plotted.append(last_saved_epoch)
+
             
-    #         plotted.append(last_saved_epoch)
+        plt.close('all')
 
-            
-    #     plt.close('all')
+        plt.save(best_predictions)
 
+        # if wandb_tracking: 
             
-    #     if wandb_tracking: 
-            
-    #         wandb.log({ "Predictions Scatterplot": wandb.Image(predictions),
-    #                     "Best Predictions Scatterplot": wandb.Image(best_predictions),
-    #                     "Residuals Plot":wandb.Image(residuals)
-    #                     })
+        #     wandb.log({ "Predictions Scatterplot": wandb.Image(predictions),
+        #                 "Best Predictions Scatterplot": wandb.Image(best_predictions),
+        #                 "Residuals Plot":wandb.Image(residuals)
+        #                 })
 
+toc = time.time()
+training_time = toc-tic
+print(f"Time for Training {num_epochs} Epochs: {training_time:5.0f} - ({(training_time/num_epochs):5.2f}/Epoch)")
 if wandb_tracking: wandb.finish()
