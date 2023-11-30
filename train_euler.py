@@ -13,15 +13,17 @@ from torch.utils.data import Subset
 from Models_DTI4 import *
 
 
-from Dataset import IG_Dataset
+from Dataset_DTI4 import IG_Dataset
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Training Parameters and Input Dataset Control")
     parser.add_argument("--model", required=True, help="The name of the model architecture")
     parser.add_argument("--data_dir", required=True, help="The source path of the data e.g.")
     parser.add_argument("--log_path", required=True, help="The path for saving results and logs.")
-    parser.add_argument("--embedding", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Wheter or not ESM embedding should be used")
-    parser.add_argument("--edge_features", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Wheter or not Edge Features should be used")
+    parser.add_argument("--embedding", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Wheter or not ESM embedding should be included")
+    parser.add_argument("--atom_features", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Wheter or not Atom Features should be included")
+    parser.add_argument("--edge_features", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Wheter or not Edge Features should be included")
+    parser.add_argument("--masternode", default=None, help="The type of master node connectivity ['None', 'protein', 'ligand', 'all', None]")
     parser.add_argument("--loss_func", default='MSE', help="The loss function that will be used ['MSE', 'RMSE', 'wMSE', 'L1', 'Huber']")
     parser.add_argument("--optim", default='Adam', help="The optimizer that will be used ['Adam', 'Adagrad', 'SGD']")
     parser.add_argument("--wandb", default=True, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Wheter or not the run should be streamed to Weights and Biases")
@@ -35,7 +37,6 @@ def parse_args():
     parser.add_argument("--weight_decay", default=0.001, type=float, help="The weight decay parameter with which the model should train (float)")
     parser.add_argument("--conv_dropout", default=0, type=float, help="The dropout probability that should be applied in the convolutional layers")
     parser.add_argument("--dropout", default=0, type=float, help="The dropout probability that should be applied in the dropout layer")
-    #parser.add_argument("--device", default=1, type=int, help="The device index of the device on which the code should run")
 
     # If the learning rate should be adaptive LINEAR
     parser.add_argument("--alr_lin",  default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Linear learning rate reduction scheme will be used")
@@ -71,9 +72,14 @@ torch.manual_seed(0)
 model_arch = args.model
 data_dir = args.data_dir
 log_path = args.log_path
-embedding = args.embedding
-edge_features = args.edge_features
 project_name = args.project_name
+
+# Setting of the graph features
+embedding = args.embedding
+atom_features = args.atom_features
+edge_features = args.edge_features
+masternode = args.masternode
+
 
 run_name = args.run_name
 wandb_tracking = args.wandb
@@ -154,10 +160,10 @@ if not os.path.exists(save_dir):
 # Location of the training data
 train_dir = data_dir
 
-dataset = IG_Dataset(train_dir, embedding=embedding, edge_features=edge_features)
+dataset = IG_Dataset(train_dir, embedding=embedding, edge_features=edge_features, atom_features=atom_features, masternode=masternode)
 print(dataset)
 
-node_feat_dim = dataset[0].x_prot_emb.shape[1]
+node_feat_dim = dataset[0].x.shape[1]
 edge_feat_dim = dataset[0].edge_attr.shape[1]
 
 labels = [graph.y.item() for graph in dataset]
@@ -186,9 +192,9 @@ val_dataset = Subset(dataset, val_idx)
 print(f'Length Training Dataset: {len(train_dataset)}')
 print(f'Length Validation Dataset: {len(val_dataset)}')
 
-train_loader = DataLoader(dataset = train_dataset, batch_size=batch_size, shuffle=True, num_workers=6, persistent_workers=True)
-eval_loader_train = DataLoader(dataset = train_dataset, batch_size=512, shuffle=True, num_workers=6, persistent_workers=True)
-eval_loader_val = DataLoader(dataset = val_dataset, batch_size=512, shuffle=True, num_workers=6, persistent_workers=True)
+train_loader = DataLoader(dataset = train_dataset, batch_size=batch_size, shuffle=True, num_workers=6, persistent_workers=True, pin_memory=True)
+eval_loader_train = DataLoader(dataset = train_dataset, batch_size=512, shuffle=True, num_workers=6, persistent_workers=True, pin_memory=True)
+eval_loader_val = DataLoader(dataset = val_dataset, batch_size=512, shuffle=True, num_workers=6, persistent_workers=True, pin_memory=True)
 #----------------------------------------------------------------------------------------------------
 
 
@@ -648,8 +654,7 @@ for epoch in range(epoch+1, num_epochs+1):
 
             
         plt.close('all')
-
-        plt.save(best_predictions)
+        
 
         # if wandb_tracking: 
             
