@@ -14,7 +14,7 @@ class IG_Dataset(Dataset):
         
         # Process all the graphs according to kwargs
         ind = 0
-        for file in self.filepaths[:20]:
+        for file in self.filepaths:
             
             grph = torch.load(file)
 
