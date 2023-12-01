@@ -23,7 +23,7 @@ def parse_args():
     parser.add_argument("--embedding", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Wheter or not ESM embedding should be included")
     parser.add_argument("--atom_features", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Wheter or not Atom Features should be included")
     parser.add_argument("--edge_features", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Wheter or not Edge Features should be included")
-    parser.add_argument("--masternode", default=None, help="The type of master node connectivity ['None', 'protein', 'ligand', 'all', None]")
+    parser.add_argument("--masternode", default='None', help="The type of master node connectivity ['None', 'protein', 'ligand', 'all', None]")
     parser.add_argument("--loss_func", default='MSE', help="The loss function that will be used ['MSE', 'RMSE', 'wMSE', 'L1', 'Huber']")
     parser.add_argument("--optim", default='Adam', help="The optimizer that will be used ['Adam', 'Adagrad', 'SGD']")
     parser.add_argument("--wandb", default=True, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Wheter or not the run should be streamed to Weights and Biases")
@@ -73,6 +73,8 @@ model_arch = args.model
 data_dir = args.data_dir
 log_path = args.log_path
 project_name = args.project_name
+run_name = args.run_name
+wandb_tracking = args.wandb
 
 # Setting of the graph features
 embedding = args.embedding
@@ -80,13 +82,11 @@ atom_features = args.atom_features
 edge_features = args.edge_features
 masternode = args.masternode
 
-
-run_name = args.run_name
-wandb_tracking = args.wandb
 if wandb_tracking: print(f'Saving into Project Folder {project_name}')
 
 random_seed = 42
 
+# Training Parameters
 loss_function = args.loss_func
 num_epochs = args.num_epochs
 learning_rate = args.learning_rate
@@ -132,6 +132,8 @@ if wandb_tracking:
                 "Learning Rate": learning_rate,
                 "ESM Embedding": embedding,
                 "Edge Features": edge_features,
+                "Atom Features": atom_features,
+                "Masternode Connectivity": masternode,
                 "Weight Decay": weight_decay,
                 "Architecture": model_arch,
                 "Epochs": num_epochs,
@@ -464,6 +466,9 @@ print(f'Model Architecture {model_arch} - Fold {fold_to_train} ({run_name})')
 print(f'Number of Parameters: {parameters}')
 print(f'ESM Embedding: {embedding}')
 print(f'Edge Features: {edge_features}')
+print(f'Atom Features: {atom_features}')
+print(f'Masternode Connectivity: {masternode}')
+
 print(f'Learning Rate: {learning_rate}')
 print(f'Weight Decay: {weight_decay}')
 print(f'Batch Size: {batch_size}')
