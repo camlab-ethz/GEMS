@@ -50,18 +50,22 @@ class GAT0tap_ma(torch.nn.Module):
         self.fc2 = torch.nn.Linear(64, 1)
 
     def forward(self, graphbatch):
-        
+        print()
+        print(graphbatch)
         x = self.conv1(graphbatch.x, graphbatch.edge_index, graphbatch.edge_attr)
         x = F.relu(x)
+        print(x.shape)
         x = self.conv2(x, graphbatch.edge_index, graphbatch.edge_attr)
         x = F.relu(x)
+        print(x.shape)
 
         # Pool the nodes of each interaction graph
         last_node_indeces = graphbatch.n_nodes.cumsum(dim=0) - 1
         master_node_features = x[last_node_indeces]
+        print(master_node_features.shape)
 
         x = self.dropout_layer(master_node_features)
-
+        print(x.shape)
         # Fully-Connected Layers
         x = self.fc1(x)
         x = F.relu(x)
