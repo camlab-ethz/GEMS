@@ -5,7 +5,7 @@ from torch_geometric.data import Dataset, Data
 
 
 class IG_Dataset(Dataset):
-    def __init__(self, root, embedding=False, edge_features=False, atom_features=False, masternode=None, mn_self_loops=True):
+    def __init__(self, root, embedding=False, edge_features=False, atom_features=False, masternode='None', mn_self_loops=True):
         super().__init__(root)
 
         self.data_dir = root
@@ -48,7 +48,7 @@ class IG_Dataset(Dataset):
 
             # Edge Index: If masternode, connect masternode to all atoms or only to ligand/protein atoms
             
-            if masternode == None:
+            if masternode == 'None':
                 
                 train_graph = Data(x = x, 
                                edge_index=grph.edge_index, 
