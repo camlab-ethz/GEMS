@@ -58,7 +58,14 @@ class IG_Dataset(Dataset):
                                )
 
             else:
-
+                mn_edges_feature_vector = torch.tensor([0., 1., 0.,                         # it's a mn connection
+                                                        0,                                  # length is zero
+                                                        0., 0., 0.,0.,0.,                   # bondtype = None
+                                                        0.,                                 # is not conjugated
+                                                        0.,                                 # is not in ring
+                                                        0., 0., 0., 0., 0., 0.])            # No stereo
+                
+                
                 # If the masternode should be connected to all other nodes
                 if masternode == 'all':
                     edge_index_master_prot_lig = torch.cat([grph.edge_index_master_prot, grph.edge_index_master_lig], axis = 1)
@@ -66,8 +73,10 @@ class IG_Dataset(Dataset):
                     if mn_self_loops:
                         mn_index = torch.max(edge_index).item()
                         edge_index = torch.cat((edge_index, torch.tensor([[mn_index],[mn_index]])), axis=1)
-                        
 
+                    mn_feature_rows = mn_edges_feature_vector.repeat(edge_index.shape[1] - grph.edge_attr.shape[0], 1)
+                    edge_attr = torch.cat([grph.edge_attr, mn_feature_rows], axis=0)
+                        
 
                 # If the masternode should only be connected to ligand nodes
                 elif masternode == 'ligand':
@@ -75,6 +84,10 @@ class IG_Dataset(Dataset):
                     if mn_self_loops:
                         mn_index = torch.max(edge_index).item()
                         edge_index = torch.cat((edge_index, torch.tensor([[mn_index],[mn_index]])), axis=1)
+                    
+                    mn_feature_rows = mn_edges_feature_vector.repeat(edge_index.shape[1] - grph.edge_attr.shape[0], 1)
+                    edge_attr = torch.cat([grph.edge_attr, mn_feature_rows], axis=0)
+
 
                 # If the masternode should only be connection to protein nodes
                 elif masternode == 'protein':
@@ -83,13 +96,17 @@ class IG_Dataset(Dataset):
                         mn_index = torch.max(edge_index).item()
                         edge_index = torch.cat((edge_index, torch.tensor([[mn_index],[mn_index]])), axis=1)
 
+                    mn_feature_rows = mn_edges_feature_vector.repeat(edge_index.shape[1] - grph.edge_attr.shape[0], 1)
+                    edge_attr = torch.cat([grph.edge_attr, mn_feature_rows], axis=0)
+
+
                 else: 
                     raise Exception("masternode must be either 'None', 'protein', 'ligand' or 'all'")
             
             
                 train_graph = Data(x = x, 
                                 edge_index=edge_index, 
-                                edge_attr=grph.edge_attr, 
+                                edge_attr=edge_attr, 
                                 y=pK_scaled, 
                                 n_nodes=n_nodes #needed for reading out masternode features
                                 #,pos=grph.pos
