@@ -194,9 +194,9 @@ val_dataset = Subset(dataset, val_idx)
 print(f'Length Training Dataset: {len(train_dataset)}')
 print(f'Length Validation Dataset: {len(val_dataset)}')
 
-train_loader = DataLoader(dataset = train_dataset, batch_size=batch_size, shuffle=True, num_workers=6, persistent_workers=True, pin_memory=True)
-eval_loader_train = DataLoader(dataset = train_dataset, batch_size=512, shuffle=True, num_workers=6, persistent_workers=True, pin_memory=True)
-eval_loader_val = DataLoader(dataset = val_dataset, batch_size=512, shuffle=True, num_workers=6, persistent_workers=True, pin_memory=True)
+train_loader = DataLoader(dataset = train_dataset, batch_size=batch_size, shuffle=True, num_workers=4, persistent_workers=True, pin_memory=True)
+eval_loader_train = DataLoader(dataset = train_dataset, batch_size=512, shuffle=True, num_workers=4, persistent_workers=True, pin_memory=True)
+eval_loader_val = DataLoader(dataset = val_dataset, batch_size=512, shuffle=True, num_workers=4, persistent_workers=True, pin_memory=True)
 #----------------------------------------------------------------------------------------------------
 
 
@@ -272,8 +272,13 @@ Model = Model.double()
 torch.save(Model, f'{save_dir}/model_configuration.pt')
 
 parameters = count_parameters(Model)
-if wandb_tracking: config['Number of Parameters'] = parameters
 print(f'Model architecture {model_arch} with {parameters} parameters')
+
+if wandb_tracking: 
+    config['Number of Parameters'] = parameters
+    config['Device'] = torch.cuda.get_device_name()
+
+
 
 if optim == 'Adam': optimizer = torch.optim.Adam(list(Model.parameters()),lr=learning_rate, weight_decay=weight_decay)
 elif optim == 'Adagrad': optimizer = torch.optim.Adagrad(Model.parameters(), learning_rate, weight_decay=weight_decay)
@@ -448,8 +453,8 @@ if wandb_tracking:
     wandb.login()
     wandb.init(project=project_name, name = run_name, config=config, dir=wandb_dir)
     
-    # wandb.log({"Training Labels": wandb.Image(hist_training_labels),
-    #            "Validation Labels": wandb.Image(hist_validation_labels)})
+    wandb.log({"Training Labels": wandb.Image(hist_training_labels),
+               "Validation Labels": wandb.Image(hist_validation_labels)})
 
 
 if pretrained:
@@ -630,7 +635,7 @@ for epoch in range(epoch+1, num_epochs+1):
     # After regular intervals, plot the predictions of the current and the best model
     # -------------------------------------------------------------------------------------------------------------------------------
     
-    if epoch % 100 == 0 or epoch == (num_epochs-1):
+    if epoch % 200 == 0 or epoch == num_epochs:
 
         # Plot the predictions
         # predictions = plot_predictions( train_y_true, train_y_pred,
@@ -661,14 +666,14 @@ for epoch in range(epoch+1, num_epochs+1):
         plt.close('all')
         
 
-        # if wandb_tracking: 
+        if wandb_tracking: 
             
-        #     wandb.log({ "Predictions Scatterplot": wandb.Image(predictions),
-        #                 "Best Predictions Scatterplot": wandb.Image(best_predictions),
-        #                 "Residuals Plot":wandb.Image(residuals)
-        #                 })
+            wandb.log({ #"Predictions Scatterplot": wandb.Image(predictions),
+                        "Best Predictions Scatterplot": wandb.Image(best_predictions),
+                        "Residuals Plot":wandb.Image(residuals)
+                        })
 
 toc = time.time()
-training_time = toc-tic
-print(f"Time for Training {num_epochs} Epochs: {training_time:5.0f} - ({(training_time/num_epochs):5.2f}/Epoch)")
+training_time = (toc-tic)/60
+print(f"Time for Training {num_epochs} Epochs: {training_time:5.1f} minutes - ({(training_time/num_epochs):5.2f} minutes/epoch)")
 if wandb_tracking: wandb.finish()
