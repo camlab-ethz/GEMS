@@ -1,0 +1,31 @@
+----------------------------------------------------
+Reproduce DTI3 GAT0tap t6 Results
+----------------------------------------------------
+
+r01_611a_add_001_none_d00
+r01_611a_add_001_none_d10
+r01_611a_add_001_none_d20
+r01_611a_add_001_none_d30
+r01_611a_add_001_none_d40
+
+r01_611a_add_001_none_d01
+r01_611a_add_001_none_d11
+r01_611a_add_001_none_d21
+r01_611a_add_001_none_d31
+r01_611a_add_001_none_d41
+
+r01_611a_add_001_none_d02
+r01_611a_add_001_none_d12
+r01_611a_add_001_none_d22
+r01_611a_add_001_none_d32
+r01_611a_add_001_none_d42
+
+for script in *r01*.sh; do sbatch "$script"; done
+
+
+
+
+
+
+
+
