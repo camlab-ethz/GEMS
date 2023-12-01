@@ -3,6 +3,11 @@ experiments/DTI_1/*/
 experiments/DTI_2/*/
 experiments/DTI_2b/*/
 experiments/DTI_3/*/
+experiments/DTI4_setup/*/
+experiments/DTI4a/*/
+experiments/DTI4b/*/
+
+
 data/DTI_1/input_graphs*/
 data/DTI_3/input_graphs*/
 training_data/
