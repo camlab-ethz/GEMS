@@ -49,3 +49,47 @@ r01_611b_add_001_none_d42
 for script in *611b*.sh; do sbatch "$script"; done
 
 
+----------------------------------------------------
+Corrected DTI4a with preselection of protein atoms in range 5A
+----------------------------------------------------
+
+r01_611a2_add_001_none_d00
+r01_611a2_add_001_none_d10
+r01_611a2_add_001_none_d20
+r01_611a2_add_001_none_d30
+r01_611a2_add_001_none_d40
+
+r01_611a2_add_001_none_d01
+r01_611a2_add_001_none_d11
+r01_611a2_add_001_none_d21
+r01_611a2_add_001_none_d31
+r01_611a2_add_001_none_d41
+
+r01_611a2_add_001_none_d02
+r01_611a2_add_001_none_d12
+r01_611a2_add_001_none_d22
+r01_611a2_add_001_none_d32
+r01_611a2_add_001_none_d42
+
+for script in *611a2*.sh; do sbatch "$script"; done
+
+----------------------------------------------------
+Without Embedding
+----------------------------------------------------
+r01_011a2_add_001_none_d01
+r01_011a2_add_001_none_d11
+r01_011a2_add_001_none_d21
+r01_011a2_add_001_none_d31
+r01_011a2_add_001_none_d41
+
+r01_011a2_add_001_none_d02
+r01_011a2_add_001_none_d12
+r01_011a2_add_001_none_d22
+r01_011a2_add_001_none_d32
+r01_011a2_add_001_none_d42
+
+for script in *011a2*.sh; do sbatch "$script"; done
+
+
+r01_011b_add_001_none_d11
+r01_011b_add_001_none_d21
