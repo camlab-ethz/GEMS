@@ -178,3 +178,16 @@ r03_611b_add_001_none_d11
 r03_611b_add_001_none_d21
 
 for script in *add*.sh; do sbatch "$script"; done
+
+
+
+------------------------------------------------------
+Experiment with multiplicative reduction of learning rate from 0.005 to 0.0002
+
+r01_611b_add_005_mult9984_d00
+r01_611b_mna_005_mult9984_d00
+r01_611b_mnap_005_mult9984_d00
+
+r03_611b_add_005_mult9984_d00
+r03_611b_mna_005_mult9984_d00
+r03_611b_mnap_005_mult9984_d00
