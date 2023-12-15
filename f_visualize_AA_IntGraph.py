@@ -55,7 +55,7 @@ def visualize_graph(graph,
 
 
     else: 
-        edge_list, _ = remove_self_loops(graph.edge_index_master_prot)
+        edge_list, _ = remove_self_loops(graph.edge_index)
         edge_list = edge_list.T.tolist()
     
         edges=[]
