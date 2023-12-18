@@ -239,3 +239,15 @@ r01_611b5_add_001_none_d21
 r01_611b5_add_001_none_d31
 
 for script in *611b5*.sh; do sbatch "$script"; done
+
+
+----------------------------------------------------------------
+TEST DTI4a5
+
+r01_611a5_add_001_none_d00
+r01_611a5_add_001_none_d01
+r01_611a5_add_001_none_d11
+r01_611a5_add_001_none_d21
+r01_611a5_add_001_none_d31
+
+for script in *611a5*.sh; do sbatch "$script"; done
