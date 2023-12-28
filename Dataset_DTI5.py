@@ -11,8 +11,9 @@ class IG_Dataset(Dataset):
                              masternode='None', 
                              mn_self_loops=True, 
                              refined_only=False,
-                             exclude_IC50=False,
-                             resolution_threshold=None,
+                             exclude_ic50=False,
+                             exclude_nmr=False,
+                             resolution_threshold=5.,
                              precision_strict=False):
         
         super().__init__(root)
@@ -28,21 +29,25 @@ class IG_Dataset(Dataset):
             grph = torch.load(file)
 
             # GET METADATA [in_refined, affmetric_encoding[affinity_metric], resolution, precision_encoding[precision], float(log_kd_ki)]
+            # NMR structures have resolution = 0
             # affmetric_encoding = {'Ki':1., 'Kd':2.,'IC50':3.}
             # precision_encoding = {'=':0., '>':1., '<':2., '>=':3., '<=':4., '~':5.}
-            in_refined, affinity_metric, resolution, precision, log_kd_ki = grph.data.tolist() 
+            in_refined, affinity_metric, resolution, precision, log_kd_ki = grph.data.tolist()
 
             if refined_only and in_refined == 0:
                 continue
 
-            if resolution_threshold != None and resolution > resolution_threshold:
-                print(in_refined, affinity_metric, resolution, precision, log_kd_ki)
+            if resolution > resolution_threshold:
+                #print(in_refined, affinity_metric, resolution, precision, log_kd_ki)
                 continue
 
             if precision_strict and precision != 0:
                 continue
 
-            if exclude_IC50 and affinity_metric == 3:
+            if exclude_ic50 and affinity_metric == 3:
+                continue
+
+            if exclude_nmr and resolution == 0:
                 continue
 
             
