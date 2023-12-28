@@ -36,6 +36,7 @@ __pycache__
 
 # Ignore log files
 *.log
+*.txt
 
 # Ignore Node.js modules
 node_modules/
