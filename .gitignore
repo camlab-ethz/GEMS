@@ -21,6 +21,7 @@ experiments/DTI5i/*/
 
 data/DTI_1/input_graphs*/
 data/DTI_3/input_graphs*/
+data/DTI5
 training_data/
 wandb/
 slurm*
