@@ -261,6 +261,7 @@ class GAT3_mn(torch.nn.Module):
 
 
 '''3-LAYER ARCHITECTURE ------------------------------------------------------------------------------------------------------'''
+
 class GAT4_mn(torch.nn.Module):
     def __init__(self, dropout_prob, in_channels, edge_dim, conv_dropout_prob):
         super(GAT0c_mn, self).__init__()
