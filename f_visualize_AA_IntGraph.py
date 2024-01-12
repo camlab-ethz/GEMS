@@ -22,13 +22,13 @@ def visualize_graph(graph,
     # To prepare a list of all the edges in the graph, and a list of same shape that countains the features of these edges
     # For this, remove double edges (undirected graph) and remove self_loops
 
-    x_lig = graph.x_lig
-    x_prot_emb = graph.x_prot_emb
-    x_prot_aa = graph.x_prot_aa
+    # x_lig = graph.x_lig
+    # x_prot_emb = graph.x_prot_emb
+    # x_prot_aa = graph.x_prot_aa
 
-    graph.x = torch.cat((x_lig, x_prot_aa), axis=0)    
-    #graph.x = torch.cat((x_lig, x_prot_emb), axis=0)
-    print(graph.x.shape)
+    # graph.x = torch.cat((x_lig, x_prot_aa), axis=0)    
+    # #graph.x = torch.cat((x_lig, x_prot_emb), axis=0)
+    # print(graph.x.shape)
 
 
 
