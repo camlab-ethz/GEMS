@@ -44,6 +44,8 @@ def parse_args():
     parser.add_argument("--exclude_nmr", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If datapoints generated with NMR should be excluded")
     parser.add_argument("--resolution_threshold", default=5., type=float, help="Threshold for exclusion of datapoints with high resolution")
     parser.add_argument("--precision_strict", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If datapoints with unprecise affinity (>,<,..) should be excluded")
+    parser.add_argument("--delete_ligand", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If dataset should be constructed omitting all ligand nodes")
+    parser.add_argument("--delete_protein", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If dataset should be constructed omitting all protein nodes")
 
 
     # If the learning rate should be adaptive LINEAR
@@ -94,6 +96,8 @@ exclude_ic50 = args.exclude_ic50
 exclude_nmr = args.exclude_nmr
 resolution_threshold = args.resolution_threshold
 precision_strict = args.precision_strict
+delete_ligand = args.delete_ligand
+delete_protein = args.delete_protein
 
 if wandb_tracking: print(f'Saving into Project Folder {project_name}')
 
@@ -184,7 +188,9 @@ dataset = IG_Dataset(train_dir,
                     exclude_ic50=exclude_ic50,
                     exclude_nmr=exclude_nmr,
                     resolution_threshold=resolution_threshold,
-                    precision_strict=precision_strict)
+                    precision_strict=precision_strict, 
+                    delete_ligand=delete_ligand,
+                    delete_protein=delete_protein)
 print(dataset)
 
 node_feat_dim = dataset[0].x.shape[1]
