@@ -60,3 +60,9 @@ db.sqlite
 
 # Ignore editor-specific files
 .vscode/
+
+# Other
+tmp/
+*cluster*
+*.h5
+*analys*
