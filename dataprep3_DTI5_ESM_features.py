@@ -10,13 +10,13 @@ def load_object(filename):
 
 
 # Load ESM model and tokenizer from HuggingFace
-model_name = "facebook/esm2_t6_8M_UR50D"
+#model_name = "facebook/esm2_t6_8M_UR50D"
 #model_name = "facebook/esm2_t12_35M_UR50D"
 #model_name = "facebook/esm2_t30_150M_UR50D"
-#model_name = "facebook/esm2_t33_650M_UR50D"
+model_name = "facebook/esm2_t33_650M_UR50D"
 
-model_descriptor = 'esm2_t6_8M'
-embedding_size = 320
+model_descriptor = 'esm2_t33_650M'
+embedding_size = 1280
 
 device_idx = 2
 torch.cuda.set_device(device_idx)
