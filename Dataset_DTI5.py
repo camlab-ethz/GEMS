@@ -14,7 +14,9 @@ class IG_Dataset(Dataset):
                              exclude_ic50=False,
                              exclude_nmr=False,
                              resolution_threshold=5.,
-                             precision_strict=False):
+                             precision_strict=False,
+                             delete_protein = False, 
+                             delete_ligand = False):
         
         super().__init__(root)
 
@@ -78,7 +80,8 @@ class IG_Dataset(Dataset):
 
 
             # Number of nodes of the graph (including masternode)
-            n_nodes = torch.tensor(x.shape[0], dtype=torch.int64)
+            n_nodes = x.shape[0]
+            n_lig_nodes = grph.x_lig.shape[0]
 
 
             # Edge Index: If masternode, connect masternode to all atoms or only to ligand/protein atoms
@@ -137,15 +140,50 @@ class IG_Dataset(Dataset):
 
                 else: 
                     raise Exception("masternode must be either 'None', 'protein', 'ligand' or 'all'")
+                
+
+
+
+                if delete_protein: 
+
+                    # Remove all nodes that don't belong to the ligand from feature matrix, keep masternode
+                    x = torch.concat( [x[:n_lig_nodes,:] , x[-1,:].view(1,-1)] )
+
+                    # Remove all coordinates of nodes that don't belong to the ligand and keep masternode (for visualization only)
+                    grph.pos = torch.concat( [grph.pos[:n_lig_nodes,:] , grph.pos[-1,:].view(1,-1)] )
+
+                    # Keep only edges that are between ligand atoms of between ligand atoms and masternode
+                    edge_mask = ((edge_index < n_lig_nodes) | (edge_index == n_nodes-1)).all(dim=0)
+                    edge_index = edge_index[:, edge_mask]
+                    edge_index[edge_index == n_nodes-1] = n_lig_nodes
+                    edge_attr = edge_attr[edge_mask, :]
             
-            
+
+                elif delete_ligand:
+
+                    # Remove all nodes that don't belong to the ligand from feature matrix, keep masternode
+                    x = x[n_lig_nodes:, :]
+
+                    # Remove all coordinates of nodes that don't belong to the ligand and keep masternode (for visualization only)
+                    grph.pos = grph.pos[n_lig_nodes:, :]
+
+                    # Keep only edges that are between protein nodes and the masternode
+                    edge_mask = torch.all(edge_index >= n_lig_nodes, dim=0)
+                    edge_index = edge_index[:, edge_mask] - n_lig_nodes
+                    edge_attr = edge_attr[edge_mask, :]
+
+
+
+
                 train_graph = Data(x = x, 
                                 edge_index=edge_index, 
                                 edge_attr=edge_attr, 
                                 y=pK_scaled, 
-                                n_nodes=n_nodes #needed for reading out masternode features
+                                n_nodes=torch.tensor(n_nodes, dtype=torch.int64) #needed for reading out masternode features
                                 #,pos=grph.pos
-                )         
+                )
+
+
 
             self.input_data[ind] = train_graph
             ind += 1
