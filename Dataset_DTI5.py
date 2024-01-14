@@ -157,6 +157,8 @@ class IG_Dataset(Dataset):
                     edge_index = edge_index[:, edge_mask]
                     edge_index[edge_index == n_nodes-1] = n_lig_nodes
                     edge_attr = edge_attr[edge_mask, :]
+
+                    n_nodes = x.shape[0]
             
 
                 elif delete_ligand:
@@ -172,7 +174,7 @@ class IG_Dataset(Dataset):
                     edge_index = edge_index[:, edge_mask] - n_lig_nodes
                     edge_attr = edge_attr[edge_mask, :]
 
-
+                    n_nodes = x.shape[0]
 
 
                 train_graph = Data(x = x, 
