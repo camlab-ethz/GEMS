@@ -24,12 +24,14 @@ experiments/DTI5f_c1/*/
 data/DTI_1/input_graphs*/
 data/DTI_3/input_graphs*/
 data/DTI5
+data/DTI5_c1
 data/DTI5_grid_search
 training_data/
 wandb/
 slurm*
 Slurm*/
 export/
+*attention_weights*
 
 benchmark_dataloaders_euler/*
 
