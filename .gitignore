@@ -67,6 +67,5 @@ db.sqlite
 
 # Other
 tmp/
-*cluster*
 *.h5
 *analys*
