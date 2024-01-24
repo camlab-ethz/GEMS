@@ -27,6 +27,7 @@ data/DTI5
 data/DTI5_c1
 data/DTI5_grid_search
 training_data/
+*netcomp*
 wandb/
 slurm*
 Slurm*/
@@ -69,3 +70,5 @@ db.sqlite
 tmp/
 *.h5
 *analys*
+*.npy
+*graph_similarity*
