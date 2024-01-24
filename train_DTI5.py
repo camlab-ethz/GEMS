@@ -47,6 +47,12 @@ def parse_args():
     parser.add_argument("--delete_ligand", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If dataset should be constructed omitting all ligand nodes")
     parser.add_argument("--delete_protein", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If dataset should be constructed omitting all protein nodes")
 
+    # Early stopping
+    parser.add_argument("--early_stopping",  default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If early stopping should be used to prevent overfitting")
+    parser.add_argument("--early_stop_patience", default=100, type=int, help="For how many epochs the validation loss can cease to decrease without triggering early stop")
+    parser.add_argument("--early_stop_min_delta", default=0.3, type=int, help="How far train loss and val loss are allowed to diverge without triggering early stop")
+
+
 
     # If the learning rate should be adaptive LINEAR
     parser.add_argument("--alr_lin",  default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Linear learning rate reduction scheme will be used")
@@ -120,6 +126,32 @@ save_dir = log_path
 wandb_dir = log_path
 
 run_name = f'{run_name}_f{fold_to_train}' 
+
+
+# Early Stopping
+early_stopping = args.early_stopping
+if early_stopping:
+
+    class EarlyStopper:
+        def __init__(self, patience=1, min_delta=1):
+            self.patience = patience
+            self.min_delta = min_delta
+            self.counter = 0
+            self.min_validation_loss = float('inf')
+
+        def early_stop(self, validation_loss, train_loss):
+            if (validation_loss - train_loss) > self.min_delta:
+                return True
+            elif validation_loss < self.min_validation_loss:
+                self.min_validation_loss = validation_loss
+                self.counter = 0
+            elif validation_loss > (self.min_validation_loss + self.min_delta):
+                self.counter += 1
+                if self.counter >= self.patience:
+                    return True
+            return False
+        
+    early_stopper = EarlyStopper(patience=args.early_stop_patience, min_delta=args.early_stop_min_delta)
 
 
 # The learning rate reduction scheme
@@ -651,12 +683,10 @@ for epoch in range(epoch+1, num_epochs+1):
         best_metrics['val'] = (val_loss, val_r, val_rmse, val_r2, val_y_true, val_y_pred)
         best_metrics['train'] = (train_loss, train_r, train_rmse, train_r2, train_y_true, train_y_pred)
 
-
     print(log_string, flush=True)
 
     if epoch % 50 == 0:
         print(f'Time: {((time.time() - tic)/60):5.0f}')
-    #-------------------------------------------------------------------------------------------------------------------------------
 
 
 
@@ -700,6 +730,14 @@ for epoch in range(epoch+1, num_epochs+1):
                         "Best Predictions Scatterplot": wandb.Image(best_predictions),
                         "Residuals Plot":wandb.Image(residuals)
                         })
+            
+    
+    # Is it time for early stopping?
+    if early_stopping:
+        if early_stopper.early_stop(val_loss, train_loss): break
+
+
+
 
 toc = time.time()
 training_time = (toc-tic)/60
