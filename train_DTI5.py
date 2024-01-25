@@ -137,26 +137,28 @@ if early_stopping:
             self.patience = patience
             self.min_delta = min_delta
             self.counter = 0
-            self.min_validation_loss = float('inf')
+            self.min_validation_r = 0
+            #self.min_validation_r = float('inf')
 
-        def early_stop(self, validation_loss, train_loss):
-            if (validation_loss - train_loss) > self.min_delta:
-                print(f'Early Stopping: Delta Validation Loss - Train Loss has become higher than {self.min_delta} epochs')
+        def early_stop(self, val_r, train_r):
+            if abs(val_r - train_r) > self.min_delta:
+                print(f'Early Stopping: Difference Validation R - Train R has become higher than {self.min_delta} epochs')
                 return True
-            if validation_loss < self.min_validation_loss:
-                self.min_validation_loss = validation_loss
+            if val_r > self.min_validation_r:
+                self.min_validation_r = val_r
                 self.counter = 0
-            elif validation_loss > self.min_validation_loss:
+            elif val_r < self.min_validation_r:
                 self.counter += 1
                 if self.counter >= self.patience:
-                    print(f'Early Stopping: Validation Loss has not decreased for {self.patience} epochs')
+                    print(f'Early Stopping: Validation R has not decreased for {self.patience} epochs')
                     return True
             return False
         
     early_stopper = EarlyStopper(patience=args.early_stop_patience, min_delta=args.early_stop_min_delta)
 
 
-# The learning rate reduction scheme
+
+# Learning rate reduction scheme
 alr_lin = args.alr_lin
 alr_mult = args.alr_mult
 alr_plateau = args.alr_plateau
@@ -736,7 +738,7 @@ for epoch in range(epoch+1, num_epochs+1):
     
     # Is it time for early stopping?
     if early_stopping:
-        if early_stopper.early_stop(val_loss, train_loss): 
+        if early_stopper.early_stop(val_r, train_r): 
             break
 
 
