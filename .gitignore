@@ -68,6 +68,8 @@ db.sqlite
 
 # Other
 tmp/
+*.tsv
+*.csv
 *.h5
 *analys*
 *.npy
