@@ -50,7 +50,7 @@ def parse_args():
     # Early stopping
     parser.add_argument("--early_stopping",  default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If early stopping should be used to prevent overfitting")
     parser.add_argument("--early_stop_patience", default=100, type=int, help="For how many epochs the validation loss can cease to decrease without triggering early stop")
-    parser.add_argument("--early_stop_min_delta", default=0.3, type=int, help="How far train loss and val loss are allowed to diverge without triggering early stop")
+    parser.add_argument("--early_stop_min_delta", default=0.3, type=float, help="How far train loss and val loss are allowed to diverge without triggering early stop")
 
 
 
@@ -141,13 +141,15 @@ if early_stopping:
 
         def early_stop(self, validation_loss, train_loss):
             if (validation_loss - train_loss) > self.min_delta:
+                print(f'Early Stopping: Delta Validation Loss - Train Loss has become higher than {self.min_delta} epochs')
                 return True
-            elif validation_loss < self.min_validation_loss:
+            if validation_loss < self.min_validation_loss:
                 self.min_validation_loss = validation_loss
                 self.counter = 0
-            elif validation_loss > (self.min_validation_loss + self.min_delta):
+            elif validation_loss > self.min_validation_loss:
                 self.counter += 1
                 if self.counter >= self.patience:
+                    print(f'Early Stopping: Validation Loss has not decreased for {self.patience} epochs')
                     return True
             return False
         
@@ -734,7 +736,8 @@ for epoch in range(epoch+1, num_epochs+1):
     
     # Is it time for early stopping?
     if early_stopping:
-        if early_stopper.early_stop(val_loss, train_loss): break
+        if early_stopper.early_stop(val_loss, train_loss): 
+            break
 
 
 
