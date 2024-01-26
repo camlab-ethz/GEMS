@@ -694,10 +694,15 @@ for epoch in range(epoch+1, num_epochs+1):
 
 
 
+    early_stop = False
+    if early_stopping: early_stop = early_stopper.early_stop(val_r, train_r)
+
+
+
     # After regular intervals, plot the predictions of the current and the best model
     # -------------------------------------------------------------------------------------------------------------------------------
     
-    if epoch % 200 == 0 or epoch == num_epochs:
+    if epoch % 100 == 0 or epoch == num_epochs or early_stop:
 
         # Plot the predictions
         # predictions = plot_predictions( train_y_true, train_y_pred,
@@ -724,22 +729,18 @@ for epoch in range(epoch+1, num_epochs+1):
 
             plotted.append(last_saved_epoch)
 
-            
         plt.close('all')
         
-
         if wandb_tracking: 
-            
             wandb.log({ #"Predictions Scatterplot": wandb.Image(predictions),
                         "Best Predictions Scatterplot": wandb.Image(best_predictions),
                         "Residuals Plot":wandb.Image(residuals)
                         })
             
     
+
     # Is it time for early stopping?
-    if early_stopping:
-        if early_stopper.early_stop(val_r, train_r): 
-            break
+    if early_stop: break
 
 
 
