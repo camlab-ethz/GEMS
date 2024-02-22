@@ -35,7 +35,6 @@ slurm*
 Slurm*/
 export/
 *stdicts*
-*attention_weights*
 
 benchmark_dataloaders_euler/*
 
