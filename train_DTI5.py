@@ -11,6 +11,7 @@ from torch_geometric.loader import DataLoader
 from sklearn.model_selection import StratifiedKFold
 from torch.utils.data import Subset
 from Models_DTI5 import *
+from Models_DTI6 import *
 
 
 from Dataset_DTI5 import IG_Dataset
@@ -190,6 +191,9 @@ if wandb_tracking:
                 "Weight Decay": weight_decay,
                 "Architecture": model_arch,
                 "Epochs": num_epochs,
+                "Optimizer": optim,
+                "Early Stopping": early_stopping,
+                "Early Stopping Patience": args.early_stop_patience,
                 "Batch Size": batch_size,
                 "Splitting Random Seed":random_seed,
                 "Dropout Probability": dropout_prob,
@@ -354,10 +358,10 @@ elif optim == 'SGD': optimizer = torch.optim.SGD(Model.parameters(), lr=learning
 if alr_lin: 
     lin_scheduler = torch.optim.lr_scheduler.LinearLR(optimizer, start_factor=start_factor, end_factor=end_factor, total_iters=total_iters)
     learning_rate_reduction_scheme = f'Linear LR Scheduler enabled with start factor {start_factor}, end factor {end_factor} and total iters {total_iters}'
-if alr_mult:
+elif alr_mult:
     mult_scheduler = torch.optim.lr_scheduler.MultiplicativeLR(optimizer, lr_lambda=lambda epoch: factor)
     learning_rate_reduction_scheme = f'Multiplicative LR Scheduler enabled with factor {factor}'
-if alr_plateau: 
+elif alr_plateau: 
     plat_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=reduction, patience=patience, min_lr=min_lr)
     learning_rate_reduction_scheme = f'ReduceLRonPlateau LR Scheduler enabled with patience {patience}, factor {reduction} and min LR {min_lr}'
 else: 
@@ -747,5 +751,5 @@ for epoch in range(epoch+1, num_epochs+1):
 
 toc = time.time()
 training_time = (toc-tic)/60
-print(f"Time for Training {num_epochs} Epochs: {training_time:5.1f} minutes - ({(training_time/num_epochs):5.2f} minutes/epoch)")
+print(f"Time for Training: {training_time:5.1f} minutes - ({(training_time/num_epochs):5.2f} minutes/epoch)")
 if wandb_tracking: wandb.finish()
