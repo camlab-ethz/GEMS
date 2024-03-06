@@ -1,7 +1,9 @@
 import torch
 import torch.nn.functional as F
+from torch.nn import Sequential, Linear, ReLU, BatchNorm1d, Dropout
 from torch_geometric.nn import global_mean_pool, GATv2Conv, global_add_pool, GCNConv
 from torch_geometric.data import Batch
+from torch_geometric.nn import  GINEConv, global_add_pool
 
     
 
