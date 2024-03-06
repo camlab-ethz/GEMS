@@ -21,6 +21,9 @@ experiments/DTI5h/*/
 experiments/DTI5i/*/
 experiments/DTI5f_c1/*/
 experiments/DTI5f_c2/*/
+experiments/DTI5f_c3/*/
+experiments/DTI5f_c4/*/
+experiments/DTI5f_c4_grid_search/*/
 
 data/DTI_1/input_graphs*/
 data/DTI_3/input_graphs*/
