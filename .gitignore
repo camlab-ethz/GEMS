@@ -38,6 +38,7 @@ slurm*
 Slurm*/
 export/
 *stdicts*
+c4_training_set.py
 
 benchmark_dataloaders_euler/*
 
@@ -72,6 +73,7 @@ db.sqlite
 
 # Other
 tmp/
+*.csv
 *.tsv
 *.h5
 *analys*
