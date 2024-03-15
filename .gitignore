@@ -35,6 +35,8 @@ data/DTI5_c4
 data/DTI5_grid_search
 training_data/
 *netcomp*
+*plots*
+*visualize*
 wandb/
 slurm*
 Slurm*/
@@ -76,6 +78,7 @@ db.sqlite
 
 # Other
 tmp/
+*.fasta
 *.csv
 *.tsv
 *.h5
