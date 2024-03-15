@@ -145,7 +145,7 @@ def analyse_cluster(name, data):
             filtered_data = []
 
             for d in sorted_data:
-                if not filtered_data or abs(d[2] - filtered_data[-1][2]) > 1:
+                if not filtered_data or abs(float(d[2]) - float(filtered_data[-1][2])) > 1:
                     filtered_data.append(d)
                 else:
                     delete_complex(d[0], folder_path)
@@ -201,8 +201,9 @@ def analyse_cluster(name, data):
 
 
 
+    # ----------------------------------------------------------------------------------------------------------------------------
     # REMOVE SIMILARITIES TO THE TEST SET FROM THE TRAINING SET
-    # ----------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------------------------------------
 
     # Make a list of all conflicting complexes of the cluster
     conflicting = [word for tuple in conflicts for word in tuple if isinstance(word,str)]
@@ -212,14 +213,12 @@ def analyse_cluster(name, data):
     for comp in conflicting:
         if comp in test_complexes:
 
-
+            similarities = [tuple for tuple in conflicts if comp in tuple]
+            to_remove = list(set([y for x, y, *_ in similarities if x == comp] + [x for x, y, *_ in similarities if y == comp]))
+            
             # If removal of train-test similarities is turned ON
             # --------------------------------------------------
             if rm_train_test_sims == True:
-
-                similarities = [tuple for tuple in conflicts if comp in tuple]
-                to_remove = list(set([y for x, y, *_ in similarities if x == comp] + [x for x, y, *_ in similarities if y == comp]))
-                
                 for removal in to_remove:
                     delete_complex(removal, folder_path)
                     removed.append(removal)
@@ -231,14 +230,27 @@ def analyse_cluster(name, data):
 
 
             # If removal of train-test similarities is turned OFF
-            else: conflicts = [tuple for tuple in conflicts if comp not in tuple]
+            # --------------------------------------------------
+            # - Make sure the complexes that resemble the test complex stay in during the redundancy removal
+            # - In all conflicts involving a complex in to_remove (complex is similar to a test complex "comp")
+            #   change the value of the affinity_difference to affinity_threshold_train + 1
+            else: 
+                # Remove all tuples containing the test_complex from conflicts
+                conflicts = [tuple for tuple in conflicts if comp not in tuple]
+
+                for k, conflict in enumerate(conflicts):
+                    if conflict[0] in to_remove or conflict[1] in to_remove:
+
+                        conflicts[k] = (conflict[0], conflict[1], conflict[2], affinity_threshold_train + 1)
+            # --------------------------------------------------
 
 
 
 
 
+    # ----------------------------------------------------------------------------------------------------------------------------
     # REMOVE REMAINING REDUNDANCIES FROM THE TRAINING SET
-    # ----------------------------------------------------------         
+    # ----------------------------------------------------------------------------------------------------------------------------
 
     if rm_train_train_sims == True:
 
