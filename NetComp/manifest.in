@@ -1,0 +1,5 @@
+recirsive-include netcomp/distance/*
+recirsive-include netcomp/linalg/*
+
+include README.md
+include requirements.txt

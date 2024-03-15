@@ -1,0 +1,19 @@
+language: python
+python:
+  - "3.4"
+  - "3.5"
+  - "3.6"
+branches:
+  only:
+    - master
+# command to install dependencies
+install:
+  - pip install -r requirements.txt
+  - pip install codecov
+  - pip install coverage
+  - pip install .
+script:
+  - python test.py
+after_success:
+  - coverage run tests.py
+  - codecov

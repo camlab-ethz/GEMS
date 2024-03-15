@@ -34,8 +34,6 @@ data/DTI5_c3
 data/DTI5_c4
 data/DTI5_grid_search
 training_data/
-NetComp/
-*netcomp*
 *plots*
 *visualize*
 wandb/
