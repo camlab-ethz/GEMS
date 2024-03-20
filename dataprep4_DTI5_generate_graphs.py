@@ -354,8 +354,8 @@ for complex_id, folder_path, protein_path, ligand_path in zip(complexes, folder_
         skipped.append(complex_id)
         continue
         
-    esm_embedding = torch.load(os.path.join(folder_path, f'{complex_id}_{embedding_descriptor}.pt'))
-    esm_emb_len = esm_embedding.shape[1]
+    aa_embedding = torch.load(os.path.join(folder_path, f'{complex_id}_{embedding_descriptor}.pt'))
+    esm_emb_len = aa_embedding.shape[1]
     
 
     # Access the ligand mol object and generate coordinate matrix (pos)
@@ -445,7 +445,7 @@ for complex_id, folder_path, protein_path, ligand_path in zip(complexes, folder_
 
             # Add feature vector to prot_emb matrix
             padding = np.zeros((1, num_atomfeatures))
-            embedding = esm_embedding[residue-1]
+            embedding = aa_embedding[residue-1]
             features = np.concatenate((embedding[np.newaxis,:], padding), axis=1)
             x_prot_emb = np.vstack((x_prot_emb, features))
 
