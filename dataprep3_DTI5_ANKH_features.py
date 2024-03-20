@@ -10,16 +10,17 @@ def load_object(filename):
         return pickle.load(f)
 
 
-model_name = 'ankh_base'
-model_descriptor = 'ankh_base'
-embedding_size = 768
+model_name = 'ankh_large'
+model_descriptor = 'ankh_large'
+embedding_size = 1536
 
 device_idx = 4
 torch.cuda.set_device(device_idx)
 device = torch.device(f'cuda:{device_idx}' if torch.cuda.is_available() else 'cpu')
 print(device, torch.cuda.current_device(), torch.cuda.get_device_name())
 
-model, tokenizer = ankh.load_base_model()
+if model_name == 'ankh_base': model, tokenizer = ankh.load_base_model()
+elif model_name == 'ankh_large': model, tokenizer = ankh.load_large_model()
 model.to(device).eval()
 
 data_dir = '/data/grbv/PDBbind/DTI5_input_data_processed'
@@ -61,7 +62,7 @@ def get_aa_embeddings_ankh(protein_sequence):
     return embedding.squeeze() 
 
 
-# ind = proteins.index('4ycu')
+# ind = proteins.index('1a0q')
 # for id, folder_path, protein_path in zip(proteins[ind:ind+1], folder_paths[ind:ind+1], protein_paths[ind:ind+1]):
 for id, folder_path, protein_path in zip(proteins, folder_paths, protein_paths):
 
