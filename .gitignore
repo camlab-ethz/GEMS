@@ -25,14 +25,6 @@ experiments/DTI5f_c3/*/
 experiments/DTI5f_c4/*/
 experiments/DTI5f_c4_grid_search/*/
 
-data/DTI_1/input_graphs*/
-data/DTI_3/input_graphs*/
-data/DTI5
-data/DTI5_c1
-data/DTI5_c2
-data/DTI5_c3
-data/DTI5_c4
-data/DTI5_grid_search
 training_data/
 *plots*
 *visualize*
