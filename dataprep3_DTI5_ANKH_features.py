@@ -29,7 +29,6 @@ data_dir = '/data/grbv/PDBbind/DTI5_input_data_processed'
 log_file_path = os.path.join(data_dir, '.logs', f'{model_descriptor}.txt')
 log = open(log_file_path, 'a')
 log.write("Generating ANKH Embeddings for PDBbind - Log File:\n")
-log.write("Data: PDBbind v2020 refined and general set merged\n")
 log.write("\n")
 
 # Generate a lists of all protein-ligand complexes, the corresponding folder path and protein_dictionary paths
