@@ -3,6 +3,7 @@ import os
 import torch
 from transformers import AutoTokenizer, AutoModel
 import numpy as np
+import tqdm
 
 def load_object(filename):
     with open(filename, 'rb') as f:
@@ -38,7 +39,7 @@ print(f'Number of Smiles to be processed: {num_smiles}')
 print(f'Model Name: {model_name}')
 count = 0
 
-for molecule_id, smiles in smiles_dict.items():
+for molecule_id, smiles in tqdm(smiles_dict.items()):
 
     log_string = f'{molecule_id}: '
 
@@ -47,6 +48,7 @@ for molecule_id, smiles in smiles_dict.items():
         log_string += 'Embedding already exists'
         log.write(log_string + "\n")
         continue
+    
 
     smiles = smiles_dict[molecule_id]    
     embedding = smiles_to_embedding(smiles, tokenizer, model)
