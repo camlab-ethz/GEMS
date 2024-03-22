@@ -73,6 +73,5 @@ tmp/
 *.csv
 *.tsv
 *.h5
-*analys*
 *.npy
 *graph_similarity*
