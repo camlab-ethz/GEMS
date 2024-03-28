@@ -23,11 +23,12 @@ def visualize_graph(graph,
     # For this, remove double edges (undirected graph) and remove self_loops
 
     # x_lig = graph.x_lig
+    # x_lig = graph.x_lig
     # x_prot_emb = graph.x_prot_emb
     # x_prot_aa = graph.x_prot_aa
 
     # graph.x = torch.cat((x_lig, x_prot_aa), axis=0)    
-    # #graph.x = torch.cat((x_lig, x_prot_emb), axis=0)
+    # graph.x = torch.cat((x_lig, x_prot_emb), axis=0)
     # print(graph.x.shape)
 
 
