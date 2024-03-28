@@ -12,7 +12,7 @@ from torch_geometric.data import Data, Batch
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Inputs to Graph Generation Script")
-    parser.add_argument("--embedding", required=True, help="The embedding that should be used [esm2_t6_8M, esm2_t12_35M, esm2_t30_150M, esm2_t33_650M]")
+    parser.add_argument("--embedding", required=True, help="The embedding that should be used [ankh_base, esm2_t6_8M, esm2_t12_35M, esm2_t30_150M, esm2_t33_650M]")
     return parser.parse_args()
 
 args = parse_args()
