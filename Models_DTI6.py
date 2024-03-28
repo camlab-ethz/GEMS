@@ -116,9 +116,9 @@ class GAT0bn2(torch.nn.Module):
 
 
 
-class GAT0_mn_bn(torch.nn.Module):
+class GAT0mnbn(torch.nn.Module):
     def __init__(self, dropout_prob, in_channels, edge_dim, conv_dropout_prob):
-        super(GAT0_mn_bn, self).__init__()
+        super(GAT0mnbn, self).__init__()
 
         #Convolutional Layers
         self.conv1 = GATv2Conv(in_channels, 256, edge_dim=edge_dim, heads=4, dropout=conv_dropout_prob)
