@@ -355,7 +355,7 @@ for complex_id, folder_path, protein_path, ligand_path in zip(complexes, folder_
         continue
         
     aa_embedding = torch.load(os.path.join(folder_path, f'{complex_id}_{embedding_descriptor}.pt'))
-    esm_emb_len = aa_embedding.shape[1]
+    aa_emb_len = aa_embedding.shape[1]
     
 
     # Access the ligand mol object and generate coordinate matrix (pos)
@@ -379,7 +379,7 @@ for complex_id, folder_path, protein_path, ligand_path in zip(complexes, folder_
 
     # Edge Index and Node Feature Matrix for Substrate
     #------------------------------------------------------------------------------------------
-    x_lig = atom_features(mol, padding_len=esm_emb_len)
+    x_lig = atom_features(mol, padding_len=aa_emb_len)
 
     if np.sum(np.isnan(x_lig)) > 0:
         log_string += 'Skipped - Nans during ligand feature computation'
@@ -416,8 +416,8 @@ for complex_id, folder_path, protein_path, ligand_path in zip(complexes, folder_
                 residue_idx += 1
 
     # Iterate over the connection enzyme residues
-    x_prot_emb = np.array([]).reshape(0, esm_emb_len + num_atomfeatures)
-    x_prot_aa = np.array([]).reshape(0, esm_emb_len + num_atomfeatures)
+    x_prot_emb = np.array([]).reshape(0, aa_emb_len + num_atomfeatures)
+    x_prot_aa = np.array([]).reshape(0, aa_emb_len + num_atomfeatures)
     
     new_indeces = []
     count = pos.shape[0]
@@ -450,7 +450,7 @@ for complex_id, folder_path, protein_path, ligand_path in zip(complexes, folder_
             x_prot_emb = np.vstack((x_prot_emb, features))
 
             # Add feature vector to prot_aa matrix
-            padding = np.zeros((1, num_atomfeatures+esm_emb_len-len(amino_acids)))
+            padding = np.zeros((1, num_atomfeatures+aa_emb_len-len(amino_acids)))
             aa_identity = one_of_k_encoding_unk(resname, amino_acids)
             features = np.concatenate((np.array(aa_identity)[np.newaxis,:], padding), axis=1)
             x_prot_aa = np.vstack((x_prot_aa, features))
@@ -465,7 +465,7 @@ for complex_id, folder_path, protein_path, ligand_path in zip(complexes, folder_
             # Add feature vector of hetatm to x
             resname_smiles = hetatm_smiles_dict1[resname.strip('0123456789')]
             hetatm_mol = Chem.MolFromSmiles(resname_smiles)
-            hetatm_features = atom_features(hetatm_mol, padding_len=esm_emb_len)
+            hetatm_features = atom_features(hetatm_mol, padding_len=aa_emb_len)
             x_prot_emb = np.vstack((x_prot_emb, hetatm_features))
             x_prot_aa = np.vstack((x_prot_aa, hetatm_features))
 
@@ -476,7 +476,7 @@ for complex_id, folder_path, protein_path, ligand_path in zip(complexes, folder_
     # MASTER NODE
     # add master node features (ones) to x_prot and add a point with mean of ligand coordinates to pos
 
-    master_node_features = np.zeros([1, esm_emb_len + num_atomfeatures], dtype=np.float64)
+    master_node_features = np.zeros([1, aa_emb_len + num_atomfeatures], dtype=np.float64)
     x_prot_aa = np.vstack((x_prot_aa, master_node_features))
     x_prot_emb = np.vstack((x_prot_emb, master_node_features))
 
@@ -577,19 +577,19 @@ for complex_id, folder_path, protein_path, ligand_path in zip(complexes, folder_
             skipped.append(complex_id)
             continue
 
-        if x_lig.shape[1] != num_atomfeatures+esm_emb_len:
+        if x_lig.shape[1] != num_atomfeatures+aa_emb_len:
             log_string += f'Skipped - x_lig has shape {x_lig.shape}'
             log.write(log_string + "\n")
             skipped.append(complex_id)
             continue
 
-        if x_prot_emb.shape[1] != esm_emb_len + num_atomfeatures:
+        if x_prot_emb.shape[1] != aa_emb_len + num_atomfeatures:
             log_string += f'Skipped - x_prot_emb has shape {x_prot_emb.shape}'
             log.write(log_string + "\n")
             skipped.append(complex_id)
             continue
 
-        if x_prot_aa.shape[1] != esm_emb_len + num_atomfeatures:
+        if x_prot_aa.shape[1] != aa_emb_len + num_atomfeatures:
             log_string += f'Skipped - x_prot_aa has shape {x_prot_aa.shape}'
             log.write(log_string + "\n")
             skipped.append(complex_id)
