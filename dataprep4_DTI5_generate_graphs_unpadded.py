@@ -12,7 +12,7 @@ from torch_geometric.data import Data, Batch
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Inputs to Graph Generation Script")
-    parser.add_argument("--embedding", required=True, help="The embedding that should be used [esm2_t6_8M, esm2_t12_35M, esm2_t30_150M, esm2_t33_650M]")
+    parser.add_argument("--embedding", required=True, help="The embedding that should be used [ankh_base, esm2_t6_8M, esm2_t12_35M, esm2_t30_150M, esm2_t33_650M]")
     return parser.parse_args()
 
 args = parse_args()
@@ -256,7 +256,7 @@ def edge_index_and_attr(mol, pos, undirected = True, self_loops = True):
 embedding_descriptor = args.embedding
 num_atomfeatures = 40
 num_edgefeatures = 17
-output_folder = f'/data/grbv/PDBbind/DTI_5/input_graphs_{embedding_descriptor}/'
+output_folder = f'/data/grbv/PDBbind/DTI_5/input_graphs_{embedding_descriptor}_unpad/'
 
 
 # GET THE PREPROCESSED DATA
