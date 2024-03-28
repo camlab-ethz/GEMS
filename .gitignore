@@ -1,4 +1,5 @@
 # Ignore all folders with data
+experiments/_old/*
 experiments/DTI_1/*/
 experiments/DTI_2/*/
 experiments/DTI_2b/*/
@@ -23,7 +24,10 @@ experiments/DTI5f_c1/*/
 experiments/DTI5f_c2/*/
 experiments/DTI5f_c3/*/
 experiments/DTI5f_c4/*/
+experiments/DTI5f_c4a/*/
+experiments/DTI5f_c4b/*/
 experiments/DTI5f_c4_grid_search/*/
+experiments/DTI5f_c5/*/
 
 data/DTI_1/input_graphs*/
 data/DTI_3/input_graphs*/
@@ -32,6 +36,8 @@ data/DTI5_c1
 data/DTI5_c2
 data/DTI5_c3
 data/DTI5_c4
+data/DTI5_c4a
+data/DTI5_c4b
 data/DTI5_grid_search
 training_data/
 *netcomp*
