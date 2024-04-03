@@ -65,9 +65,9 @@ class IG_Dataset(Dataset):
 
             # Generate feature matrix x with/without embedding and atom features
             if embedding:
-                x = torch.cat((grph.x_lig, grph.x_prot_emb), axis=0)
+                x = torch.cat((grph.x_lig_emb, grph.x_prot_emb), axis=0)
             else:
-                x = torch.cat((grph.x_lig, grph.x_prot_aa), axis=0)
+                x = torch.cat((grph.x_lig_aa, grph.x_prot_aa), axis=0)
 
             if not atom_features:
                 x[:,-31:] = 0
@@ -81,7 +81,7 @@ class IG_Dataset(Dataset):
 
             # Number of nodes of the graph (including masternode)
             n_nodes = x.shape[0]
-            n_lig_nodes = grph.x_lig.shape[0]
+            n_lig_nodes = grph.x_lig_emb.shape[0]
 
 
             # Edge Index: If masternode, connect masternode to all atoms or only to ligand/protein atoms
