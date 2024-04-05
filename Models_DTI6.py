@@ -42,7 +42,83 @@ class GAT0bn(torch.nn.Module):
 
 
 
-# Same but with final ReLu
+class GAT1bn(torch.nn.Module):
+    def __init__(self, dropout_prob, in_channels, edge_dim, conv_dropout_prob):
+        super(GAT1bn, self).__init__()
+
+        #Convolutional Layers
+        self.conv1 = GATv2Conv(in_channels, 256, edge_dim=edge_dim, heads=1, dropout=conv_dropout_prob)
+        self.bn1 = BatchNorm1d(256)
+        self.conv2 = GATv2Conv(256, 64, edge_dim=edge_dim, heads=4, dropout=conv_dropout_prob)
+        self.bn2 = BatchNorm1d(256)
+
+        self.dropout_layer = torch.nn.Dropout(dropout_prob)
+        self.fc1 = torch.nn.Linear(256, 64)
+        self.fc2 = torch.nn.Linear(64, 1)
+
+    def forward(self, graphbatch):
+        
+        x = self.conv1(graphbatch.x, graphbatch.edge_index, graphbatch.edge_attr)
+        x = F.relu(x)
+        x = self.bn1(x)
+        x = self.conv2(x, graphbatch.edge_index, graphbatch.edge_attr)
+        x = F.relu(x)
+        x = self.bn2(x)
+
+        # Pool the nodes of each interaction graph
+        x = global_add_pool(x, batch=graphbatch.batch)
+        x = self.dropout_layer(x)
+
+        # Fully-Connected Layers
+        x = self.fc1(x)
+        x = F.relu(x)
+        x = self.fc2(x)
+        return x
+   
+
+
+class GAT0mnbn(torch.nn.Module):
+    def __init__(self, dropout_prob, in_channels, edge_dim, conv_dropout_prob):
+        super(GAT0mnbn, self).__init__()
+
+        #Convolutional Layers
+        self.conv1 = GATv2Conv(in_channels, 256, edge_dim=edge_dim, heads=4, dropout=conv_dropout_prob)
+        self.bn1 = BatchNorm1d(1024)
+        self.conv2 = GATv2Conv(1024, 64, edge_dim=edge_dim, heads=4, dropout=conv_dropout_prob)
+        self.bn2 = BatchNorm1d(256)
+        
+        self.dropout_layer = torch.nn.Dropout(dropout_prob)
+        self.fc1 = torch.nn.Linear(256, 64)
+        self.fc2 = torch.nn.Linear(64, 1)
+
+    def forward(self, graphbatch):
+        x = self.conv1(graphbatch.x, graphbatch.edge_index, graphbatch.edge_attr)
+        x = F.relu(x)
+        x = self.bn1(x)
+        x = self.conv2(x, graphbatch.edge_index, graphbatch.edge_attr)
+        x = F.relu(x)
+        x = self.bn2(x)
+
+        # Pool the nodes of each interaction graph
+        last_node_indeces = graphbatch.n_nodes.cumsum(dim=0) - 1
+        master_node_features = x[last_node_indeces]
+        x = self.dropout_layer(master_node_features)
+
+        # Fully-Connected Layers
+        x = self.fc1(x)
+        x = F.relu(x)
+        x = self.fc2(x)
+        return x
+    
+
+
+
+
+
+# ______________________________________________________________________________________________________
+
+
+# Same as GAT0bn but with final ReLu
 class GAT0bn1(torch.nn.Module):
     def __init__(self, dropout_prob, in_channels, edge_dim, conv_dropout_prob):
         super(GAT0bn1, self).__init__()
@@ -112,45 +188,6 @@ class GAT0bn2(torch.nn.Module):
         x = self.dropout_layer(x)
         x = self.fc2(x)
         return x
-    
-
-
-
-class GAT0mnbn(torch.nn.Module):
-    def __init__(self, dropout_prob, in_channels, edge_dim, conv_dropout_prob):
-        super(GAT0mnbn, self).__init__()
-
-        #Convolutional Layers
-        self.conv1 = GATv2Conv(in_channels, 256, edge_dim=edge_dim, heads=4, dropout=conv_dropout_prob)
-        self.bn1 = BatchNorm1d(1024)
-        self.conv2 = GATv2Conv(1024, 64, edge_dim=edge_dim, heads=4, dropout=conv_dropout_prob)
-        self.bn2 = BatchNorm1d(256)
-        
-        self.dropout_layer = torch.nn.Dropout(dropout_prob)
-        self.fc1 = torch.nn.Linear(256, 64)
-        self.fc2 = torch.nn.Linear(64, 1)
-
-    def forward(self, graphbatch):
-        x = self.conv1(graphbatch.x, graphbatch.edge_index, graphbatch.edge_attr)
-        x = F.relu(x)
-        x = self.bn1(x)
-        x = self.conv2(x, graphbatch.edge_index, graphbatch.edge_attr)
-        x = F.relu(x)
-        x = self.bn2(x)
-
-        # Pool the nodes of each interaction graph
-        last_node_indeces = graphbatch.n_nodes.cumsum(dim=0) - 1
-        master_node_features = x[last_node_indeces]
-        x = self.dropout_layer(master_node_features)
-
-        # Fully-Connected Layers
-        x = self.fc1(x)
-        x = F.relu(x)
-        x = self.fc2(x)
-        return x
-    
-
-
 
 class GIN0(torch.nn.Module):
     def __init__(self, dropout_prob, in_channels, edge_dim, conv_dropout_prob):
