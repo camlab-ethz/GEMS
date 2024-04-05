@@ -92,8 +92,8 @@ class IG_Dataset(Dataset):
                                edge_index=grph.edge_index, 
                                edge_attr=grph.edge_attr, 
                                y=pK_scaled
-                               ,pos=grph.pos
-                               ,id=grph.id
+                               #,pos=grph.pos
+                               #,id=grph.id
                                )
 
             else:
@@ -183,8 +183,8 @@ class IG_Dataset(Dataset):
                                 edge_attr=edge_attr, 
                                 y=pK_scaled, 
                                 n_nodes=torch.tensor(n_nodes, dtype=torch.int64) #needed for reading out masternode features
-                                ,pos=grph.pos
-                                ,id=grph.id
+                                #,pos=grph.pos
+                                #,id=grph.id
                 )
 
 
