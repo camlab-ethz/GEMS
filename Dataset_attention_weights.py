@@ -28,9 +28,9 @@ class IG_Dataset(Dataset):
 
             # Generate feature matrix x with/without embedding and atom features
             if embedding:
-                x = torch.cat((grph.x_lig, grph.x_prot_emb), axis=0)
+                x = torch.cat((grph.x_lig_emb, grph.x_prot_emb), axis=0)
             else:
-                x = torch.cat((grph.x_lig, grph.x_prot_aa), axis=0)
+                x = torch.cat((grph.x_lig_aa, grph.x_prot_aa), axis=0)
 
             if not atom_features:
                 x[:,-31:] = 0
@@ -106,14 +106,14 @@ class IG_Dataset(Dataset):
             
             
                 train_graph = Data(x = x,
-                                   x_aa = torch.cat((grph.x_lig, grph.x_prot_aa), axis=0),
+                                   x_aa = torch.cat((grph.x_lig_aa, grph.x_prot_aa), axis=0),
                                    edge_index=edge_index, 
                                    edge_attr=edge_attr, 
                                    y=pK_scaled, 
                                    n_nodes=n_nodes #needed for reading out masternode features
                                    ,pos=grph.pos
                                    ,id=grph.id,
-                                   n_lig_nodes = grph.x_lig.shape[0]
+                                   n_lig_nodes = grph.x_lig_aa.shape[0]
                 )         
 
             self.input_data[ind] = train_graph

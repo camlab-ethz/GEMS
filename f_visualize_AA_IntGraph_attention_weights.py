@@ -124,7 +124,7 @@ def visualize_graph(graph,
 
 
     #atomtypes = (graph.x[:,1280:1289] == 1).nonzero(as_tuple=True)[1].tolist() #identify the index of the first 1 in the feature matrix = atom type
-    index, atomtypes = (graph.x_aa[:,320:329] == 1).nonzero(as_tuple=True) #identify the index of the first 1 in the feature matrix = atom type
+    index, atomtypes = (graph.x_aa[:,20:29] == 1).nonzero(as_tuple=True) #identify the index of the first 1 in the feature matrix = atom type
 
     for idx, atomtype in zip(index.tolist(), atomtypes.tolist()):
 
