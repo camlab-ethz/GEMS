@@ -10,8 +10,8 @@ import time
 from torch_geometric.loader import DataLoader
 from sklearn.model_selection import StratifiedKFold
 from torch.utils.data import Subset
-from Models_DTI5 import *
-from Models_DTI6 import *
+from models_masternode import *
+from models_global_pool import *
 
 
 from Dataset_DTI5 import IG_Dataset
