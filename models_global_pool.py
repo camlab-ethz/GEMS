@@ -206,7 +206,7 @@ class GAT4bn(torch.nn.Module):
 
 
 
-class SelfAttention(Module):
+class SelfAttention(torch.nn.Module):
     def __init__(self, in_channels):
         super(SelfAttention, self).__init__()
         self.query = Linear(in_channels, in_channels)
