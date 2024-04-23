@@ -91,4 +91,3 @@ tmp/
 *.tsv
 *.h5
 *.npy
-*graph_similarity*
