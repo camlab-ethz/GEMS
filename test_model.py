@@ -148,7 +148,7 @@ args = parse_args()
 
 # Paths
 filtering = args.filtering
-stdict_paths = args.stdict_paths.split(',')
+stdict_paths = args.stdict_paths.split(' ')
 print(stdict_paths)
 save_dir = args.save_dir
 
