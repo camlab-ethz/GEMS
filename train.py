@@ -725,11 +725,11 @@ for epoch in range(epoch+1, num_epochs+1):
             best_predictions = plot_predictions( train_y_true, train_y_pred,
                                     val_y_true, val_y_pred,
                                     f"{run_name}: Epoch {last_saved_epoch}\nTrain R = {train_r:.3f}, Validation R = {val_r:.3f}\nTrain RMSE = {train_rmse:.3f}, Validation RMSE = {val_rmse:.3f}")
-            best_predictions.savefig(f'{save_dir}/predictions.png')
+            best_predictions.savefig(f'{save_dir}/train_predictions.png')
 
             residuals = residuals_plot(train_y_true, train_y_pred, val_y_true, val_y_pred, 
                                     f"{run_name}: Epoch {last_saved_epoch}\nTrain R = {train_r:.3f}, Validation R = {val_r:.3f}\nTrain RMSE = {train_rmse:.3f}, Validation RMSE = {val_rmse:.3f}")     
-            residuals.savefig(f'{save_dir}/residuals.png')
+            residuals.savefig(f'{save_dir}/train_residuals.png')
 
             plotted.append(last_saved_epoch)
 

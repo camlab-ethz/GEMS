@@ -148,8 +148,7 @@ args = parse_args()
 
 # Paths
 filtering = args.filtering
-stdict_paths = args.stdict_paths.split(' ')
-print(stdict_paths)
+stdict_paths = args.stdict_paths.split(',')
 save_dir = args.save_dir
 
 embedding_descriptor = args.embedding_descriptor
@@ -266,7 +265,7 @@ loss, r, rmse, r2, y_true, y_pred, ids = train_metrics
 plot_predictions(ax3, y_true, y_pred, f"Training Predictions\nR = {r:.3f}, RMSE = {rmse:.3f}", 'Training Data')
 
 plt.tight_layout()
-plt.savefig(f'{save_dir}/{model_name}_performance_scatterplot.png', dpi=300)
+plt.savefig(f'{save_dir}/test_scatterplot.png', dpi=300)
 #-------------------------------------------------------------------------------------------------------------------------
 
 
@@ -295,5 +294,5 @@ loss, r, rmse, r2, y_true, y_pred, ids = train_metrics
 plot_predictions(ax3, y_true, y_pred, f"Training Predictions\nR = {r:.3f}, RMSE = {rmse:.3f}", 'Training Data')
 
 plt.tight_layout()
-plt.savefig(f'{save_dir}/{model_name}_performance_scatterplot_filtered.png', dpi=300)
+plt.savefig(f'{save_dir}/test_scatterplot_filtered.png', dpi=300)
 #-------------------------------------------------------------------------------------------------------------------------

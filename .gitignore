@@ -58,7 +58,7 @@ NetComp/*
 
 #Ignore test_files
 *_old.py
-testfiles/
+stuff/
 
 # Ignore system files
 .DS_Store
