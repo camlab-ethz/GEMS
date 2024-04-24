@@ -242,7 +242,7 @@ class GAT5bn(nn.Module):
     def __init__(self, dropout_prob, in_channels, edge_dim, conv_dropout_prob):
         super(GAT5bn, self).__init__()
 
-        self.transformer = TransformerBlock(input_dim=in_channels, transformer_dim=256, output_dim=64, num_heads=4)
+        self.transformer = TransformerBlock(input_dim=in_channels, transformer_dim=128, output_dim=64, num_heads=4)
         
         # Convolutional Layers
         self.conv1 = GATv2Conv(64, 256, edge_dim=edge_dim, heads=4, dropout=conv_dropout_prob)
