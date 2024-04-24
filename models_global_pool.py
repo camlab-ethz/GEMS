@@ -1,4 +1,5 @@
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import Sequential, Linear, ReLU, BatchNorm1d, Dropout
 from torch_geometric.nn import global_mean_pool, GATv2Conv, global_add_pool, GINEConv
@@ -206,6 +207,77 @@ class GAT4bn(torch.nn.Module):
 
 
 
+
+
+class TransformerBlock(nn.Module):
+    def __init__(self, input_dim, transformer_dim, output_dim, num_heads, dropout_rate=0.1):
+        super(TransformerBlock, self).__init__()
+        self.attention = nn.MultiheadAttention(embed_dim=transformer_dim, num_heads=num_heads, dropout=dropout_rate)
+        self.feed_forward = nn.Sequential(
+            nn.Linear(transformer_dim, 4 * transformer_dim),  # Expand dimensions
+            nn.ReLU(),
+            nn.Dropout(dropout_rate),
+            nn.Linear(4 * transformer_dim, transformer_dim)  # Compress back to model_dim
+        )
+        
+        self.input_linear = nn.Linear(input_dim, transformer_dim)
+        self.output_linear = nn.Linear(transformer_dim, output_dim)
+        self.norm = nn.LayerNorm(transformer_dim)
+        self.dropout = nn.Dropout(dropout_rate)
+
+    def forward(self, x):
+        x = self.input_linear(x) # Project to transformer_dim
+        x = self.norm(x) # LayerNorm
+        attn_output, _ = self.attention(x, x, x) # Self-attention
+        x = x + self.dropout(attn_output) # Dropout and residual connection
+        x = self.norm(x) # LayerNorm
+        x = x + self.dropout(self.feed_forward(x)) # Feed Forward Model, Dropout and residual connection
+        x = self.norm(x) # LayerNorm
+        x = self.output_linear(x) # Project to output_dim
+        x = self.norm(x) # LayerNorm
+        return x
+
+
+class GAT5bn(nn.Module):
+    def __init__(self, dropout_prob, in_channels, edge_dim, conv_dropout_prob):
+        super(GAT5bn, self).__init__()
+
+        self.transformer = TransformerBlock(input_dim=in_channels, transformer_dim=256, output_dim=64, num_heads=4)
+        
+        # Convolutional Layers
+        self.conv1 = GATv2Conv(64, 256, edge_dim=edge_dim, heads=4, dropout=conv_dropout_prob)
+        self.bn1 = nn.BatchNorm1d(1024)
+        self.conv2 = GATv2Conv(1024, 64, edge_dim=edge_dim, heads=4, dropout=conv_dropout_prob)
+        self.bn2 = nn.BatchNorm1d(256)
+
+        self.dropout_layer = nn.Dropout(dropout_prob)
+        self.fc1 = nn.Linear(256, 64)
+        self.fc2 = nn.Linear(64, 1)
+
+    def forward(self, graphbatch):
+        x = graphbatch.x
+        x = self.transformer(x)  # Apply transformer block for dimensionality reduction
+        
+        x = self.conv1(x, graphbatch.edge_index, graphbatch.edge_attr)
+        x = F.relu(x)
+        x = self.bn1(x)
+        x = self.conv2(x, graphbatch.edge_index, graphbatch.edge_attr)
+        x = F.relu(x)
+        x = self.bn2(x)
+
+        x = global_add_pool(x, batch=graphbatch.batch)
+        x = self.dropout_layer(x)
+
+        x = self.fc1(x)
+        x = F.relu(x)
+        x = self.fc2(x)
+        return x
+
+
+
+
+### This code could be changed to use MultiheadAttention from PyTorch
+
 class SelfAttention(torch.nn.Module):
     def __init__(self, in_channels):
         super(SelfAttention, self).__init__()
@@ -224,9 +296,9 @@ class SelfAttention(torch.nn.Module):
         return attended_features
 
 
-class GAT5bn(torch.nn.Module):
+class GAT6bn(torch.nn.Module):
     def __init__(self, dropout_prob, in_channels, edge_dim, conv_dropout_prob):
-        super(GAT5bn, self).__init__()
+        super(GAT6bn, self).__init__()
 
         self.attention = SelfAttention(in_channels)  # Attention mechanism
         
