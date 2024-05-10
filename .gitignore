@@ -30,6 +30,8 @@ experiments/DTI5f_c4_grid_search/*/
 experiments/DTI5f_c5/*/
 
 PDBbind/
+PDBbind1/
+PDBbind2/
 test_data/
 data/DTI_1/input_graphs*/
 data/DTI_3/input_graphs*/
