@@ -32,7 +32,10 @@ experiments/DTI5f_c5/*/
 PDBbind/
 PDBbind1/
 PDBbind2/
+huggingface/
+bash_scripts/
 test_data/
+benchmark_dataloaders*
 data/DTI_1/input_graphs*/
 data/DTI_3/input_graphs*/
 data/DTI5
@@ -68,7 +71,6 @@ __pycache__
 
 
 # Ignore bash scripts
-*.sh
 
 # Ignore log files
 *.log
