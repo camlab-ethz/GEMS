@@ -1,6 +1,6 @@
+from transformers import AutoModel, AutoTokenizer
 import pickle
 import os
-import ankh
 import torch
 import numpy as np
 import argparse
@@ -11,19 +11,35 @@ import time
 
 
 def arg_parser():
-    parser = argparse.ArgumentParser(description='Preprocess PDBbind data for DTI5')
+    parser = argparse.ArgumentParser(description='Compute ANKH embeddings for all proteins in a given directory.')
     parser.add_argument('--data_dir', type=str, required=True, help='Path to the data directory containing all proteins(PDB) and ligands (SDF)')
-    parser.add_argument('--ankh_base', default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If the ankh_base model should be used")
+    parser.add_argument('--esm_checkpoint', default='t6', type=str, help="Which checkpoint of ESM should be used [t6, t12, t30, t33]")
     return parser.parse_args()
-
 args = arg_parser()
 
 data_dir = args.data_dir
-model_name = 'ankh_base' if args.ankh_base else 'ankh_large'
+checkpoint = args.esm_checkpoint
+
+# Load ESM model and tokenizer from HuggingFace
+if checkpoint=='t6': 
+    model_name = "facebook/esm2_t6_8M_UR50D"
+    model_descriptor = 'esm2_t6_8M_UR50D'
+    embedding_size = 320
+if checkpoint=='t12':
+    model_name = "facebook/esm2_t12_35M_UR50D"
+    model_descriptor = 'esm2_t12_35M_UR50D'
+    embedding_size = 480
+if checkpoint=='t30':
+    model_name = "facebook/esm2_t30_150M_UR50D"
+    model_descriptor = 'esm2_t30_150M_UR50D'
+    embedding_size = 640
+if checkpoint=='t33':
+    model_name = "facebook/esm2_t33_650M_UR50D"
+    model_descriptor = 'esm2_t33_650M_UR50D'
+    embedding_size = 1280
 
 # Initialize PDB Parser
 parser = PDBParser(PERMISSIVE=1, QUIET=True)
-
 
 # Device settings and loading of models
 #device = torch.device('cpu')
@@ -31,23 +47,16 @@ device = torch.device(f'cuda:0' if torch.cuda.is_available() else 'cpu')
 print(torch.cuda.is_available())
 print(device)
 
-# Load the model from ANKH
-if model_name == 'ankh_base':
-    model, tokenizer = ankh.load_base_model()
-    embedding_size = 768
-elif model_name == 'ankh_large':
-    model, tokenizer = ankh.load_large_model()
-    embedding_size = 1536
-
-model.to(device).eval()
-
-
+# Load the model from HuggingFace
+model = AutoModel.from_pretrained(model_name).to(device)
+tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 
 # Initialize Log File
-log_file_path = os.path.join(data_dir, '.logs', f'{model_name}.txt')
+log_file_path = os.path.join(data_dir, '.logs', f'{model_descriptor}.txt')
 log = open(log_file_path, 'a')
-log.write("Generating ANKH Embeddings - Log File:\n")
+log.write("Generating ESM Embeddings for PDBbind - Log File:\n")
+log.write("Data: PDBbind v2020 refined and general set merged\n")
 log.write("\n")
 
 
@@ -60,20 +69,15 @@ print(f'Model Name: {model_name}')
 
 
 # FUNCTION TO COMPUTE EMBEDDINGS
-def get_aa_embeddings_ankh(protein_sequence):
-
-    protein_sequences = [list(protein_sequence)]
-    outputs = tokenizer.batch_encode_plus(protein_sequences, 
-                                add_special_tokens=False, 
-                                padding=True, 
-                                is_split_into_words=True, 
-                                return_tensors="pt")
-    outputs.to(device)
+def get_aa_embeddings_esm2(sequence, crop_EOS_BOS=True):
+    token_ids = tokenizer(sequence, return_tensors="pt")["input_ids"].to(device)
 
     with torch.no_grad():
-        embedding = model(input_ids=outputs['input_ids'], attention_mask=outputs['attention_mask']).last_hidden_state
+        embeddings = model(token_ids).last_hidden_state
+        embedding = embeddings[0]
+        if crop_EOS_BOS: embedding = embedding[1:-1, :]
 
-    return embedding.squeeze() 
+    return embedding    
 
 
 # Start generating embeddings for all proteins iteratively 
@@ -83,18 +87,19 @@ for protein in tqdm(proteins):
     id = protein.name.split('_')[0]
     log_string = f'{id}: '
 
-    save_filepath = os.path.join(data_dir, f'{id}_{model_name}.pt')
+    save_filepath = os.path.join(data_dir, f'{id}_{model_descriptor}.pt')
     if os.path.exists(save_filepath):
         log_string += 'Embedding already exists'
         log.write(log_string + "\n")
         continue
-
+    
     expected_len = 0
 
     # Parse the protein
     with open(protein.path) as pdbfile:
         prot = parse_pdb(parser, id, pdbfile)    
-        
+
+
     emb = np.array([], dtype=np.int64).reshape(0,embedding_size)
 
     for chain in prot:
@@ -106,7 +111,7 @@ for protein in tqdm(proteins):
             expected_len += len(sequence)
 
             try:
-                embeddings = get_aa_embeddings_ankh(sequence)
+                embeddings = get_aa_embeddings_esm2(sequence)
                 emb = np.vstack((emb, embeddings.cpu()))
                 
             except Exception as e:
@@ -127,4 +132,3 @@ for protein in tqdm(proteins):
 
 print(f'Time taken for {num_proteins} proteins: {time.time() - tic} seconds')
 log.close()
-
