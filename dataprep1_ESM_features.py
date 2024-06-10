@@ -11,7 +11,7 @@ import time
 
 
 def arg_parser():
-    parser = argparse.ArgumentParser(description='Compute ANKH embeddings for all proteins in a given directory.')
+    parser = argparse.ArgumentParser(description='Compute ESM embeddings for all proteins in a given directory.')
     parser.add_argument('--data_dir', type=str, required=True, help='Path to the data directory containing all proteins(PDB) and ligands (SDF)')
     parser.add_argument('--esm_checkpoint', default='t6', type=str, help="Which checkpoint of ESM should be used [t6, t12, t30, t33]")
     return parser.parse_args()
@@ -41,7 +41,7 @@ if checkpoint=='t33':
 # Initialize PDB Parser
 parser = PDBParser(PERMISSIVE=1, QUIET=True)
 
-# Device settings and loading of models
+# Device settings
 #device = torch.device('cpu')
 device = torch.device(f'cuda:0' if torch.cuda.is_available() else 'cpu')
 print(torch.cuda.is_available())
@@ -53,7 +53,9 @@ tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 
 # Initialize Log File
-log_file_path = os.path.join(data_dir, '.logs', f'{model_descriptor}.txt')
+log_folder = os.path.join(data_dir, '.logs')
+if not os.path.exists(log_folder): os.makedirs(log_folder)
+log_file_path = os.path.join(log_folder, f'{model_descriptor}.txt')
 log = open(log_file_path, 'a')
 log.write("Generating ESM Embeddings for PDBbind - Log File:\n")
 log.write("Data: PDBbind v2020 refined and general set merged\n")

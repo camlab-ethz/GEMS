@@ -25,7 +25,7 @@ model_name = 'ankh_base' if args.ankh_base else 'ankh_large'
 parser = PDBParser(PERMISSIVE=1, QUIET=True)
 
 
-# Device settings and loading of models
+# Device settings
 #device = torch.device('cpu')
 device = torch.device(f'cuda:0' if torch.cuda.is_available() else 'cpu')
 print(torch.cuda.is_available())
@@ -43,9 +43,10 @@ model.to(device).eval()
 
 
 
-
 # Initialize Log File
-log_file_path = os.path.join(data_dir, '.logs', f'{model_name}.txt')
+log_folder = os.path.join(data_dir, '.logs')
+if not os.path.exists(log_folder): os.makedirs(log_folder)
+log_file_path = os.path.join(log_folder, f'{model_name}.txt')
 log = open(log_file_path, 'a')
 log.write("Generating ANKH Embeddings - Log File:\n")
 log.write("\n")
@@ -63,15 +64,15 @@ print(f'Model Name: {model_name}')
 def get_aa_embeddings_ankh(protein_sequence):
 
     protein_sequences = [list(protein_sequence)]
-    outputs = tokenizer.batch_encode_plus(protein_sequences, 
+    inputs = tokenizer.batch_encode_plus(protein_sequences, 
                                 add_special_tokens=False, 
                                 padding=True, 
                                 is_split_into_words=True, 
                                 return_tensors="pt")
-    outputs.to(device)
+    inputs.to(device)
 
     with torch.no_grad():
-        embedding = model(input_ids=outputs['input_ids'], attention_mask=outputs['attention_mask']).last_hidden_state
+        embedding = model(input_ids=inputs['input_ids'], attention_mask=inputs['attention_mask']).last_hidden_state
 
     return embedding.squeeze() 
 
