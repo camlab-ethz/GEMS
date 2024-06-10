@@ -24,12 +24,12 @@ def calculate_cbeta_position(ca_coords, c_coords, n_coords):
     u_plane /= np.linalg.norm(u_plane)  # Normalize
     
     # Compute the Cβ position
-    cb = (ca + bond_length_ca_cb * (
-        np.cos(bond_angle_n_ca_cb) * u_n_ca +
-        np.sin(bond_angle_n_ca_cb) * (
-            np.cos(bond_angle_c_ca_cb) * u_plane +
-            np.sin(bond_angle_c_ca_cb) * u_orth)
-    ))
+    cb = (  ca + bond_length_ca_cb 
+            * (np.cos(bond_angle_n_ca_cb) 
+            * u_n_ca 
+            + np.sin(bond_angle_n_ca_cb) 
+            * (np.cos(bond_angle_c_ca_cb) * u_plane + np.sin(bond_angle_c_ca_cb) * u_orth)
+         ))
     
     return cb
 
