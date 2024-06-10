@@ -1,0 +1,966 @@
+import os
+import glob
+import json
+import argparse
+import numpy as np
+
+from Bio.PDB.PDBParser import PDBParser
+
+# RDKit
+from rdkit import Chem
+from rdkit.Chem import AllChem
+from rdkit.Chem import rdPartialCharges
+from rdkit.Chem.MolStandardize import rdMolStandardize  
+
+from time import time
+# import jax.numpy as jnp
+# from jax import jit, vmap
+
+from f_parse_pdb_general import parse_pdb
+
+# PyTorch and PyTorch Geometric
+import torch
+from torch_geometric.utils import to_undirected, add_self_loops
+from torch_geometric.data import Data, Batch
+
+
+def arg_parser():
+    parser = argparse.ArgumentParser(description="Inputs to Graph Generation Script")
+    parser.add_argument('--data_dir', type=str, required=True, help='Path to the data directory containing all proteins(PDB) and ligands (SDF)')
+    parser.add_argument('--affinity_dict', type=str, required=True, help='Path to json file assigning affinity values to complexes in the data')
+    
+    parser.add_argument('--protein_embeddings',
+    nargs='+',
+    help='Provide names of protein embeddings that should be incorporated (--protein embeddings string1 string2 string3)')
+
+    parser.add_argument('--ligand_embeddings',
+    nargs='+',
+    help='Provide names of embeddings that should be incorporated (--ligand_embeddings string1 string2 string3)')
+
+    return parser.parse_args()
+
+
+
+def parse_sdf_file(file_path):
+    """
+    Parses an SDF file and returns a list of molecules.
+
+    Args:
+        file_path (str): The path to the SDF file.
+
+    Returns:
+        list: A list of molecules parsed from the SDF file.
+    """
+    suppl = Chem.SDMolSupplier(file_path, sanitize=True, removeHs=True, strictParsing=True)
+    molecules = []
+    for mol in suppl:
+        if mol is not None:
+            molecules.append(mol)
+    return molecules
+
+
+
+def find_files_with_patterns(directory, pattern1, pattern2):
+    """
+    Find files in a directory that match the given patterns.
+
+    Args:
+        directory (str): The directory to search for files.
+        pattern1 (str): The first pattern to match in the file names.
+        pattern2 (str): The second pattern to match in the file names.
+
+    Returns:
+        list: A list of file paths that match the given patterns.
+    """
+
+    search_pattern = os.path.join(directory, f"*{pattern1}*{pattern2}*")
+    matching_files = glob.glob(search_pattern)
+    
+    return matching_files
+
+
+
+def one_of_k_encoding_unk(x, allowable_set):
+    """
+    Encodes a categorical variable using a one-hot encoding scheme. If the variable is not in the allowable set,
+    it is encoded as the last element in the set.
+
+    Parameters:
+    x (str): The categorical variable to be encoded.
+    allowable_set (list): The set of allowable categories for the variable.
+
+    Returns:
+    list: A list of boolean values indicating whether each category in the allowable set matches the input variable.
+    """
+    if x not in allowable_set:
+        x = allowable_set[-1]
+    return list(map(lambda s: x == s, allowable_set))
+
+
+
+def one_of_k_encoding(x, allowable_set):
+    """
+    Encodes a categorical variable using a one-hot encoding scheme.
+
+    Parameters:
+    x (str): The categorical variable to be encoded.
+    allowable_set (list): The set of allowable categories for the variable.
+
+    Returns:
+    list: A list of boolean values indicating whether each category in the allowable set matches the input variable.
+    """
+
+    if x not in allowable_set:
+        raise ValueError("input {0} not in allowable set{1}:".format(x, allowable_set))
+    return list(map(lambda s: x == s, allowable_set))
+
+
+
+def make_undirected_with_self_loops(edge_index, edge_attr, undirected=True, self_loops=True):
+    """
+    Converts the given edge_index and edge_attr to an undirected graph with self-loops.
+
+    Args:
+        edge_index (Tensor): The edge indices of the graph.
+        edge_attr (Tensor): The edge attributes of the graph.
+        undirected (bool, optional): Whether to convert the graph to undirected. Defaults to True.
+        self_loops (bool, optional): Whether to add self-loops to the graph. Defaults to True.
+
+    Returns:
+        edge_index (Tensor): The updated edge indices of the graph.
+        edge_attr (Tensor): The updated edge attributes of the graph.
+    """
+    self_loop_feature_vector = torch.tensor([0., 1., 0.,  # it's a self-loop
+                                              0, 0, 0, 0,  # length is zero
+                                              0., 0., 0., 0., 0.,  # bondtype = None
+                                              0.,  # is not conjugated
+                                              0.,  # is not in ring
+                                              0., 0., 0., 0., 0., 0.])  # No stereo -> self-loop
+    if undirected: edge_index, edge_attr = to_undirected(edge_index, edge_attr)
+    if self_loops: edge_index, edge_attr = add_self_loops(edge_index, edge_attr, fill_value=self_loop_feature_vector)
+    return edge_index, edge_attr
+
+
+
+def get_atom_features(mol, padding_len):
+    """
+    Get the atom features for a given molecule.
+
+    Args:
+        mol (rdkit.Chem.rdchem.Mol): The molecule object.
+        padding_len (int): The length of padding to be added.
+
+    Returns:
+        np.array: An array containing the atom features.
+    """
+    x = []
+    for atom in mol.GetAtoms():
+
+        padding = [0 for n in range(padding_len)]
+        symbol = atom.GetSymbol()
+
+        if symbol in metals: symbol = 'metal'
+        elif symbol in halogens: symbol = 'halogen'
+
+        if symbol == 'H': atom_encoding = [0 for i in range(len(all_atoms))]
+        else: atom_encoding = one_of_k_encoding(symbol, all_atoms)
+        
+        ringm = [atom.IsInRing()]
+        hybr = atom.GetHybridization()
+        charge = [float(atom.GetFormalCharge())] 
+        aromatic = [atom.GetIsAromatic()]
+        mass = [atom.GetMass()/100]
+        numHs = atom.GetTotalNumHs()
+        degree = atom.GetDegree()
+        chirality = str(atom.GetChiralTag())
+
+        results =   padding + \
+                    atom_encoding + \
+                    ringm  + \
+                    one_of_k_encoding(hybr, [Chem.rdchem.HybridizationType.S, Chem.rdchem.HybridizationType.SP, Chem.rdchem.HybridizationType.SP2, Chem.rdchem.HybridizationType.SP2D, 
+                                             Chem.rdchem.HybridizationType.SP3, Chem.rdchem.HybridizationType.SP3D, Chem.rdchem.HybridizationType.SP3D2, Chem.rdchem.HybridizationType.UNSPECIFIED]) + \
+                    charge + \
+                    aromatic + \
+                    mass + \
+                    one_of_k_encoding(numHs, [0, 1, 2, 3, 4]) + \
+                    one_of_k_encoding_unk(degree,[0, 1, 2, 3, 4, 5, 6, 7, 8, 'OTHER']) + \
+                    one_of_k_encoding_unk(chirality, ['CHI_UNSPECIFIED', 'CHI_TETRAHEDRAL_CW', 'CHI_TETRAHEDRAL_CCW', 'OTHER'])     
+        
+        x.append(results)  
+
+    return np.array(x)
+
+
+
+def edge_index_and_attr(mol, pos, undirected = True, self_loops = True):
+    """
+    Compute the edge index and edge attributes for a given molecule and atom positions.
+
+    Args:
+        mol (rdkit.Chem.rdchem.Mol): The molecule object.
+        pos (numpy.ndarray): The positions of atoms in the molecule.
+        undirected (bool, optional): Whether to make the graph undirected. Defaults to True.
+        self_loops (bool, optional): Whether to add self-loops to the graph. Defaults to True.
+
+    Returns:
+        torch.Tensor: The edge index tensor.
+        torch.Tensor: The edge attribute tensor.
+    """
+    edge_index = [[],[]]
+    edge_attr = []
+
+    #  Edge Attributes - Loop over edges and compute feature vector
+    #--------------------------------------------------------------------    
+    for bond in mol.GetBonds():
+
+        atm1 = bond.GetBeginAtomIdx()
+        atm2 = bond.GetEndAtomIdx()
+
+        edge_index[0].append(atm1)
+        edge_index[1].append(atm2)
+
+
+        # Generate Edge Feature Vector
+        #--------------------------------------------------------------------
+        edge_feature_vector = []
+
+        # Edge Type (covalent bond, non-covalent_bond, self-loop)
+        edge_feature_vector.extend(one_of_k_encoding('covalent', ['covalent','self-loop','non-covalent']))
+
+        # Length of Edge (append 4 times for compatibility with non-conv edge feature vectors)
+        length = np.linalg.norm(pos[atm1]-pos[atm2])
+        for i in range(4): edge_feature_vector.append(length/10)
+
+        # Bond Type (single, double, aromatic)
+        edge_feature_vector.extend(one_of_k_encoding(bond.GetBondTypeAsDouble(), [0.,1.0,1.5,2.0,3.0]))
+
+        # Conjugated
+        edge_feature_vector.append(bond.GetIsConjugated())
+
+        # Is in Ring?
+        edge_feature_vector.append(bond.IsInRing())
+
+        # Stereo
+        allowed = [Chem.rdchem.BondStereo.STEREONONE,
+                Chem.rdchem.BondStereo.STEREOANY, 
+                Chem.rdchem.BondStereo.STEREOE, 
+                Chem.rdchem.BondStereo.STEREOZ, 
+                Chem.rdchem.BondStereo.STEREOCIS, 
+                Chem.rdchem.BondStereo.STEREOTRANS]
+        
+        edge_feature_vector.extend(one_of_k_encoding(bond.GetStereo(), allowed))
+
+        edge_attr.append(edge_feature_vector)
+
+    # Make undirected and add self loops if necessary
+    edge_index = torch.tensor(edge_index, dtype=torch.int64)
+    edge_attr = torch.tensor(edge_attr, dtype=torch.float64)
+    edge_index, edge_attr = make_undirected_with_self_loops(edge_index, edge_attr, undirected=undirected, self_loops=self_loops)
+    return edge_index, edge_attr
+
+
+def calculate_cbeta_position(ca_coords, c_coords, n_coords):
+    # Convert input coordinates to numpy arrays
+    ca = np.array(ca_coords)
+    c = np.array(c_coords)
+    n = np.array(n_coords)
+    
+    # Bond lengths and angles
+    bond_length_ca_cb = 1.54  # Å
+    bond_angle_n_ca_cb = np.deg2rad(109.5)  # radians
+    bond_angle_c_ca_cb = np.deg2rad(109.5)  # radians
+    
+    # Unit vectors along the bonds
+    u_n_ca = (n - ca) / np.linalg.norm(n - ca)
+    u_c_ca = (c - ca) / np.linalg.norm(c - ca)
+    
+    # Orthogonal vector to the plane formed by N, Cα, and C
+    u_orth = np.cross(u_n_ca, u_c_ca)
+    u_orth /= np.linalg.norm(u_orth)  # Normalize
+    
+    # Vector component in the plane
+    u_plane = np.cross(u_orth, u_n_ca)
+    u_plane /= np.linalg.norm(u_plane)  # Normalize
+    
+    # Compute the Cβ position
+    cb = (  ca + bond_length_ca_cb 
+            * (np.cos(bond_angle_n_ca_cb) 
+            * u_n_ca 
+            + np.sin(bond_angle_n_ca_cb) 
+            * (np.cos(bond_angle_c_ca_cb) * u_plane + np.sin(bond_angle_c_ca_cb) * u_orth)
+         ))
+    
+    return cb
+
+
+
+# Parse the arguments
+args = arg_parser()
+data_dir = args.data_dir
+affinity_dict_path = args.affinity_dict
+protein_embeddings = args.protein_embeddings
+ligand_embeddings = args.ligand_embeddings
+print(protein_embeddings)
+print(ligand_embeddings)
+
+
+### For testing ###
+# affinity_dict_path = 'PDBbind_data_dict.json'
+# data_dir = 'PDBbind1'
+# embedding_descriptors = ['ChemBERTa-10M-MLM', 'ankh_base', 'esm2_t6_8M_UR50D']
+###################
+
+
+
+all_atoms = ['B', 'C', 'N', 'O', 'P', 'S', 'Se', 'metal', 'halogen']
+halogens = ['F', 'Cl', 'Br', 'I', 'At'] #Halogen atoms Fluorine (F), Chlorine (Cl), Bromine (Br), Iodine (I), and Astatine (At)
+metals = [
+    # Alkali Metals
+    'Li', 'Na', 'K', 'Rb', 'Cs', 'Fr',
+    # Alkaline Earth Metals
+    'Be', 'Mg', 'Ca', 'Sr', 'Ba', 'Ra',
+    # Transition Metals
+    'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn',
+    'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd',
+    'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg',
+    'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn',
+    'Nh', 'Fl', 'Mc', 'Lv',
+    # Lanthanides
+    'La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 
+    'Ho', 'Er', 'Tm', 'Yb', 'Lu',
+    # Actinides
+    'Ac', 'Th', 'Pa', 'U', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf', 
+    'Es', 'Fm', 'Md', 'No', 'Lr',
+    # Post-Transition Metals
+    'Al', 'Ga', 'In', 'Sn', 'Tl', 'Pb', 'Bi', 'Nh', 'Fl', 'Mc', 'Lv',
+    # Half-Metals
+    'As', 'Si', 'Sb', 'Te'
+]
+
+
+amino_acids = ["ALA", "ARG", "ASN", "ASP", "CYS", "GLN", "GLU", "GLY", "HIS", "ILE", "LEU",
+               "LYS", "MET", "PHE", "PRO", "SER", "THR", "TRP", "TYR", "VAL"]
+
+hetatm_smiles_dict = {'ZN': '[Zn+2]', 'MG': '[Mg+2]', 'NA': '[Na+1]', 'MN': '[Mn+2]', 'CA': '[Ca+2]', 'K': '[K+1]',
+                      'NI': '[Ni+2]', 'FE': '[Fe+2]', 'CO': '[Co+2]', 'HG': '[Hg+2]', 'CD': '[Cd+2]', 'CU': '[Cu+2]', 
+                      'CS': '[Cs+1]', 'AU': '[Au+1]', 'LI': '[Li+1]', 'GA': '[Ga+3]', 'IN': '[In+3]', 'BA': '[Ba+2]',
+                      'RB': '[Rb+1]', 'SR': '[Sr+2]'}
+
+
+# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# PREPROCESSING
+# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# Load the JSON file into a dictionary
+with open(affinity_dict_path, 'r', encoding='utf-8') as json_file:
+    affinity_dict = json.load(json_file)
+
+
+# Get sorted lists of proteins and ligands (dirEntry objects) in the data_dir
+proteins = sorted([protein for protein in os.scandir(data_dir) if protein.name.endswith('protein.pdb')], key=lambda x: x.name)
+ligands = sorted([ligand for ligand in os.scandir(data_dir) if ligand.name.endswith('ligand.sdf')], key=lambda x: x.name)
+
+if not len(proteins) == len(ligands):
+    raise ValueError('Number of proteins and ligands does not match')
+else:
+    print(f'Number of Protein PDBs: {len(proteins)}')
+    print(f'Number of Ligand SDFs: {len(ligands)}')
+
+
+# Initialize Log File:
+log_folder = os.path.join(data_dir,'.logs/')
+if not os.path.exists(log_folder): os.makedirs(log_folder)
+log_file_path = os.path.join(log_folder, "graph_construction_logs.txt")
+log = open(log_file_path, 'a')
+log.write("Data Preprocessing - Log File:\n")
+log.write("Construction of Featurized Interaction Graphs\n")
+log.write("\n")
+
+
+# Initialize PDB Parser
+parser = PDBParser(PERMISSIVE=1, QUIET=True)
+
+amino_acids = ["ALA","ARG","ASN","ASP","CYS","GLN","GLU","GLY","HIS","ILE","LEU","LYS","MET","PHE","PRO","SER","THR","TRP","TYR","VAL"]
+known_hetatms = ['ZN','MG','NA','MN','CA','K','NI','FE','CO','HG','CD','CU','CS','AU','LI','GA','IN','BA','RB','SR']
+known_residues = amino_acids + known_hetatms
+
+
+# Start a loop over the complexes
+#----------------------------------------------------------
+for protein, ligand in zip(proteins, ligands):
+
+    if protein.name.split('_')[0] != ligand.name.split('_')[0]:
+        raise ValueError(f'Protein {protein} and Ligand {ligand} do not match')
+    else:
+        id = protein.name.split('_')[0]
+        protein_path = protein.path
+        ligand_path = ligand.path
+
+    
+    print()
+    print(id)
+    log_string = f'{id}: '
+
+
+
+
+    # LIGAND PARSING - Continue only if the parsed ligand has been processed successfully, else skip this complex
+    lig = parse_sdf_file(ligand_path)
+    if len(lig) == 1: ligand_mol = lig[0]
+    else:
+        log_string += 'Ligand could not be parsed successfully'
+        log.write(log_string + "\n")
+        continue
+    
+    # LIGAND ATOMCOORDS - Get coordinate Matrix of the ligand (Continue only if the ligand has at least 5 heavy atoms)
+    conformer = ligand_mol.GetConformer()
+    coordinates = conformer.GetPositions()
+    ligand_atomcoords = np.array(coordinates)
+    if ligand_atomcoords.shape[0]<5:
+        log_string += 'Ligand is smaller than 5 Atoms and is skipped'
+        log.write(log_string + "\n")
+        continue
+
+
+    # PARSING OF PROTEIN PDB TO GENERATE COORDINATE MATRIX
+    # -----------------------------------------------------
+
+    with open(protein_path) as pdbfile:
+        protein_dict = parse_pdb(parser, id, pdbfile)
+
+
+    # Iterate over the chains in the protein_dict and collect data on the amino acids and hetatms
+    protein_atomcoords = np.array([], dtype=np.int64).reshape(0,3)
+    res_list = []
+    residue_memberships = []
+    residues_dict = {} # Create a dictionary with all residues consecutively without chain distinction (for graph construction)
+
+    residue_idx = 1
+    for chain in protein_dict:
+        chain_comp = protein_dict[chain]['composition']
+
+        # CHAIN CONTAINS ONLY AMINO ACIDS AND HETATMS
+        if chain_comp == [True, False] or chain_comp == [True, True]:
+            
+            for residue in protein_dict[chain]['aa_residues']:
+                res_dict = protein_dict[chain]['aa_residues'][residue]
+
+                # Add the residue to the residue_dict
+                residues_dict[residue_idx] = res_dict
+
+                # Process the information on the residue
+                protein_atomcoords = np.vstack((protein_atomcoords, res_dict['coords']))
+                res_list.append((residue_idx, res_dict['resname']))          
+                memb = [residue_idx for atom in res_dict['atom_indeces']]
+                residue_memberships.extend(memb)
+                residue_idx += 1
+        
+        # CHAIN CONTAINS HETATMS BUT NO AMINO ACIDS
+        elif chain_comp == [False, True]: 
+            for hetatm_res in protein_dict[chain]['hetatm_residues']:
+                hetatmres_dict = protein_dict[chain]['hetatm_residues'][hetatm_res]
+                
+                # Add the residue to the residue_dict
+                residues_dict[residue_idx] = hetatmres_dict
+                
+                # Process the information on the hetatm
+                protein_atomcoords = np.vstack((protein_atomcoords, hetatmres_dict['hetatmcoords']))
+                res_list.append((residue_idx, hetatmres_dict['resname']))
+                memb = [residue_idx for atom in hetatmres_dict['atoms']]
+                residue_memberships.extend(memb)
+                residue_idx +=1
+
+
+
+
+
+    # # COMPUTE CONNECTIVITY BETWEEN LIGAND AND PROTEIN ATOMS
+    # # -----------------------------------------------------
+    
+    # With numpy --------------------------------------------------------------------------------------------------------
+    #tic = time()
+    max_len = 4
+    diff = protein_atomcoords[np.newaxis, :, :] - ligand_atomcoords[:, np.newaxis, :]
+    pairwise_distances = np.linalg.norm(diff, axis=2)
+    close = pairwise_distances <= max_len + 1
+    
+    connections = [np.unique(np.array(residue_memberships)[np.where(row)]) for row in close]
+    #np_time = time()-tic
+
+    connections_res_num = sorted(list(set([atm for l in connections for atm in l])))
+    connections_res_name = [res_list[aa-1][1] for aa in connections_res_num]
+    
+    #print(f'Numpy Time: {np_time}')
+    # ---------------------------------------------------------------------------------------------------------------------
+
+
+
+    # With JAX --------------------------------------------------------------------------------------------------------
+    
+    #Warm up the JIT compilation
+
+    # def compute_connections(protein_atomcoords, ligand_atomcoords):
+
+    #     diff = protein_atomcoords[jnp.newaxis, :, :] - ligand_atomcoords[:, jnp.newaxis, :]
+    #     pairwise_distances = jnp.linalg.norm(diff, axis=2)
+    #     close = pairwise_distances <= 5
+    #     return close
+    # compute_connections = jit(compute_connections)
+
+    # _ = compute_connections(np.array(protein_atomcoords), jnp.array(ligand_atomcoords))
+    
+    # tic = time()
+    # close = compute_connections(protein_atomcoords, ligand_atomcoords)    
+    # connections = [np.unique(np.array(residue_memberships)[np.where(row)]) for row in np.array(close)]
+    # jnp_time = time()-tic
+    # connected_res_num = sorted(list(set([atm for l in connections for atm in l])))
+    # connected_res_name = [res_list[aa-1][1] for aa in connected_res_num]
+
+    # print(f'JaxNumpy Time: {jnp_time}')
+    # ---------------------------------------------------------------------------------------------------------------------
+
+
+
+    unknown_res = [(res not in known_residues and res.strip('0123456789') not in known_residues) for res in connections_res_name]
+    if any(unknown_res):
+        log_string += 'Ligand has been connected to a unknown protein residue, the complex is therefore skipped'
+        log.write(log_string + "\n")
+        continue
+
+
+    log_string += 'Preprocessing Successful - '
+
+
+
+    #-------------------------------------------------------------------------------------------------------------
+    # GENERATE INTERACTION-GRAPH
+    #------------------------------------------------------------------------------------------------------------- 
+
+    num_atomfeatures = 40
+    num_edgefeatures = 20
+
+
+    # Load the amino acid embeddings
+    if protein_embeddings is not None:
+        found_all_emb = True
+        aa_embeddings = {}
+
+        for j, emb in enumerate(protein_embeddings):
+            matching_files = find_files_with_patterns(data_dir, id, emb)
+            if len(matching_files) == 1:
+                aa_embeddings[j] = torch.load(matching_files[0])
+            elif len(matching_files) == 0:
+                found_all_emb = False
+                log_string += f'No embedding file found for {emb}'
+                break
+            elif len(matching_files) > 1:
+                found_all_emb = False
+                log_string += f'Multiple embedding files found for {emb}'
+                break
+                
+        
+        # Skip the complex if not all/too many embeddings are found
+        if not found_all_emb: 
+            log.write(log_string + "\n")
+            continue
+
+
+    # Load the ligand embeddings if there are any
+    if ligand_embeddings is not None:
+        found_all_emb = True
+        lig_embeddings = {}
+
+        for j, emb in enumerate(ligand_embeddings):
+            matching_files = find_files_with_patterns(data_dir, id, emb)
+            if len(matching_files) == 1:
+                lig_embeddings[j] = torch.load(matching_files[0])
+            elif len(matching_files) == 0:
+                found_all_emb = False
+                log_string += f'No embedding file found for {emb}'
+                break
+            elif len(matching_files) > 1:
+                found_all_emb = False
+                log_string += f'Multiple embedding files found for {emb}'
+                break
+                
+        
+        # Skip the complex if not all/too many embeddings are found
+        if not found_all_emb: 
+            log.write(log_string + "\n")
+            continue
+    
+    
+
+    #------------------------------------------------------------------------------------------
+    # Edge Index, Edge Attributes and Node Feature Matrix for Ligand
+    #------------------------------------------------------------------------------------------
+    x = get_atom_features(ligand_mol, padding_len=len(amino_acids))
+    
+    if np.sum(np.isnan(x)) > 0:
+        log_string += 'Skipped - Nans during ligand feature computation'
+        log.write(log_string + "\n")
+        continue
+    
+    edge_index_lig, edge_attr_lig = edge_index_and_attr(ligand_mol, ligand_atomcoords, self_loops=False, undirected=False)
+    
+
+
+
+    #------------------------------------------------------------------------------------------
+    # Edge Index, Edge Attributes and Node Feature Matrix for Protein
+    #------------------------------------------------------------------------------------------
+
+
+    # Check if all imported amino embeddings have the same number of amino acids
+    num_AAs = []
+    for j, emb in enumerate(protein_embeddings):
+        emb_shape = aa_embeddings[j].shape
+        num_AAs.append(emb_shape[0])
+
+
+    if not all(len == num_AAs[0] for len in num_AAs):
+        log_string += 'Embeddings have different lengths'
+        log.write(log_string + "\n")
+        continue
+
+    
+    # Initialize POS using the ligand coordinates
+    pos = ligand_atomcoords.copy()
+    
+    # Initialize embedding protein feature matrix for each protein embedding
+    x_emb = [np.zeros([x.shape[0], aa_embeddings[j].shape[1]], dtype=np.float64) for j,_ in enumerate(protein_embeddings)]
+
+    
+
+
+
+    # Iterate over the residues that were identified as neighbors of ligand atoms (<5A distance)
+    # and add their coordinates to POS, their feature vectors to X, and their embeddings to X_EMB
+    # -------------------------------------------------------------------------------------------
+    new_indeces = []
+    count = pos.shape[0]
+    residue_mismatch = False
+    incomplete_residue = False
+
+    for residue, resname in zip(connections_res_num, connections_res_name):
+
+
+        if not resname == residues_dict[residue]['resname']:
+            print(f'Complex {id}: Residues do not match with')
+            residue_mismatch = True
+        
+
+        # IF THE RESIDUE IS AN AMINO ACID
+        # -----------------------------------------------------
+        if resname in amino_acids:
+
+            try: 
+                ca_idx = residues_dict[residue]['atoms'].index('CA')
+                c_idx = residues_dict[residue]['atoms'].index('C')
+                n_idx = residues_dict[residue]['atoms'].index('N')
+
+                ca_coords = residues_dict[residue]['coords'][ca_idx]
+                c_coords = residues_dict[residue]['coords'][c_idx]
+                n_coords = residues_dict[residue]['coords'][n_idx]
+
+            except ValueError as ve: 
+                incomplete_residue = (residue, resname)
+                continue
+            
+            # Add coords of the CA atom to pos
+            pos = np.vstack((pos, ca_coords))
+
+            # Add feature vector (one-hot-encoding of amino acid type) to feature matrix x
+            aa_identity = np.array(one_of_k_encoding(resname, amino_acids))[np.newaxis,:]
+            padding = np.zeros([1, num_atomfeatures], dtype=np.float64)
+            features = np.hstack((padding, aa_identity))
+            
+            x = np.vstack((x, features))
+            
+
+            # For each embedding protein feature matrix, add the corresponding amino acid embedding
+            for j,_ in enumerate(protein_embeddings):
+                aa_emb = aa_embeddings[j][residue-1]
+                
+                x_emb[j] = np.vstack((x_emb[j], aa_emb[np.newaxis,:]))
+                
+
+        # IF THE RESIDUE IS A HETATM
+        # -----------------------------------------------------
+        else:
+            # Add coords of hetatm to pos
+            coords = residues_dict[residue]['hetatmcoords']
+            pos = np.vstack((pos, coords))
+
+            # Get the atom features for the heteroatom
+            resname_smiles = hetatm_smiles_dict[resname.strip('0123456789')]
+            hetatm_mol = Chem.MolFromSmiles(resname_smiles)
+            hetatm_features = get_atom_features(hetatm_mol, padding_len=len(amino_acids))
+
+            x = np.vstack((x, hetatm_features))
+
+            # For each embedding protein feature matrix, add the a row of zeros
+            for j,_ in enumerate(protein_embeddings):
+                padding = np.zeros([1, aa_embeddings[j].shape[1]], dtype=np.float64)
+
+                x_emb[j] = np.vstack((x_emb[j], padding))
+
+
+        new_indeces.append(count)
+        count +=1
+
+
+
+    ''' Do this in the Dataset Class
+    #------------------------------------------------------------------------------------------
+    # MASTER NODE
+    # add master node features (ones) to x_prot and add a point with mean of ligand coordinates to pos
+
+    # master_node_features_emb = np.zeros([1, aa_emb_len + num_atomfeatures], dtype=np.float64)
+    # master_node_features_aa = np.zeros([1, len(amino_acids) + num_atomfeatures], dtype=np.float64)
+
+
+    # x_prot_aa = np.vstack((x_prot_aa, master_node_features_aa))
+    # x_prot_emb = np.vstack((x_prot_emb, master_node_features_emb))
+
+    # pos = np.vstack((pos, np.mean(pos[:x_lig_emb.shape[0],:], axis=0)))
+    #------------------------------------------------------------------------------------------
+    '''
+
+
+
+    # Check that there has been no residue mismatch
+    if residue_mismatch: 
+        log_string += 'Skipped - Mismatch between "connections" and protein_dict found!'
+        log.write(log_string + "\n")
+        continue
+    
+    # If in one of the residues the CA, C, or N atom was not found, PDB is incomplete, skip complex
+    if incomplete_residue:
+        log_string += f'Skipped - Protein residue {incomplete_residue} missing backbone atoms'
+        log.write(log_string + "\n")
+        continue
+
+
+
+
+    # EDGE INDEX, EDGE ATTR - Add the connection identified above to the edge_index
+    #------------------------------------------------------------------------------------------
+
+    # Create a mapping from the residue numbers in the protein to the indeces in the graph
+    mapping = {key: value for key, value in zip(connections_res_num, new_indeces)}
+
+
+    edge_index_prot = [[],[]]
+    edge_attr_prot = []
+
+    for index, neighbor_list in enumerate(connections): 
+        for residue in neighbor_list:
+            
+            edge_index_prot[0]+=[index]
+            edge_index_prot[1]+=[mapping[residue]]
+
+
+            # Here we need to compute all distances between the ligand atom and the four backbone atoms
+            cb_coords = calculate_cbeta_position(ca_coords, c_coords, n_coords)
+            
+            atm_ca = np.linalg.norm(pos[index] - ca_coords)
+            atm_n = np.linalg.norm(pos[index] - n_coords)
+            atm_c = np.linalg.norm(pos[index]- c_coords)
+            atm_cb = np.linalg.norm(pos[index] - cb_coords)
+
+            # Add the feature vector of the new edges to new_edge_attr (2x)
+            non_cov_feature_vec =   [0.,0.,1.,                                  # non-covalent interaction
+                                    atm_ca/10, atm_n/10, atm_c/10, atm_cb/10,    # atm-bckbone distances divided by 10
+                                    0.,0.,0.,0.,0.,                             # bondtype = non-covalent
+                                    0.,                                         # is not conjugated
+                                    0.,                                         # is not in ring
+                                    0.,0.,0.,0.,0.,0.]                          # No stereo -> non-covalent
+
+
+            # Add the feature vector of the new edges to new_edge_attr
+            edge_attr_prot.append(non_cov_feature_vec)
+
+
+    edge_index_prot = torch.tensor(edge_index_prot, dtype=torch.int64)
+    edge_attr_prot = torch.tensor(edge_attr_prot, dtype=torch.float64)
+    #------------------------------------------------------------------------------------------
+
+
+
+    # Merging the two edge_indeces and edge_attrs into an overall edge_index and edge_attr
+    edge_index = torch.concatenate( [edge_index_lig, edge_index_prot], axis=1 )
+    edge_attr = torch.concatenate( [edge_attr_lig, edge_attr_prot], axis=0 )
+
+
+    # Make undirected and add remaining self-loops
+    edge_index, edge_attr = make_undirected_with_self_loops(edge_index, edge_attr)
+    edge_index_prot, edge_attr_prot = make_undirected_with_self_loops(edge_index_prot, edge_attr_prot)
+    edge_index_lig, edge_attr_lig = make_undirected_with_self_loops(edge_index_lig, edge_attr_lig)
+
+
+
+    ''' Do this in the Dataset Class
+    #------------------------------------------------------------------------------------------
+    # Master Node edge index. Connect all nodes to a hypothetical master node in a directed way
+    # (information flows only from the ligand nodes into the master node)
+    # n_normal_nodes = x_lig_emb.shape[0] + x_prot_emb.shape[0] - 1 
+    
+    # master_lig = [[i for i in range(x_lig_emb.shape[0])],
+    #               [n_normal_nodes for _ in range(x_lig_emb.shape[0])]]
+    
+    # master_prot = [[i for i in range(max(master_lig[0])+1, n_normal_nodes)],
+    #                [n_normal_nodes for _ in range(x_prot_emb.shape[0]-1)]]
+
+    # edge_index_master_lig = torch.tensor(master_lig, dtype=torch.int64)
+    # edge_index_master_prot = torch.tensor(master_prot, dtype=torch.int64)
+    #------------------------------------------------------------------------------------------
+    '''
+
+
+
+    # Check the shapes of the input tensors
+    #------------------------------------------------------------------------------------------
+    shape_inconsistency = False
+
+    try:
+        if pos.shape[1] != 3:
+            log_string += f'Skipped - POS has shape {pos.shape}'
+            log.write(log_string + "\n")
+            continue
+
+        if x.shape[1] != num_atomfeatures + len(amino_acids):
+            log_string += f'Skipped - x has shape {x.shape}'
+            log.write(log_string + "\n")
+            continue
+
+        for j, _ in enumerate(protein_embeddings):
+            if x.shape[0] != x_emb[j].shape[0]:
+                log_string += f'Skipped - Dimension 0 of x {x.shape} and x_emb {x_emb[j].shape} not identical '
+                log.write(log_string + "\n")
+                shape_inconsistency = True
+                break
+
+        
+        for edge_ind, edge_at in [(edge_index.shape, edge_attr.shape),(edge_index_lig.shape, edge_attr_lig.shape),(edge_index_prot.shape, edge_attr_prot.shape)]:
+            if edge_ind[0] != 2 or edge_at[1] != num_edgefeatures or edge_ind[1]!=edge_at[0]:
+                log_string += f'Skipped - edge indeces error: \
+                        {edge_index.shape, edge_attr.shape}\n\
+                        {edge_index_lig.shape, edge_attr_lig.shape}\n\
+                        {edge_index_prot.shape, edge_attr_prot.shape}'
+                log.write(log_string + "\n")
+                shape_inconsistency = True
+
+
+    except IndexError as e:
+        log_string += 'Skipped -' + str(e)
+        log.write(log_string + "\n")
+        shape_inconsistency = True
+            
+    if shape_inconsistency: continue
+    #------------------------------------------------------------------------------------------
+
+
+
+    ''' Do this in the Dataset Class
+    #------------------------------------------------------------------------------------------
+    # Retrieve the binding affinity and other metadata of the complex
+    # -------------------------------------------------------------------------------------------
+    affmetric_encoding = {'Ki':1., 'Kd':2.,'IC50':3.}
+    precision_encoding = {'=':0., '>':1., '<':2., '>=':3., '<=':4., '~':5.}
+   
+    if 'Ki' in affinity_dict[complex_id].keys():
+        affinity = affinity_dict[complex_id]['Ki']
+        affinity_metric = 'Ki'
+        
+    elif 'Kd' in affinity_dict[complex_id].keys():
+        affinity = affinity_dict[complex_id]['Kd']
+        affinity_metric = 'Kd'
+
+    elif 'IC50' in affinity_dict[complex_id].keys():
+        affinity = affinity_dict[complex_id]['IC50']
+        affinity_metric = 'IC50'
+
+    resolution = affinity_dict[complex_id]['resolution']
+    log_kd_ki = affinity_dict[complex_id]['log_kd_ki']
+    precision = affinity_dict[complex_id]['precision']
+
+
+    try: resolution = float(resolution)
+    except ValueError: resolution = 0
+    
+
+
+    # Find out if the graph is part of the test or training data and save into the corresponding folder: 
+    # -------------------------------------------------------------------------------------------
+    log_string += 'Successful - Saved in '
+    save_folders = []
+
+    in_casf_2013 = False
+    in_casf_2016 = False
+    in_refined = False
+
+    if complex_id in casf_2013_complexes:
+        in_casf_2013 = True
+        log_string += 'CASF2013 '
+        save_folders.append(casf2013_folder)
+        
+    if complex_id in casf_2016_complexes:
+        in_casf_2016 = True
+        log_string += 'CASF2016 '
+        save_folders.append(casf2016_folder)
+
+    if (not in_casf_2013) and (not in_casf_2016):
+        log_string += 'Training Data'
+        save_folders.append(train_folder)
+        in_refined = complex_id in refined_complexes
+    #------------------------------------------------------------------------------------------ 
+    
+#     metadata = [in_refined, affmetric_encoding[affinity_metric], resolution, precision_encoding[precision], float(log_kd_ki)]
+    '''
+
+
+
+    # Save the graph data dictionary
+
+    graph = Data(
+        
+            x= torch.tensor(x, dtype=torch.float64),
+
+            edge_index= edge_index,
+            edge_index_lig= edge_index_lig,
+            edge_index_prot= edge_index_prot,
+
+            edge_attr= edge_attr,
+            edge_attr_lig= edge_attr_lig,
+            edge_attr_prot= edge_attr_prot,
+            
+            pos= torch.tensor(pos, dtype=torch.float64),
+            id= id,
+            )
+
+            # edge_index_master_lig = edge_index_master_lig,
+            # edge_index_master_prot = edge_index_master_prot,
+
+            # affinity= torch.tensor(affinity, dtype=torch.float64),
+            # data = torch.tensor(metadata, dtype=torch.float64)
+    
+
+    # Add the amino acid embeddings to the graph_data_dict
+    for j, emb_name in enumerate(protein_embeddings):
+        graph[emb_name] = torch.tensor(x_emb[j], dtype=torch.float64)
+
+    
+    # Add the ligand embeddings to the graph_data_dict
+    for j, emb_name in enumerate(ligand_embeddings):
+        graph[emb_name] = lig_embeddings[j]
+
+
+    print(graph)
+
+    # Save the dictionary of graph data using torch.save
+    torch.save(graph, os.path.join(data_dir, f'{id}_graph.pth'))
+    
+    log_string += 'Graph Saved'
+    log.write(log_string + "\n")
+
+log.close()
