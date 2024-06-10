@@ -53,7 +53,8 @@ log_folder = os.path.join(data_dir, '.logs')
 if not os.path.exists(log_folder): os.makedirs(log_folder)
 log_file_path = os.path.join(log_folder, f'{model_descriptor}.txt')
 log = open(log_file_path, 'a')
-log.write("Generating ChemBERTa Embeddings for PDBbind - Log File:\n")
+log.write("Generating ChemBERTa Embeddings for Proteins - Log File:\n")
+log.write(f"Model Descriptor: {model_descriptor}")
 log.write("\n")
 
 

@@ -49,6 +49,7 @@ if not os.path.exists(log_folder): os.makedirs(log_folder)
 log_file_path = os.path.join(log_folder, f'{model_name}.txt')
 log = open(log_file_path, 'a')
 log.write("Generating ANKH Embeddings - Log File:\n")
+log.write(f"Model Name: {model_name}")
 log.write("\n")
 
 

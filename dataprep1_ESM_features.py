@@ -57,8 +57,8 @@ log_folder = os.path.join(data_dir, '.logs')
 if not os.path.exists(log_folder): os.makedirs(log_folder)
 log_file_path = os.path.join(log_folder, f'{model_descriptor}.txt')
 log = open(log_file_path, 'a')
-log.write("Generating ESM Embeddings for PDBbind - Log File:\n")
-log.write("Data: PDBbind v2020 refined and general set merged\n")
+log.write("Generating ESM Embeddings for Proteins - Log File:\n")
+log.write(f"Model: {model_name}\n")
 log.write("\n")
 
 
