@@ -26,21 +26,32 @@ def sdf_to_smiles(sdf_path):
 
 def smiles_to_embedding(smiles, tokenizer, model):
     inputs = tokenizer(smiles, return_tensors="pt", padding=False, truncation=False)
+    inputs.to(device)
     with torch.no_grad():
         outputs = model(**inputs)
     embeddings = outputs.last_hidden_state
 
-    return embeddings.mean(dim=1)
+    return embeddings.mean(dim=1).cpu()
 
 
+# Device settings
+#device = torch.device('cpu')
+device = torch.device(f'cuda:0' if torch.cuda.is_available() else 'cpu')
+print(torch.cuda.is_available())
+print(device)
 
+
+# Load the ChemBERTa model
 model_name = f'DeepChem/{model_descriptor}'
-
 tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir='./huggingface')
 model = AutoModel.from_pretrained(model_name, cache_dir='./huggingface')
+model.to(device).eval()
+
 
 # Initialize Log File
-log_file_path = os.path.join(data_dir, '.logs', f'{model_descriptor}.txt')
+log_folder = os.path.join(data_dir, '.logs')
+if not os.path.exists(log_folder): os.makedirs(log_folder)
+log_file_path = os.path.join(log_folder, f'{model_descriptor}.txt')
 log = open(log_file_path, 'a')
 log.write("Generating ChemBERTa Embeddings for PDBbind - Log File:\n")
 log.write("\n")
@@ -70,7 +81,6 @@ for ligand in tqdm(ligands):
     smiles = sdf_to_smiles(ligand.path)
     embedding = smiles_to_embedding(smiles, tokenizer, model)
 
-    print(id, embedding.shape)
     torch.save(embedding, save_filepath)
     log_string += 'Successful'
 
