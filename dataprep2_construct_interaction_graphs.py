@@ -300,8 +300,9 @@ data_dir = args.data_dir
 affinity_dict_path = args.affinity_dict
 protein_embeddings = args.protein_embeddings
 ligand_embeddings = args.ligand_embeddings
-print(protein_embeddings)
-print(ligand_embeddings)
+
+print(f'Protein Embeddings: {protein_embeddings}')
+print(f'Ligand Embeddings: {ligand_embeddings}')
 
 
 ### For testing ###
@@ -540,7 +541,7 @@ for protein, ligand in zip(proteins, ligands):
 
 
     # Load the amino acid embeddings
-    if protein_embeddings is not None:
+    if protein_embeddings:
         found_all_emb = True
         aa_embeddings = {}
 
@@ -611,23 +612,25 @@ for protein, ligand in zip(proteins, ligands):
 
 
     # Check if all imported amino embeddings have the same number of amino acids
-    num_AAs = []
-    for j, emb in enumerate(protein_embeddings):
-        emb_shape = aa_embeddings[j].shape
-        num_AAs.append(emb_shape[0])
+    if protein_embeddings:
+        num_AAs = []
+        for j, emb in enumerate(protein_embeddings):
+            emb_shape = aa_embeddings[j].shape
+            num_AAs.append(emb_shape[0])
 
 
-    if not all(len == num_AAs[0] for len in num_AAs):
-        log_string += 'Embeddings have different lengths'
-        log.write(log_string + "\n")
-        continue
+        if not all(len == num_AAs[0] for len in num_AAs):
+            log_string += 'Embeddings have different lengths'
+            log.write(log_string + "\n")
+            continue
 
     
     # Initialize POS using the ligand coordinates
     pos = ligand_atomcoords.copy()
     
     # Initialize embedding protein feature matrix for each protein embedding
-    x_emb = [np.zeros([x.shape[0], aa_embeddings[j].shape[1]], dtype=np.float64) for j,_ in enumerate(protein_embeddings)]
+    if protein_embeddings:
+        x_emb = [np.zeros([x.shape[0], aa_embeddings[j].shape[1]], dtype=np.float64) for j,_ in enumerate(protein_embeddings)]
 
     
 
@@ -678,10 +681,11 @@ for protein, ligand in zip(proteins, ligands):
             
 
             # For each embedding protein feature matrix, add the corresponding amino acid embedding
-            for j,_ in enumerate(protein_embeddings):
-                aa_emb = aa_embeddings[j][residue-1]
-                
-                x_emb[j] = np.vstack((x_emb[j], aa_emb[np.newaxis,:]))
+            if protein_embeddings:
+                for j,_ in enumerate(protein_embeddings):
+                    aa_emb = aa_embeddings[j][residue-1]
+                    
+                    x_emb[j] = np.vstack((x_emb[j], aa_emb[np.newaxis,:]))
                 
 
         # IF THE RESIDUE IS A HETATM
@@ -699,10 +703,11 @@ for protein, ligand in zip(proteins, ligands):
             x = np.vstack((x, hetatm_features))
 
             # For each embedding protein feature matrix, add the a row of zeros
-            for j,_ in enumerate(protein_embeddings):
-                padding = np.zeros([1, aa_embeddings[j].shape[1]], dtype=np.float64)
+            if protein_embeddings:
+                for j,_ in enumerate(protein_embeddings):
+                    padding = np.zeros([1, aa_embeddings[j].shape[1]], dtype=np.float64)
 
-                x_emb[j] = np.vstack((x_emb[j], padding))
+                    x_emb[j] = np.vstack((x_emb[j], padding))
 
 
         new_indeces.append(count)
@@ -832,13 +837,14 @@ for protein, ligand in zip(proteins, ligands):
             log_string += f'Skipped - x has shape {x.shape}'
             log.write(log_string + "\n")
             continue
-
-        for j, _ in enumerate(protein_embeddings):
-            if x.shape[0] != x_emb[j].shape[0]:
-                log_string += f'Skipped - Dimension 0 of x {x.shape} and x_emb {x_emb[j].shape} not identical '
-                log.write(log_string + "\n")
-                shape_inconsistency = True
-                break
+        
+        if protein_embeddings:
+            for j, _ in enumerate(protein_embeddings):
+                if x.shape[0] != x_emb[j].shape[0]:
+                    log_string += f'Skipped - Dimension 0 of x {x.shape} and x_emb {x_emb[j].shape} not identical '
+                    log.write(log_string + "\n")
+                    shape_inconsistency = True
+                    break
 
         
         for edge_ind, edge_at in [(edge_index.shape, edge_attr.shape),(edge_index_lig.shape, edge_attr_lig.shape),(edge_index_prot.shape, edge_attr_prot.shape)]:
@@ -946,16 +952,20 @@ for protein, ligand in zip(proteins, ligands):
     
 
     # Add the amino acid embeddings to the graph_data_dict
-    for j, emb_name in enumerate(protein_embeddings):
-        graph[emb_name] = torch.tensor(x_emb[j], dtype=torch.float64)
+    if protein_embeddings:
+        for j, emb_name in enumerate(protein_embeddings):
+            graph[emb_name] = torch.tensor(x_emb[j], dtype=torch.float64)
 
     
     # Add the ligand embeddings to the graph_data_dict
-    for j, emb_name in enumerate(ligand_embeddings):
-        graph[emb_name] = lig_embeddings[j]
+    if ligand_embeddings:
+        for j, emb_name in enumerate(ligand_embeddings):
+            graph[emb_name] = lig_embeddings[j]
 
 
-    print(graph)
+    print(graph.edge_index)
+    print(graph.edge_index_lig)
+    print(graph.edge_index_prot)
 
     # Save the dictionary of graph data using torch.save
     torch.save(graph, os.path.join(data_dir, f'{id}_graph.pth'))
