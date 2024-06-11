@@ -875,67 +875,7 @@ for protein, ligand in zip(proteins, ligands):
 
 
 
-    ''' Do this in the Dataset Class
-    #------------------------------------------------------------------------------------------
-    # Retrieve the binding affinity and other metadata of the complex
-    # -------------------------------------------------------------------------------------------
-    affmetric_encoding = {'Ki':1., 'Kd':2.,'IC50':3.}
-    precision_encoding = {'=':0., '>':1., '<':2., '>=':3., '<=':4., '~':5.}
-   
-    if 'Ki' in affinity_dict[complex_id].keys():
-        affinity = affinity_dict[complex_id]['Ki']
-        affinity_metric = 'Ki'
-        
-    elif 'Kd' in affinity_dict[complex_id].keys():
-        affinity = affinity_dict[complex_id]['Kd']
-        affinity_metric = 'Kd'
-
-    elif 'IC50' in affinity_dict[complex_id].keys():
-        affinity = affinity_dict[complex_id]['IC50']
-        affinity_metric = 'IC50'
-
-    resolution = affinity_dict[complex_id]['resolution']
-    log_kd_ki = affinity_dict[complex_id]['log_kd_ki']
-    precision = affinity_dict[complex_id]['precision']
-
-
-    try: resolution = float(resolution)
-    except ValueError: resolution = 0
-    
-
-
-    # Find out if the graph is part of the test or training data and save into the corresponding folder: 
-    # -------------------------------------------------------------------------------------------
-    log_string += 'Successful - Saved in '
-    save_folders = []
-
-    in_casf_2013 = False
-    in_casf_2016 = False
-    in_refined = False
-
-    if complex_id in casf_2013_complexes:
-        in_casf_2013 = True
-        log_string += 'CASF2013 '
-        save_folders.append(casf2013_folder)
-        
-    if complex_id in casf_2016_complexes:
-        in_casf_2016 = True
-        log_string += 'CASF2016 '
-        save_folders.append(casf2016_folder)
-
-    if (not in_casf_2013) and (not in_casf_2016):
-        log_string += 'Training Data'
-        save_folders.append(train_folder)
-        in_refined = complex_id in refined_complexes
-    #------------------------------------------------------------------------------------------ 
-    
-#     metadata = [in_refined, affmetric_encoding[affinity_metric], resolution, precision_encoding[precision], float(log_kd_ki)]
-    '''
-
-
-
     # Save the graph data dictionary
-
     graph = Data(
         
             x= torch.tensor(x, dtype=torch.float64),
