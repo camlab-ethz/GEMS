@@ -16,4 +16,4 @@ source /cluster/project/math/dagraber/miniconda3/etc/profile.d/conda.sh
 conda activate graphgen
 
 
-python dataprep1_ChemBERTa_features.py --data_dir /cluster/work/math/dagraber/DTI/PDBbind1 --model ChemBERTa-10M-MLM
+python dataprep1_chemberta_features.py --data_dir /cluster/work/math/dagraber/DTI/PDBbind1 --model ChemBERTa-10M-MLM

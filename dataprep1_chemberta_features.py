@@ -73,7 +73,7 @@ for ligand in tqdm(ligands):
     id = ligand.name.split('_')[0]
     log_string = f'{id}: '
 
-    save_filepath = os.path.join(data_dir, f'{id}_{model_descriptor}.pt')
+    save_filepath = os.path.join(data_dir, f"{id}_{model_descriptor.replace('-', '_')}.pt")
     if os.path.exists(save_filepath):
         log_string += 'Embedding already exists'
         log.write(log_string + "\n")

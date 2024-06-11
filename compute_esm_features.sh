@@ -16,4 +16,4 @@ source /cluster/project/math/dagraber/miniconda3/etc/profile.d/conda.sh
 conda activate graphgen
 
 
-python dataprep1_ESM_features.py --data_dir /cluster/work/math/dagraber/DTI/PDBbind1 --esm_checkpoint t6
+python dataprep1_esm_features.py --data_dir /cluster/work/math/dagraber/DTI/PDBbind1 --esm_checkpoint t6

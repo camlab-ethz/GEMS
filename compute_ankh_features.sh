@@ -16,4 +16,4 @@ source /cluster/project/math/dagraber/miniconda3/etc/profile.d/conda.sh
 conda activate graphgen
 
 
-python dataprep1_ANKH_features.py --data_dir /cluster/work/math/dagraber/DTI/PDBbind1 --ankh_base True
+python dataprep1_ankh_features.py --data_dir /cluster/work/math/dagraber/DTI/PDBbind1 --ankh_base True
