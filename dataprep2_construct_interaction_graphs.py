@@ -142,7 +142,7 @@ def make_undirected_with_self_loops(edge_index, edge_attr, undirected=True, self
 
 
 
-def get_atom_features(mol, padding_len):
+def get_atom_features(mol, all_atoms, padding_len=0):
     """
     Get the atom features for a given molecule.
 
@@ -174,8 +174,7 @@ def get_atom_features(mol, padding_len):
         degree = atom.GetDegree()
         chirality = str(atom.GetChiralTag())
 
-        results =   padding + \
-                    atom_encoding + \
+        results =   atom_encoding + \
                     ringm  + \
                     one_of_k_encoding(hybr, [Chem.rdchem.HybridizationType.S, Chem.rdchem.HybridizationType.SP, Chem.rdchem.HybridizationType.SP2, Chem.rdchem.HybridizationType.SP2D, 
                                              Chem.rdchem.HybridizationType.SP3, Chem.rdchem.HybridizationType.SP3D, Chem.rdchem.HybridizationType.SP3D2, Chem.rdchem.HybridizationType.UNSPECIFIED]) + \
@@ -184,7 +183,8 @@ def get_atom_features(mol, padding_len):
                     mass + \
                     one_of_k_encoding(numHs, [0, 1, 2, 3, 4]) + \
                     one_of_k_encoding_unk(degree,[0, 1, 2, 3, 4, 5, 6, 7, 8, 'OTHER']) + \
-                    one_of_k_encoding_unk(chirality, ['CHI_UNSPECIFIED', 'CHI_TETRAHEDRAL_CW', 'CHI_TETRAHEDRAL_CCW', 'OTHER'])     
+                    one_of_k_encoding_unk(chirality, ['CHI_UNSPECIFIED', 'CHI_TETRAHEDRAL_CW', 'CHI_TETRAHEDRAL_CCW', 'OTHER']) + \
+                    padding    
         
         x.append(results)  
 
@@ -594,7 +594,7 @@ for protein, ligand in zip(proteins, ligands):
     #------------------------------------------------------------------------------------------
     # Edge Index, Edge Attributes and Node Feature Matrix for Ligand
     #------------------------------------------------------------------------------------------
-    x = get_atom_features(ligand_mol, padding_len=len(amino_acids))
+    x = get_atom_features(ligand_mol, all_atoms, padding_len=len(amino_acids))
     
     if np.sum(np.isnan(x)) > 0:
         log_string += 'Skipped - Nans during ligand feature computation'
@@ -698,7 +698,7 @@ for protein, ligand in zip(proteins, ligands):
             # Get the atom features for the heteroatom
             resname_smiles = hetatm_smiles_dict[resname.strip('0123456789')]
             hetatm_mol = Chem.MolFromSmiles(resname_smiles)
-            hetatm_features = get_atom_features(hetatm_mol, padding_len=len(amino_acids))
+            hetatm_features = get_atom_features(hetatm_mol, all_atoms, padding_len=len(amino_acids))
 
             x = np.vstack((x, hetatm_features))
 
