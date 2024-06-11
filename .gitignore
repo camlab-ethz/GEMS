@@ -29,6 +29,12 @@ experiments/DTI5f_c4b/*/
 experiments/DTI5f_c4_grid_search/*/
 experiments/DTI5f_c5/*/
 
+PDBbind1/*ankh*
+PDBbind1/*ChemBERT*
+PDBbind1/*esm2*
+PDBbind1/.logs/
+
+
 PDBbind/
 PDBbind2/
 visualization/
