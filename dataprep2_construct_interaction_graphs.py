@@ -954,8 +954,8 @@ for protein, ligand in zip(proteins, ligands):
     )
 
     if masternode: 
-        graph.edge_index_master_lig = edge_index_master_lig,
-        graph.edge_index_master_prot = edge_index_master_prot,
+        graph.edge_index_master_lig = edge_index_master_lig
+        graph.edge_index_master_prot = edge_index_master_prot
         graph.edge_index_master = edge_index_master
     
     # Add the amino acid embeddings to the graph_data_dict
