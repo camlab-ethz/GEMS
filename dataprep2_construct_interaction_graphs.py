@@ -720,24 +720,6 @@ for protein, ligand in zip(proteins, ligands):
 
 
 
-    ''' Do this in the Dataset Class
-    #------------------------------------------------------------------------------------------
-    # MASTER NODE
-    # add master node features (ones) to x_prot and add a point with mean of ligand coordinates to pos
-
-    # master_node_features_emb = np.zeros([1, aa_emb_len + num_atomfeatures], dtype=np.float64)
-    # master_node_features_aa = np.zeros([1, len(amino_acids) + num_atomfeatures], dtype=np.float64)
-
-
-    # x_prot_aa = np.vstack((x_prot_aa, master_node_features_aa))
-    # x_prot_emb = np.vstack((x_prot_emb, master_node_features_emb))
-
-    # pos = np.vstack((pos, np.mean(pos[:x_lig_emb.shape[0],:], axis=0)))
-    #------------------------------------------------------------------------------------------
-    '''
-
-
-
     # Check that there has been no residue mismatch
     if residue_mismatch: 
         log_string += 'Skipped - Mismatch between "connections" and protein_dict found!'
@@ -809,8 +791,10 @@ for protein, ligand in zip(proteins, ligands):
 
 
     #------------------------------------------------------------------------------------------
-    # Master Node edge index. Connect all nodes to a hypothetical master node in a directed way
-    # (information flows only from the ligand nodes into the master node)
+    # MASTER NODE 
+    # - Edge Indeces: Write edge indeces to connect all nodes of the graph to a hypothetical master node
+    # - Add a point with mean coordinates to the coordinate matrix
+    # - Add a row of zeros to the feature matrices (standard x and protein embedding feature matrices x_emb)
 
     if masternode: 
         n_nodes = x.shape[0]
@@ -827,6 +811,17 @@ for protein, ligand in zip(proteins, ligands):
         edge_index_master_lig = torch.tensor(master_lig, dtype=torch.int64)
         edge_index_master_prot = torch.tensor(master_prot, dtype=torch.int64)
         edge_index_master = torch.concatenate( [edge_index_master_lig[:,:-1], edge_index_master_prot], dim=1)
+
+        # Add a point with average coordinates to the bottom of the coordinate matrix
+        pos = np.vstack((pos, np.mean(pos, axis=0)))
+
+        # Add a row of zeros to the feature matrix x
+        x = np.vstack((x, np.zeros([1, x.shape[1]], dtype=np.float64)))
+
+        # Add a row of zeros to the embedding feature matrices of the x_emb
+        if protein_embeddings:
+            for j,_ in enumerate(protein_embeddings):
+                x_emb[j] = np.vstack((x_emb[j], np.zeros([1, x_emb[j].shape[1]], dtype=np.float64)))
 
     #------------------------------------------------------------------------------------------
 
@@ -969,7 +964,11 @@ for protein, ligand in zip(proteins, ligands):
         for j, emb_name in enumerate(ligand_embeddings):
             graph[emb_name] = lig_embeddings[j]
 
-
+    print()
+    print(graph)
+    print()
+    
+    
     # Save the dictionary of graph data using torch.save
     torch.save(graph, os.path.join(data_dir, f'{id}_graph.pth'))
     
