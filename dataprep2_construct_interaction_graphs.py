@@ -31,11 +31,15 @@ def arg_parser():
     
     parser.add_argument('--protein_embeddings',
     nargs='+',
-    help='Provide names of protein embeddings that should be incorporated (--protein embeddings string1 string2 string3)')
+    help='Provide string to identify protein embeddings that should be incorporated (--protein embeddings string1 string2 string3).\
+          The string should be a substring of the file names of the saved embeddings \
+          (e.g. "*_esm2_t6_8M_UR50D" -> "esm2_t6_8M_URD50" or "esm2_t6")')
 
     parser.add_argument('--ligand_embeddings',
     nargs='+',
-    help='Provide names of embeddings that should be incorporated (--ligand_embeddings string1 string2 string3)')
+    help='Provide names of embeddings that should be incorporated (--ligand_embeddings string1 string2 string3).\
+          The string should be a substring of the file names of the saved embeddings \
+          (e.g. "*_ChemBERTa_10M_MLM" -> "ChemBERTa_10M_MLM" or "ChemBERTa_10M")')
 
     parser.add_argument('--masternode',
                         default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], 
@@ -955,6 +959,7 @@ for protein, ligand in zip(proteins, ligands):
     
     # Add the amino acid embeddings to the graph_data_dict
     if protein_embeddings:
+        graph.protein_embeddings = protein_embeddings
         for j, emb_name in enumerate(protein_embeddings):
             graph[emb_name] = torch.tensor(x_emb[j], dtype=torch.float64)
 
