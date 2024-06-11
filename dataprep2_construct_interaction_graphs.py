@@ -37,6 +37,10 @@ def arg_parser():
     nargs='+',
     help='Provide names of embeddings that should be incorporated (--ligand_embeddings string1 string2 string3)')
 
+    parser.add_argument('--masternode',
+                        default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], 
+                        help="If a masternode should be added to the graph. Defaults to True.")
+
     return parser.parse_args()
 
 
@@ -300,6 +304,7 @@ data_dir = args.data_dir
 affinity_dict_path = args.affinity_dict
 protein_embeddings = args.protein_embeddings
 ligand_embeddings = args.ligand_embeddings
+masternode = args.masternode
 
 print(f'Protein Embeddings: {protein_embeddings}')
 print(f'Ligand Embeddings: {ligand_embeddings}')
@@ -796,7 +801,6 @@ for protein, ligand in zip(proteins, ligands):
     edge_index = torch.concatenate( [edge_index_lig, edge_index_prot], axis=1 )
     edge_attr = torch.concatenate( [edge_attr_lig, edge_attr_prot], axis=0 )
 
-
     # Make undirected and add remaining self-loops
     edge_index, edge_attr = make_undirected_with_self_loops(edge_index, edge_attr)
     edge_index_prot, edge_attr_prot = make_undirected_with_self_loops(edge_index_prot, edge_attr_prot)
@@ -804,22 +808,27 @@ for protein, ligand in zip(proteins, ligands):
 
 
 
-    ''' Do this in the Dataset Class
     #------------------------------------------------------------------------------------------
     # Master Node edge index. Connect all nodes to a hypothetical master node in a directed way
     # (information flows only from the ligand nodes into the master node)
-    # n_normal_nodes = x_lig_emb.shape[0] + x_prot_emb.shape[0] - 1 
-    
-    # master_lig = [[i for i in range(x_lig_emb.shape[0])],
-    #               [n_normal_nodes for _ in range(x_lig_emb.shape[0])]]
-    
-    # master_prot = [[i for i in range(max(master_lig[0])+1, n_normal_nodes)],
-    #                [n_normal_nodes for _ in range(x_prot_emb.shape[0]-1)]]
 
-    # edge_index_master_lig = torch.tensor(master_lig, dtype=torch.int64)
-    # edge_index_master_prot = torch.tensor(master_prot, dtype=torch.int64)
+    if masternode: 
+        n_nodes = x.shape[0]
+        n_l_nodes = ligand_atomcoords.shape[0]
+        n_p_nodes = n_nodes - n_l_nodes
+
+        # For a masternode that is connected to all ligand atoms
+        master_lig = [[i for i in range(n_l_nodes)]+[n_nodes],[n_nodes for _ in range(n_l_nodes+1)]]
+
+        # For a masternode that is connected to all protein amino acids
+        master_prot = [[i for i in range(n_l_nodes, n_nodes+1)],[n_nodes for _ in range(n_p_nodes+1)]]
+        
+        # For a masternode that is connected to all nodes of the graph
+        edge_index_master_lig = torch.tensor(master_lig, dtype=torch.int64)
+        edge_index_master_prot = torch.tensor(master_prot, dtype=torch.int64)
+        edge_index_master = torch.concatenate( [edge_index_master_lig[:,:-1], edge_index_master_prot], dim=1)
+
     #------------------------------------------------------------------------------------------
-    '''
 
 
 
@@ -942,15 +951,13 @@ for protein, ligand in zip(proteins, ligands):
             
             pos= torch.tensor(pos, dtype=torch.float64),
             id= id,
-            )
+    )
 
-            # edge_index_master_lig = edge_index_master_lig,
-            # edge_index_master_prot = edge_index_master_prot,
-
-            # affinity= torch.tensor(affinity, dtype=torch.float64),
-            # data = torch.tensor(metadata, dtype=torch.float64)
+    if masternode: 
+        graph.edge_index_master_lig = edge_index_master_lig,
+        graph.edge_index_master_prot = edge_index_master_prot,
+        graph.edge_index_master = edge_index_master
     
-
     # Add the amino acid embeddings to the graph_data_dict
     if protein_embeddings:
         for j, emb_name in enumerate(protein_embeddings):
@@ -962,10 +969,6 @@ for protein, ligand in zip(proteins, ligands):
         for j, emb_name in enumerate(ligand_embeddings):
             graph[emb_name] = lig_embeddings[j]
 
-
-    print(graph.edge_index)
-    print(graph.edge_index_lig)
-    print(graph.edge_index_prot)
 
     # Save the dictionary of graph data using torch.save
     torch.save(graph, os.path.join(data_dir, f'{id}_graph.pth'))
