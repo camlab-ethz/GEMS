@@ -30,8 +30,8 @@ experiments/DTI5f_c4_grid_search/*/
 experiments/DTI5f_c5/*/
 
 PDBbind/
-PDBbind1/
 PDBbind2/
+visualization/
 huggingface/
 bash_scripts/
 test_data/
@@ -48,7 +48,6 @@ data/DTI5_c4b
 data/DTI5_grid_search
 training_data/
 *plots*
-*visualize*
 wandb/
 clustering/
 slurm*
