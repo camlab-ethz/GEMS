@@ -16,20 +16,25 @@ def visualize_graph(graph,
                     show_edge_attr=False, 
                     add_traces = [], 
                     linewidth=2, 
-                    markersize=3):
+                    markersize=3, 
+                    remove_mn_edges=False,
+                    remove_noncov_edges = False):
 
 
-    # To prepare a list of all the edges in the graph, and a list of same shape that countains the features of these edges
-    # For this, remove double edges (undirected graph) and remove self_loops
+    # Remove the master node edges
+    if remove_mn_edges:
+        master_node_index = torch.max(graph.edge_index)
+        mask = graph.edge_index[1] != master_node_index
+        graph.edge_index = graph.edge_index[:, mask]
 
-    # x_lig = graph.x_lig
-    # x_lig = graph.x_lig
-    # x_prot_emb = graph.x_prot_emb
-    # x_prot_aa = graph.x_prot_aa
+    # Remove the edges between atoms and AAs
+    if remove_noncov_edges:
+        mask1 = graph.edge_index[0] < 25
+        mask2 = graph.edge_index[1] < 25
+        combined_mask = mask1 & mask2
+        graph.edge_index = graph.edge_index[:, combined_mask]
 
-    # graph.x = torch.cat((x_lig, x_prot_aa), axis=0)    
-    # graph.x = torch.cat((x_lig, x_prot_emb), axis=0)
-    # print(graph.x.shape)
+    
 
 
 
@@ -46,7 +51,7 @@ def visualize_graph(graph,
                 hoverinfo_edges.append(edge_attr[idx])
 
         # Prepare hoverinfo as a list of lists, round floats
-        hoverinfo_nodes = graph.x.tolist()
+        hoverinfo_nodes = graph.x[:,40:60].tolist()
 
         for l in range(len(hoverinfo_nodes)):
             hoverinfo_nodes[l] = [int(entry) if entry % 1 == 0 else round(entry,4) for entry in hoverinfo_nodes[l]]
@@ -64,22 +69,90 @@ def visualize_graph(graph,
             if (pair[1], pair[0]) not in edges: 
                 edges.append((pair[0], pair[1]))
 
+
         # Prepare hoverinfo as a list of lists, round floats
         hoverinfo_edges = 'None'
-        hoverinfo_nodes = graph.x.tolist()
+        hoverinfo_nodes = graph.x[:,40:60].tolist()
         for l in range(len(hoverinfo_nodes)):
             hoverinfo_nodes[l] = [int(entry) if entry % 1 == 0 else round(entry,4) for entry in hoverinfo_nodes[l]]
 
 
-    N = graph.x.shape[0]
 
-    #Marker Colors based on atom type
-    atomtypes = (graph.x[:,:9] == 1).nonzero(as_tuple=True)[1].tolist() #identify the index of the first 1 in the feature matrix = atom type
-    print(atomtypes)
-    
-    marker_color_mapping = {0:'rgb(65,105,225)', 1:'rgb(34,139,34)', 2:'rgb(0,0,255)', 3:'rgb(255,0,0)', 4:'rgb(255,120,0)', 5:'rgb(238,210,2)', 
-                            6:'rgb(238,110,2)', 7:'rgb(238,110,2)', 8:'rgb(100,50,0)'}
-    markercolor = [marker_color_mapping[atom] if atom in marker_color_mapping.keys() else 'rgb(0,0,0)' for atom in atomtypes]
+    N = graph.x.shape[0] - 1
+
+
+
+
+
+    #MARKER COLORS AND LABELS
+    #------------------------------------------------------------------------------------------------------------------------------------
+
+    atoms = {0:'B', 1:'C', 2:'N', 3:'O', 4:'P', 5:'S', 6:'Se', 7:'metal', 8:'halogen'}
+
+    atom_colors = {0:'rgb(65,105,225)', 1:'rgb(34,139,34)', 2:'rgb(0,0,255)', 3:'rgb(255,0,0)', 4:'rgb(255,120,0)', 5:'rgb(238,210,2)', 
+                                6:'rgb(238,110,2)', 7:'rgb(238,110,2)', 8:'rgb(238,110,2)'}
+
+    amino_acids = {0:"ALA", 1:"ARG", 2:"ASN", 3:"ASP", 4:"CYS", 5:"GLN", 6:"GLU", 7:"GLY", 8:"HIS", 9:"ILE", 10:"LEU",
+                        11:"LYS", 12:"MET", 13:"PHE", 14:"PRO", 15:"SER", 16:"THR", 17:"TRP", 18:"TYR", 19:"VAL"}
+
+    amino_acid_colors = {
+        'ALA': 'rgb(0,0,0)', # Black
+        'ARG': 'rgb(0,0,255)', # Blue
+        'ASN': 'rgb(173,216,230)', # Light blue
+        'ASP': 'rgb(255,0,0)', # Red
+        'CYS': 'rgb(255,255,0)', # Yellow
+        'GLN': 'rgb(144,238,144)', # Light green
+        'GLU': 'rgb(139,0,0)', # Dark red
+        'GLY': 'rgb(255,255,255)', # White
+        'HIS': 'rgb(255,105,180)', # Pink
+        'ILE': 'rgb(0,100,0)', # Dark green
+        'LEU': 'rgb(0,128,0)', # Green
+        'LYS': 'rgb(0,0,139)', # Dark blue
+        'MET': 'rgb(255,165,0)', # Orange
+        'PHE': 'rgb(105,105,105)', # Dark grey
+        'PRO': 'rgb(216,191,216)', # Light purple
+        'SER': 'rgb(255,182,193)', # Light pink
+        'THR': 'rgb(128,0,128)', # purple
+        'TRP': 'rgb(139,69,19)', # Brown
+        'TYR': 'rgb(211,211,211)', # Light grey
+        'VAL': 'rgb(204,204,0)', # Dark yellow
+    }
+
+
+    hoverinfo_nodes = [0 for i in range(N)]
+    markercolor = [0 for i in range(N)]
+
+
+    #atomtypes = (graph.x[:,1280:1289] == 1).nonzero(as_tuple=True)[1].tolist() #identify the index of the first 1 in the feature matrix = atom type
+    index, atomtypes = (graph.x[:,:9] == 1).nonzero(as_tuple=True) #identify the index of the first 1 in the feature matrix = atom type
+
+    for idx, atomtype in zip(index.tolist(), atomtypes.tolist()):
+
+        #hoverinfo_nodes[idx] = atoms[atomtype] # If the chemical element should be displayed
+        #hoverinfo_nodes[idx] = int(markersize[idx]) # If the attention score should be displayed
+        markercolor[idx] = atom_colors[atomtype]
+
+
+    index, aa_types = (graph.x[:,:20] == 1).nonzero(as_tuple=True) #identify the index of the first 1 in the feature matrix = aa type
+
+    aa_names = [amino_acids[i] for i in aa_types.tolist()]
+
+    for idx, aa_type, aa_name in zip(index.tolist(), aa_types.tolist(), aa_names):
+
+        #hoverinfo_nodes[idx] = amino_acids[aa_type] + f'({int(markersize[idx])})'
+        markercolor[idx] = amino_acid_colors[aa_name]
+
+
+    print(hoverinfo_nodes)
+    print(markercolor)
+    #------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
 
     #Marker shape based on atom type (Fe, Cl and the atoms in highligh as crosses, the rest as circles)
     not_ions = [0,1,2,3,4,5,6,7,8]
@@ -97,6 +170,9 @@ def visualize_graph(graph,
     Xe=[]
     Ye=[]
     Ze=[]
+
+    print(edges)
+
     for e in edges:
         Xe+=[atomcoords[e[0]][0],atomcoords[e[1]][0], None]# x-coordinates of edge ends
         Ye+=[atomcoords[e[0]][1],atomcoords[e[1]][1], None]# y-coordinates of edge ends
@@ -127,6 +203,14 @@ def visualize_graph(graph,
                     text=hoverinfo_nodes,
                     hoverinfo='text'
                     )
+    
+    trace3=go.Scatter3d(x=Xn,
+                y=Yn,
+                z=Zn,
+                mode='text',
+                textfont=dict(size=16),
+                text=hoverinfo_nodes,
+                )
 
     axis=dict(showbackground=False,
             showline=False,
@@ -154,9 +238,9 @@ def visualize_graph(graph,
 
     # Add the traces that are given in add_traces
     if show_edges:
-        data = [trace1, trace2] + add_traces
+        data = [trace1, trace2, trace3] + add_traces
     else: 
-        data = [trace2] + add_traces
+        data = [trace2, trace3] + add_traces
 
 
     # PLOT
@@ -164,6 +248,17 @@ def visualize_graph(graph,
     io.renderers.default='notebook'
 
     iplot(fig, filename='3d-scatter-colorscale')
+
+
+
+
+
+
+
+
+
+
+
 
 
 
