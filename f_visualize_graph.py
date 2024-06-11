@@ -74,7 +74,7 @@ def visualize_graph(graph,
     N = graph.x.shape[0]
 
     #Marker Colors based on atom type
-    atomtypes = (graph.x[:,20:29] == 1).nonzero(as_tuple=True)[1].tolist() #identify the index of the first 1 in the feature matrix = atom type
+    atomtypes = (graph.x[:,:9] == 1).nonzero(as_tuple=True)[1].tolist() #identify the index of the first 1 in the feature matrix = atom type
     print(atomtypes)
     
     marker_color_mapping = {0:'rgb(65,105,225)', 1:'rgb(34,139,34)', 2:'rgb(0,0,255)', 3:'rgb(255,0,0)', 4:'rgb(255,120,0)', 5:'rgb(238,210,2)', 
