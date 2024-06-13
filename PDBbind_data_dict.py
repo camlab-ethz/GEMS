@@ -1,20 +1,3 @@
-'''
-
-
-
-
-
-Add membership to the dictionary that is exported
-- dataset: 'general'
-
-Make sure the resolution is saved in the dictionary and that NMR structures are identifyable
-
-Save the dictionary directly as PDBbind_data_dict.json
-
-'''
-
-
-
 import os
 import json
 import numpy as np
@@ -120,25 +103,30 @@ with open(index_file, 'r') as file:
 
 
         # Determine in which subset of the PDBbind database the complex is located
+        in_casf_2013 = False
+        in_casf_2016 = False
+        in_general = False
+        in_refined = False        
+        
+        dataset = []
+
         if pdb_code in casf_2013_complexes:
             in_casf_2013 = True
-            results_general[pdb_code]['dataset']='casf_2013'
+            dataset.append('casf_2013')            
 
-        elif pdb_code in casf_2016_complexes:
+        if pdb_code in casf_2016_complexes:
             in_casf_2016 = True
-            results_general[pdb_code]['dataset']='casf_2016'
+            dataset.append('casf_2016')
 
-        elif pdb_code in general_complexes:
-            in_general = True
-            results_general[pdb_code]['dataset']='general'
-
-        elif pdb_code in refined_complexes:
+        if pdb_code in refined_complexes:
             in_refined = True
-            results_general[pdb_code]['dataset']='refined'
+            dataset.append('refined')
 
-        if sum([in_casf_2013, in_casf_2016, in_general, in_refined]) != 1:
-            print(pdb_code, in_casf_2013, in_casf_2016, in_general, in_refined)
-            raise Exception
+        if pdb_code in general_complexes:
+            in_general = True
+            dataset.append('general')
+
+        results_general[pdb_code]['dataset']=dataset
 
 
         successful+=1
@@ -154,8 +142,11 @@ print(f'Number of Datapoints with Kd = {Kd_complexes}')
 print(f'Number of Datapoints with Ki = {Ki_complexes}')
 print(f'Number of Datapoints with IC50 = {IC50_complexes}')
 
-print(results_general)
+#print(results_general)
 
 # Save the data to a pickle file
-with open('PDBbind_data_dict2.json', 'wb') as fp:
-    json.dump(results_general, fp)
+# with open('PDBbind_data_dict2.json', 'wb') as fp:
+#     json.dump(results_general, fp)
+
+with open('PDBbind_data_dict2.json', 'w', encoding='utf-8') as json_file:
+    json.dump(results_general, json_file, ensure_ascii=False, indent=4)
