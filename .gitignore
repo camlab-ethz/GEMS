@@ -67,6 +67,7 @@ benchmark_dataloaders_euler/*
 NetComp/*
 
 #Ignore test_files
+*test.ipynb
 *_old.py
 stuff/
 
