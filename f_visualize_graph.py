@@ -18,23 +18,33 @@ def visualize_graph(graph,
                     linewidth=2, 
                     markersize=3, 
                     remove_mn_edges=False,
-                    remove_noncov_edges = False):
+                    remove_noncov_edges = True):
 
+    def print_columns_as_tuple(ei):
+        for i in range(ei.shape[1]):
+            print(ei[:,i].tolist())
+        print()
 
     # Remove the master node edges
     if remove_mn_edges:
         master_node_index = torch.max(graph.edge_index)
-        mask = graph.edge_index[1] != master_node_index
+        #mask = graph.edge_index[1] != master_node_index
+        mask = torch.all(graph.edge_index != master_node_index, dim=0)
         graph.edge_index = graph.edge_index[:, mask]
 
     # Remove the edges between atoms and AAs
     if remove_noncov_edges:
-        mask1 = graph.edge_index[0] < 25
-        mask2 = graph.edge_index[1] < 25
-        combined_mask = mask1 & mask2
-        graph.edge_index = graph.edge_index[:, combined_mask]
 
-    
+        mask1 = (graph.edge_index > graph.n_nodes[1]-1).any(dim=0)
+        mask2 = (graph.edge_index == graph.n_nodes[0]).any(dim=0)
+        mask = ~mask1 | mask2
+        graph.edge_index = graph.edge_index[:, mask]
+
+        print_columns_as_tuple(graph.edge_index)
+
+        # mask1 = graph.edge_index[0] < graph.n_nodes[1].item()
+        # mask2 = graph.edge_index[1] < graph.n_nodes[1].item()
+        # combined_mask = mask1 & mask2
 
 
 
@@ -51,7 +61,7 @@ def visualize_graph(graph,
                 hoverinfo_edges.append(edge_attr[idx])
 
         # Prepare hoverinfo as a list of lists, round floats
-        hoverinfo_nodes = graph.x[:,40:60].tolist()
+        hoverinfo_nodes = graph.x[:,9:40].tolist()
 
         for l in range(len(hoverinfo_nodes)):
             hoverinfo_nodes[l] = [int(entry) if entry % 1 == 0 else round(entry,4) for entry in hoverinfo_nodes[l]]
@@ -72,13 +82,14 @@ def visualize_graph(graph,
 
         # Prepare hoverinfo as a list of lists, round floats
         hoverinfo_edges = 'None'
-        hoverinfo_nodes = graph.x[:,40:60].tolist()
+        hoverinfo_nodes = graph.x[:,9:40].tolist()
         for l in range(len(hoverinfo_nodes)):
             hoverinfo_nodes[l] = [int(entry) if entry % 1 == 0 else round(entry,4) for entry in hoverinfo_nodes[l]]
 
 
 
-    N = graph.x.shape[0] - 1
+    N = graph.x.shape[0]
+    print(N)
 
 
 
@@ -121,30 +132,31 @@ def visualize_graph(graph,
 
     hoverinfo_nodes = [0 for i in range(N)]
     markercolor = [0 for i in range(N)]
+    markersize = [markersize for i in range(N)]
 
 
-    #atomtypes = (graph.x[:,1280:1289] == 1).nonzero(as_tuple=True)[1].tolist() #identify the index of the first 1 in the feature matrix = atom type
     index, atomtypes = (graph.x[:,:9] == 1).nonzero(as_tuple=True) #identify the index of the first 1 in the feature matrix = atom type
-
+    print(atomtypes.tolist())
     for idx, atomtype in zip(index.tolist(), atomtypes.tolist()):
 
-        #hoverinfo_nodes[idx] = atoms[atomtype] # If the chemical element should be displayed
+        hoverinfo_nodes[idx] = atoms[atomtype] # If the chemical element should be displayed
         #hoverinfo_nodes[idx] = int(markersize[idx]) # If the attention score should be displayed
         markercolor[idx] = atom_colors[atomtype]
+        markersize[idx] = 20
 
 
-    index, aa_types = (graph.x[:,:20] == 1).nonzero(as_tuple=True) #identify the index of the first 1 in the feature matrix = aa type
-
+    index, aa_types = (graph.x[:,40:] == 1).nonzero(as_tuple=True) #identify the index of the first 1 in the feature matrix = aa type
     aa_names = [amino_acids[i] for i in aa_types.tolist()]
+
 
     for idx, aa_type, aa_name in zip(index.tolist(), aa_types.tolist(), aa_names):
 
-        #hoverinfo_nodes[idx] = amino_acids[aa_type] + f'({int(markersize[idx])})'
+        hoverinfo_nodes[idx] = amino_acids[aa_type]# + f'({int(markersize[idx])})'
         markercolor[idx] = amino_acid_colors[aa_name]
 
 
-    print(hoverinfo_nodes)
     print(markercolor)
+    print(markersize)
     #------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -171,7 +183,7 @@ def visualize_graph(graph,
     Ye=[]
     Ze=[]
 
-    print(edges)
+    #print(edges)
 
     for e in edges:
         Xe+=[atomcoords[e[0]][0],atomcoords[e[1]][0], None]# x-coordinates of edge ends
