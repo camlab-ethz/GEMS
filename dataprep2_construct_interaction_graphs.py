@@ -359,14 +359,13 @@ hetatm_smiles_dict = {'ZN': '[Zn+2]', 'MG': '[Mg+2]', 'NA': '[Na+1]', 'MN': '[Mn
 
 # Get sorted lists of proteins and ligands (dirEntry objects) in the data_dir
 proteins = sorted([protein for protein in os.scandir(data_dir) if protein.name.endswith('protein.pdb')], key=lambda x: x.name)
-ligands = sorted([ligand for ligand in os.scandir(data_dir) if ligand.name.endswith('ligand.sdf')], key=lambda x: x.name)
+ligands = sorted([ligand for ligand in os.scandir(data_dir) if ligand.name.endswith('ligand_san.sdf')], key=lambda x: x.name)
+
+print(f'Number of Protein PDBs: {len(proteins)}')
+print(f'Number of Ligand SDFs: {len(ligands)}')
 
 if not len(proteins) == len(ligands):
     raise ValueError('Number of proteins and ligands does not match')
-else:
-    print(f'Number of Protein PDBs: {len(proteins)}')
-    print(f'Number of Ligand SDFs: {len(ligands)}')
-
 
 # Initialize Log File:
 log_folder = os.path.join(data_dir,'.logs/')
