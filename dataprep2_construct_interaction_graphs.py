@@ -194,10 +194,6 @@ def get_atom_features(mol, all_atoms, padding_len=0):
                     padding    
         
         x.append(results)
-
-    for l in x: 
-        print(l)
-
     return np.array(x)
 
 
@@ -420,7 +416,6 @@ for protein, ligand in zip(proteins, ligands):
     # LIGAND ATOMCOORDS - Get coordinate Matrix of the ligand (Continue only if the ligand has at least 5 heavy atoms)
     conformer = ligand_mol.GetConformer()
     coordinates = conformer.GetPositions()
-    print(coordinates)
     ligand_atomcoords = np.array(coordinates)
     if ligand_atomcoords.shape[0]<5:
         log_string += 'Ligand is smaller than 5 Atoms and is skipped'
