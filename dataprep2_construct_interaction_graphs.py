@@ -27,7 +27,6 @@ from torch_geometric.data import Data, Batch
 def arg_parser():
     parser = argparse.ArgumentParser(description="Inputs to Graph Generation Script")
     parser.add_argument('--data_dir', type=str, required=True, help='Path to the data directory containing all proteins(PDB) and ligands (SDF)')
-    parser.add_argument('--affinity_dict', type=str, required=True, help='Path to json file assigning affinity values to complexes in the data')
     
     parser.add_argument('--protein_embeddings',
     nargs='+',
@@ -169,8 +168,8 @@ def get_atom_features(mol, all_atoms, padding_len=0):
 
         if symbol in metals: symbol = 'metal'
         elif symbol in halogens: symbol = 'halogen'
-
-        if symbol == 'H': atom_encoding = [0 for i in range(len(all_atoms))]
+        if symbol == 'H': continue #atom_encoding = [0 for i in all_atoms]
+        
         else: atom_encoding = one_of_k_encoding(symbol, all_atoms)
         
         ringm = [atom.IsInRing()]
@@ -184,7 +183,7 @@ def get_atom_features(mol, all_atoms, padding_len=0):
 
         results =   atom_encoding + \
                     ringm  + \
-                    one_of_k_encoding(hybr, [Chem.rdchem.HybridizationType.S, Chem.rdchem.HybridizationType.SP, Chem.rdchem.HybridizationType.SP2, Chem.rdchem.HybridizationType.SP2D, 
+                    one_of_k_encoding_unk(hybr, [Chem.rdchem.HybridizationType.S, Chem.rdchem.HybridizationType.SP, Chem.rdchem.HybridizationType.SP2, Chem.rdchem.HybridizationType.SP2D, 
                                              Chem.rdchem.HybridizationType.SP3, Chem.rdchem.HybridizationType.SP3D, Chem.rdchem.HybridizationType.SP3D2, Chem.rdchem.HybridizationType.UNSPECIFIED]) + \
                     charge + \
                     aromatic + \
@@ -194,7 +193,10 @@ def get_atom_features(mol, all_atoms, padding_len=0):
                     one_of_k_encoding_unk(chirality, ['CHI_UNSPECIFIED', 'CHI_TETRAHEDRAL_CW', 'CHI_TETRAHEDRAL_CCW', 'OTHER']) + \
                     padding    
         
-        x.append(results)  
+        x.append(results)
+
+    for l in x: 
+        print(l)
 
     return np.array(x)
 
@@ -305,7 +307,6 @@ def calculate_cbeta_position(ca_coords, c_coords, n_coords):
 # Parse the arguments
 args = arg_parser()
 data_dir = args.data_dir
-affinity_dict_path = args.affinity_dict
 protein_embeddings = args.protein_embeddings
 ligand_embeddings = args.ligand_embeddings
 masternode = args.masternode
@@ -315,7 +316,6 @@ print(f'Ligand Embeddings: {ligand_embeddings}')
 
 
 ### For testing ###
-# affinity_dict_path = 'PDBbind_data_dict.json'
 # data_dir = 'PDBbind1'
 # embedding_descriptors = ['ChemBERTa-10M-MLM', 'ankh_base', 'esm2_t6_8M_UR50D']
 ###################
@@ -360,10 +360,6 @@ hetatm_smiles_dict = {'ZN': '[Zn+2]', 'MG': '[Mg+2]', 'NA': '[Na+1]', 'MN': '[Mn
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # PREPROCESSING
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# Load the JSON file into a dictionary
-with open(affinity_dict_path, 'r', encoding='utf-8') as json_file:
-    affinity_dict = json.load(json_file)
-
 
 # Get sorted lists of proteins and ligands (dirEntry objects) in the data_dir
 proteins = sorted([protein for protein in os.scandir(data_dir) if protein.name.endswith('protein.pdb')], key=lambda x: x.name)
@@ -424,6 +420,7 @@ for protein, ligand in zip(proteins, ligands):
     # LIGAND ATOMCOORDS - Get coordinate Matrix of the ligand (Continue only if the ligand has at least 5 heavy atoms)
     conformer = ligand_mol.GetConformer()
     coordinates = conformer.GetPositions()
+    print(coordinates)
     ligand_atomcoords = np.array(coordinates)
     if ligand_atomcoords.shape[0]<5:
         log_string += 'Ligand is smaller than 5 Atoms and is skipped'
