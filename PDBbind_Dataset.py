@@ -57,8 +57,10 @@ class IG_Dataset(Dataset):
             if exclude_ic50 and "IC50" in self.pdbbind_dict[id].keys():
                 print('IC50 excluded')
                 continue
-            #if refined_only and not self.pdbbind_dict[id]['refined']: continue
-            #if exclude_nmr and self.pdbbind_dict[id]['NMR']: continue
+            if refined_only and 'refined' not in self.pdbbind_dict[id]['dataset']:
+                print('Not refined')
+                continue
+            if exclude_nmr and self.pdbbind_dict[id]['resolution'] == 'NMR': continue
 
             
             # Get the affinity label and normalize it
