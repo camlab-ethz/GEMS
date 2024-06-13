@@ -48,18 +48,10 @@ class IG_Dataset(Dataset):
             id = grph.id
             pos = grph.pos
             print(id)
-            if float(self.pdbbind_dict[id]['resolution']) > resolution_threshold: 
-                print('Resolution too low')
-                continue
-            if precision_strict and self.pdbbind_dict[id]['precision'] != "=":
-                print('Precision not strict enough')
-                continue
-            if exclude_ic50 and "IC50" in self.pdbbind_dict[id].keys():
-                print('IC50 excluded')
-                continue
-            if refined_only and 'refined' not in self.pdbbind_dict[id]['dataset']:
-                print('Not refined')
-                continue
+            if float(self.pdbbind_dict[id]['resolution']) > resolution_threshold: continue
+            if precision_strict and self.pdbbind_dict[id]['precision'] != "=": continue
+            if exclude_ic50 and "IC50" in self.pdbbind_dict[id].keys(): continue
+            if refined_only and 'refined' not in self.pdbbind_dict[id]['dataset']: continue
             if exclude_nmr and self.pdbbind_dict[id]['resolution'] == 'NMR': continue
 
             
@@ -107,6 +99,7 @@ class IG_Dataset(Dataset):
                 if masternode_connectivity == 'all': edge_index_master = grph.edge_index_master
                 elif masternode_connectivity == 'ligand': edge_index_master = grph.edge_index_master_lig
                 elif masternode_connectivity == 'protein': edge_index_master = grph.edge_index_master_prot
+                else: raise ValueError(f"Invalid value for masternode_connectivity: {masternode_connectivity}")
 
                 # By default, the edge_index_master contains directed edges for information flow from the 
                 # ligand and protein nodes to the masternode ("in")
@@ -119,7 +112,9 @@ class IG_Dataset(Dataset):
 
                 # For information flow in both directions ("undirected"), swap the rows and append
                 elif masternode_edges == 'undirected':
-                    edge_index_master = torch.cat((edge_index_master[:,:-1], edge_index_master[[1, 0], :]), dim=1)
+                    edge_index_master = torch.concatenate((edge_index_master[:,:-1], edge_index_master[[1, 0], :]), dim=1)
+                
+                else: raise ValueError(f"Invalid value for masternode_edges: {masternode_edges}")
 
                 # Append the updated edge_index_master to the edge_index containing the other edges in the graph
                 edge_index = torch.concatenate((edge_index, edge_index_master), dim=1)
@@ -139,9 +134,9 @@ class IG_Dataset(Dataset):
 
                 mn_edge_matrix = mn_edge_attr.repeat(edge_index_master.shape[1], 1)
 
-                edge_attr = torch.cat([edge_attr, mn_edge_matrix], axis=0)
-                edge_attr_lig = torch.cat([edge_attr_lig, mn_edge_matrix], axis=0)
-                edge_attr_prot = torch.cat([edge_attr_prot, mn_edge_matrix], axis=0)
+                edge_attr = torch.concatenate([edge_attr, mn_edge_matrix], axis=0)
+                edge_attr_lig = torch.concatenate([edge_attr_lig, mn_edge_matrix], axis=0)
+                edge_attr_prot = torch.concatenate([edge_attr_prot, mn_edge_matrix], axis=0)
 
 
             # If NO masternode should be included in the graph, remove the corresponding rows from pos and x
@@ -150,7 +145,7 @@ class IG_Dataset(Dataset):
                 pos = pos[:-1, :]
 
 
-
+            # --- ABLATION STUDIES ---
             # For ablation studies: Generate feature matrices without node/edge features
             if not atom_features:
                 x = torch.concatenate((x[:, 0:9], x[:, 40:]), dim=1)
@@ -170,24 +165,24 @@ class IG_Dataset(Dataset):
             elif delete_protein and not masternode: raise ValueError('Cannot delete protein nodes without masternode')
             elif delete_protein and masternode:
                 # Remove all nodes that don't belong to the ligand from feature matrix, keep masternode
-                x = torch.concat( [x[:n_lig_nodes,:] , x[-1,:].view(1,-1)] )
+                x = torch.concatenate( [x[:n_lig_nodes,:] , x[-1,:].view(1,-1)] )
 
                 # Remove all coordinates of nodes that don't belong to the ligand and keep masternode
-                pos = torch.concat( [pos[:n_lig_nodes,:] , pos[-1,:].view(1,-1)] )
+                pos = torch.concatenate( [pos[:n_lig_nodes,:] , pos[-1,:].view(1,-1)] )
 
-                # Keep only edges that are between ligand atoms of between ligand atoms and masternode
-                mask = ((edge_index < n_lig_nodes) | (edge_index == n_nodes-1)).all(dim=0)
-                edge_index = edge_index[:, edge_mask]
-                edge_index[edge_index == n_nodes-1] = n_lig_nodes
-                edge_attr = edge_attr[edge_mask, :]
+                # Keep only edges that are between ligand atoms or between ligand atoms and masternode
+                mask = ((edge_index < n_lig_nodes) | (edge_index == n_nodes)).all(dim=0)
+                edge_index = edge_index[:, mask]
+                edge_index[edge_index == n_nodes] = n_lig_nodes
+                edge_attr = edge_attr[mask, :]
 
                 train_graph = Data(x = x,
                                 edge_index=edge_index,
                                 edge_attr=edge_attr, 
                                 y=pK_scaled, 
-                                n_nodes=torch.tensor(n_nodes, dtype=torch.int64) #needed for reading out masternode features
-                                ,pos=grph.pos
-                                ,id=grph.id
+                                n_nodes=torch.tensor([n_nodes, n_lig_nodes, n_prot_nodes], dtype=torch.int64) #needed for reading out masternode features
+                                #,pos=pos
+                                #,id=id
                 )
             elif delete_ligand and not masternode: raise ValueError('Cannot delete ligand nodes without masternode')
             elif delete_ligand and masternode:
@@ -198,19 +193,20 @@ class IG_Dataset(Dataset):
                 grph.pos = grph.pos[n_lig_nodes:, :]
 
                 # Keep only edges that are between protein nodes and the masternode
-                edge_mask = torch.all(edge_index >= n_lig_nodes, dim=0)
-                edge_index = edge_index[:, edge_mask] - n_lig_nodes
-                edge_attr = edge_attr[edge_mask, :]
+                mask = torch.all(edge_index >= n_lig_nodes, dim=0)
+                edge_index = edge_index[:, mask] - n_lig_nodes
+                edge_attr = edge_attr[mask, :]
 
                 train_graph = Data(x = x,
                                 edge_index=edge_index,
                                 edge_attr=edge_attr,
                                 y=pK_scaled, 
                                 n_nodes=torch.tensor(n_nodes, dtype=torch.int64) #needed for reading out masternode features
-                                ,pos=grph.pos
-                                ,id=grph.id
+                                #,pos=pos
+                                #,id=id
                 )
 
+            # --- 
             else: 
                 train_graph = Data(x = x, 
                                 edge_index=edge_index,
@@ -219,18 +215,18 @@ class IG_Dataset(Dataset):
                                 # we need to pass the corresponding edge_index conaining these edges, but in such 
                                 # architectures we can't do the ablation anymore because there we don't have
                                 # any edge_index_lig or edge_index_prot.
-                                edge_index_lig=edge_index_lig,
-                                edge_index_prot=edge_index_prot,
-                                edge_attr_lig=edge_attr_lig,
-                                edge_attr_prot=edge_attr_prot,
+                                #edge_index_lig=edge_index_lig,
+                                #edge_index_prot=edge_index_prot,
+                                #edge_attr_lig=edge_attr_lig,
+                                #edge_attr_prot=edge_attr_prot,
                                 y=pK_scaled,
                                 n_nodes=torch.tensor(n_nodes, dtype=torch.int64) #needed for reading out masternode features
-                                ,pos=grph.pos
-                                ,id=grph.id
+                                #,pos=pos
+                                #,id=id
                 )
 
 
-            print(train_graph)
+            #print(train_graph)
             self.input_data[ind] = train_graph
             ind += 1
 
