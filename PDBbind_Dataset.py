@@ -2,6 +2,7 @@ import os
 import numpy as np
 import torch
 import json
+import warnings
 from torch_geometric.data import Dataset, Data
 
 
@@ -34,6 +35,7 @@ class IG_Dataset(Dataset):
         self.data_split = data_split
         self.protein_embeddings = protein_embeddings
         self.ligand_embeddings = ligand_embeddings
+        if len(self.ligand_embeddings) > 0 and not masternode: warnings.warn("Ligand embeddings are not used if no masternode is included.")
 
         # Load the PDBbind data dictionary containing all metadata for the complexes
         self.PDBbind_data_dict = 'PDBbind_data_dict.json'
@@ -50,7 +52,7 @@ class IG_Dataset(Dataset):
         dataset_filepaths = [os.path.join(self.data_dir, f"{key}_graph.pth") for key in pdbbind_data_split]
         self.filepaths = [filepath for filepath in dataset_filepaths if os.path.isfile(filepath)]
 
-
+        
         
 
         #------------------------------------------------------------------------------------------
@@ -87,15 +89,6 @@ class IG_Dataset(Dataset):
                 if emb_tensor is not None:
                     x = torch.concatenate((x, emb_tensor), axis=1)
 
-            # Append the ligand embeddings to the feature matrices 
-            # (only to the masternode, which is the last row in the feature matrix)
-            for emb in self.ligand_embeddings:
-                emb_vector = grph[emb]
-                if emb_tensor is not None:
-                    emb_tensor = torch.concatenate((torch.zeros(x.shape[0]-1, emb_vector.shape[1]), emb_vector), axis=0)
-                    x = torch.concatenate((x, emb_tensor), axis=1)
-
-
 
             # --- EDGE INDECES, EDGE ATTRIBUTES--- 
             # for convolution on 1) all edges, 2) only ligand edges and 3) only protein edges
@@ -110,6 +103,15 @@ class IG_Dataset(Dataset):
 
             # If a masternode should be included in the graph, add the corresponding edge_index
             if masternode:
+
+                # Append the ligand embeddings to the feature matrices 
+                # (only to the masternode, which is the last row in the feature matrix)
+                for emb in self.ligand_embeddings:
+                    emb_vector = grph[emb]
+                    if emb_tensor is not None:
+                        emb_tensor = torch.concatenate((torch.zeros(x.shape[0]-1, emb_vector.shape[1]), emb_vector), axis=0)
+                        x = torch.concatenate((x, emb_tensor), axis=1)
+
                 # Depending on the desired masternode connectivity (to all nodes, to ligand nodes or to protein nodes),
                 # choose the correct edge index master from the graph object
                 if masternode_connectivity == 'all': edge_index_master = grph.edge_index_master
