@@ -890,7 +890,7 @@ for protein, ligand in zip(proteins, ligands):
     
     # Add the amino acid embeddings to the graph_data_dict
     if protein_embeddings:
-        graph.protein_embeddings = protein_embeddings
+        #graph.protein_embeddings = protein_embeddings
         for j, emb_name in enumerate(protein_embeddings):
             graph[emb_name] = torch.tensor(x_emb[j], dtype=torch.float64)
 
