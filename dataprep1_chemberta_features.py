@@ -22,7 +22,7 @@ model_descriptor = args.model
 def sdf_to_smiles(sdf_path):
     suppl = Chem.SDMolSupplier(sdf_path)
     smiles_list = [Chem.MolToSmiles(mol) for mol in suppl if mol is not None]
-    return smiles_list[0]
+    return smiles_list
 
 def smiles_to_embedding(smiles, tokenizer, model):
     inputs = tokenizer(smiles, return_tensors="pt", padding=False, truncation=False)
@@ -59,7 +59,7 @@ log.write("\n")
 
 
 # Generate a lists of all ligands
-ligands = sorted([ligand for ligand in os.scandir(data_dir) if ligand.name.endswith('ligand.sdf')], key=lambda x: x.name)
+ligands = sorted([ligand for ligand in os.scandir(data_dir) if ligand.name.endswith('ligand_san.sdf')], key=lambda x: x.name)
 num_ligands = len(ligands)
 
 print(f'Number of ligands to be processed: {num_ligands}')
@@ -79,7 +79,13 @@ for ligand in tqdm(ligands):
         log.write(log_string + "\n")
         continue
         
-    smiles = sdf_to_smiles(ligand.path)
+    smiles_list = sdf_to_smiles(ligand.path)
+    if len(smiles_list) == 1: smiles = smiles_list[0]
+    else:
+        log_string += 'SMILES string could not be extracted from SDF file'
+        log.write(log_string + "\n")
+        continue
+    
     embedding = smiles_to_embedding(smiles, tokenizer, model)
 
     torch.save(embedding, save_filepath)
