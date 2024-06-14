@@ -486,7 +486,6 @@ for protein, ligand in zip(proteins, ligands):
     
     connections = [np.unique(np.array(residue_memberships)[np.where(row)]) for row in close]
     #np_time = time()-tic
-
     connections_res_num = sorted(list(set([atm for l in connections for atm in l])))
     connections_res_name = [res_list[aa-1][1] for aa in connections_res_num]
     
@@ -592,7 +591,10 @@ for protein, ligand in zip(proteins, ligands):
     
 
     #------------------------------------------------------------------------------------------
-    # Edge Index, Edge Attributes and Node Feature Matrix for Ligand
+    # Edge Index, Edge Attributes, Node Feature Matrix X and Coordinate Matrix POS for Ligand
+    # - initialize node feature matrix X by computing the atom features for the ligand with RDKit
+    # - write the edge index and edge attributes for the ligand with RDKit
+    # - initialize the coordinate matrix POS with the ligand atom coordinates
     #------------------------------------------------------------------------------------------
     x = get_atom_features(ligand_mol, all_atoms, padding_len=len(amino_acids))
     
@@ -603,13 +605,17 @@ for protein, ligand in zip(proteins, ligands):
     
     edge_index_lig, edge_attr_lig = edge_index_and_attr(ligand_mol, ligand_atomcoords, self_loops=False, undirected=False)
     
+    # Initialize POS using the ligand coordinates
+    pos = ligand_atomcoords.copy()
+
 
 
 
     #------------------------------------------------------------------------------------------
-    # Edge Index, Edge Attributes and Node Feature Matrix for Protein
+    # Extend Feature Matrix X and Coordinate Matrix POS with Protein Residues, initialize embedding feature matrix
+    # - initialize embedding protein feature matrix
+    # - iterate over the protein residues and add their coords to POS, their features to X, and their embeddings to X_EMB
     #------------------------------------------------------------------------------------------
-
 
     # Check if all imported amino embeddings have the same number of amino acids
     if protein_embeddings:
@@ -625,20 +631,14 @@ for protein, ligand in zip(proteins, ligands):
             continue
 
     
-    # Initialize POS using the ligand coordinates
-    pos = ligand_atomcoords.copy()
-    
     # Initialize embedding protein feature matrix for each protein embedding
+    # Add a row of zeros for each ligand atom (no embedding for ligand atoms)
     if protein_embeddings:
         x_emb = [np.zeros([x.shape[0], aa_embeddings[j].shape[1]], dtype=np.float64) for j,_ in enumerate(protein_embeddings)]
 
     
-
-
-
     # Iterate over the residues that were identified as neighbors of ligand atoms (<5A distance)
     # and add their coordinates to POS, their feature vectors to X, and their embeddings to X_EMB
-    # -------------------------------------------------------------------------------------------
     new_indeces = []
     count = pos.shape[0]
     residue_mismatch = False
@@ -658,12 +658,7 @@ for protein, ligand in zip(proteins, ligands):
 
             try: 
                 ca_idx = residues_dict[residue]['atoms'].index('CA')
-                c_idx = residues_dict[residue]['atoms'].index('C')
-                n_idx = residues_dict[residue]['atoms'].index('N')
-
                 ca_coords = residues_dict[residue]['coords'][ca_idx]
-                c_coords = residues_dict[residue]['coords'][c_idx]
-                n_coords = residues_dict[residue]['coords'][n_idx]
 
             except ValueError as ve: 
                 incomplete_residue = (residue, resname)
@@ -730,12 +725,15 @@ for protein, ligand in zip(proteins, ligands):
 
 
 
-    # EDGE INDEX, EDGE ATTR - Add the connection identified above to the edge_index
+    #------------------------------------------------------------------------------------------
+    # EDGE INDEX, EDGE ATTR - Add the connection between ligand and protein nodes to the edge_index
+    # - creates edge_index_prot (edges connecting ligand atoms to protein residues)
+    # - creates edge_attr_prot (edge attributes for the edges connecting ligand atoms to protein residues)
+    # - merges edge_index_lig and edge_index_prot into edge_index (edges connecting all nodes of the graph)
     #------------------------------------------------------------------------------------------
 
     # Create a mapping from the residue numbers in the protein to the indeces in the graph
     mapping = {key: value for key, value in zip(connections_res_num, new_indeces)}
-
 
     edge_index_prot = [[],[]]
     edge_attr_prot = []
@@ -743,11 +741,20 @@ for protein, ligand in zip(proteins, ligands):
     for index, neighbor_list in enumerate(connections): 
         for residue in neighbor_list:
             
+            # --- EDGE INDEX ---
             edge_index_prot[0]+=[index]
             edge_index_prot[1]+=[mapping[residue]]
 
-
+            # --- EDGE ATTR ---
             # Here we need to compute all distances between the ligand atom and the four backbone atoms
+            ca_idx = residues_dict[residue]['atoms'].index('CA')
+            c_idx = residues_dict[residue]['atoms'].index('C')
+            n_idx = residues_dict[residue]['atoms'].index('N')
+
+            ca_coords = residues_dict[residue]['coords'][ca_idx]
+            c_coords = residues_dict[residue]['coords'][c_idx]
+            n_coords = residues_dict[residue]['coords'][n_idx]
+            
             cb_coords = calculate_cbeta_position(ca_coords, c_coords, n_coords)
             
             atm_ca = np.linalg.norm(pos[index] - ca_coords)
@@ -770,9 +777,6 @@ for protein, ligand in zip(proteins, ligands):
 
     edge_index_prot = torch.tensor(edge_index_prot, dtype=torch.int64)
     edge_attr_prot = torch.tensor(edge_attr_prot, dtype=torch.float64)
-    #------------------------------------------------------------------------------------------
-
-
 
     # Merging the two edge_indeces and edge_attrs into an overall edge_index and edge_attr
     edge_index = torch.concatenate( [edge_index_lig, edge_index_prot], axis=1 )
@@ -782,6 +786,7 @@ for protein, ligand in zip(proteins, ligands):
     edge_index, edge_attr = make_undirected_with_self_loops(edge_index, edge_attr)
     edge_index_prot, edge_attr_prot = make_undirected_with_self_loops(edge_index_prot, edge_attr_prot)
     edge_index_lig, edge_attr_lig = make_undirected_with_self_loops(edge_index_lig, edge_attr_lig)
+    #------------------------------------------------------------------------------------------
 
 
 
@@ -790,12 +795,14 @@ for protein, ligand in zip(proteins, ligands):
     # - Edge Indeces: Write edge indeces to connect all nodes of the graph to a hypothetical master node
     # - Add a point with mean coordinates to the coordinate matrix
     # - Add a row of zeros to the feature matrices (standard x and protein embedding feature matrices x_emb)
+    #------------------------------------------------------------------------------------------
 
     if masternode: 
         n_nodes = x.shape[0]
         n_l_nodes = ligand_atomcoords.shape[0]
         n_p_nodes = n_nodes - n_l_nodes
 
+        # --- EDGE INDECES ---
         # For a masternode that is connected to all ligand atoms
         master_lig = [[i for i in range(n_l_nodes)]+[n_nodes],[n_nodes for _ in range(n_l_nodes+1)]]
 
@@ -807,7 +814,7 @@ for protein, ligand in zip(proteins, ligands):
         edge_index_master_prot = torch.tensor(master_prot, dtype=torch.int64)
         edge_index_master = torch.concatenate( [edge_index_master_lig[:,:-1], edge_index_master_prot], dim=1)
 
-        # Add a point with average coordinates to the bottom of the coordinate matrix
+        # Add a point with MEAN coordinates to the bottom of the coordinate matrix
         pos = np.vstack((pos, np.mean(pos, axis=0)))
 
         # Add a row of zeros to the feature matrix x
@@ -822,6 +829,7 @@ for protein, ligand in zip(proteins, ligands):
 
 
 
+    #------------------------------------------------------------------------------------------
     # Check the shapes of the input tensors
     #------------------------------------------------------------------------------------------
     shape_inconsistency = False
