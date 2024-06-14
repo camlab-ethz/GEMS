@@ -36,6 +36,7 @@ PDBbind1/.logs/
 
 
 PDBbind/
+PDBbind0/
 PDBbind2/
 visualization/
 huggingface/
@@ -62,9 +63,7 @@ export/
 *stdicts*
 c4_training_set.py
 *aggregate_results*
-
-benchmark_dataloaders_euler/*
-NetComp/*
+NetComp/
 
 #Ignore test_files
 *test.ipynb
