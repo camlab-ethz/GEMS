@@ -1,6 +1,6 @@
 import os
 import glob
-import json
+from tqdm import tqdm
 import argparse
 import numpy as np
 
@@ -387,7 +387,7 @@ known_residues = amino_acids + known_hetatms
 
 # Start a loop over the complexes
 #----------------------------------------------------------
-for protein, ligand in zip(proteins, ligands):
+for protein, ligand in tqdm(zip(proteins, ligands), total=len(proteins), desc='Processing Complexes'):
 
     if protein.name.split('_')[0] != ligand.name.split('_')[0]:
         raise ValueError(f'Protein {protein} and Ligand {ligand} do not match')
@@ -396,9 +396,6 @@ for protein, ligand in zip(proteins, ligands):
         protein_path = protein.path
         ligand_path = ligand.path
 
-    
-    print()
-    print(id)
     log_string = f'{id}: '
 
 
@@ -747,16 +744,21 @@ for protein, ligand in zip(proteins, ligands):
 
             # --- EDGE ATTR ---
             # Here we need to compute all distances between the ligand atom and the four backbone atoms
-            ca_idx = residues_dict[residue]['atoms'].index('CA')
-            c_idx = residues_dict[residue]['atoms'].index('C')
-            n_idx = residues_dict[residue]['atoms'].index('N')
+            try:
+                ca_idx = residues_dict[residue]['atoms'].index('CA')
+                c_idx = residues_dict[residue]['atoms'].index('C')
+                n_idx = residues_dict[residue]['atoms'].index('N')
 
-            ca_coords = residues_dict[residue]['coords'][ca_idx]
-            c_coords = residues_dict[residue]['coords'][c_idx]
-            n_coords = residues_dict[residue]['coords'][n_idx]
+                ca_coords = residues_dict[residue]['coords'][ca_idx]
+                c_coords = residues_dict[residue]['coords'][c_idx]
+                n_coords = residues_dict[residue]['coords'][n_idx]
+                
+                cb_coords = calculate_cbeta_position(ca_coords, c_coords, n_coords)
             
-            cb_coords = calculate_cbeta_position(ca_coords, c_coords, n_coords)
-            
+            except ValueError as ve: 
+                incomplete_residue = (residue, resname)
+                break
+
             atm_ca = np.linalg.norm(pos[index] - ca_coords)
             atm_n = np.linalg.norm(pos[index] - n_coords)
             atm_c = np.linalg.norm(pos[index]- c_coords)
@@ -773,6 +775,13 @@ for protein, ligand in zip(proteins, ligands):
 
             # Add the feature vector of the new edges to new_edge_attr
             edge_attr_prot.append(non_cov_feature_vec)
+
+
+    # If in one of the residues the CA, C, or N atom was not found, PDB is incomplete, skip complex
+    if incomplete_residue:
+        log_string += f'Skipped - Protein residue {incomplete_residue} missing backbone atoms'
+        log.write(log_string + "\n")
+        continue
 
 
     edge_index_prot = torch.tensor(edge_index_prot, dtype=torch.int64)
@@ -907,10 +916,6 @@ for protein, ligand in zip(proteins, ligands):
     if ligand_embeddings:
         for j, emb_name in enumerate(ligand_embeddings):
             graph[emb_name] = lig_embeddings[j]
-
-    print()
-    print(graph)
-    print()
     
     
     # Save the dictionary of graph data using torch.save
