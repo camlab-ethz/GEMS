@@ -7,40 +7,56 @@ from torch_geometric.data import Dataset, Data
 
 class IG_Dataset(Dataset):
     def __init__(self,
+                # Dataset Construction
                 root,                               # Path to the folder containing the graphs  
-                filepaths,                          # List of filepaths to the graphs that should be included
+                dataset,                            # Wheter the training or test data should be loaded ['train', 'casf2013', 'casf2016']
+                data_split,                         # Filepath to dictionary (json file) containing the data split for the PDBbind dataset
                 protein_embeddings,                 # List of all protein embeddings that should be included
                 ligand_embeddings,                  # List of all ligand embeddings that should be included
-                masternode=True,                    # If a masternode (mn) should be included
-                masternode_connectivity = 'all',    # If a mn is included, to which nodes it should be connected ('all', 'ligand', 'protein')
-                masternode_edges='undirected',      # If the mn should be connected with undirected or directed edges ("undirected", "in", or "out")
-                edge_features=True,                 # If edge features should be included
-                atom_features=True,                 # If atom features should be included
                 refined_only=False,                 # If only refined complexes should be included
                 exclude_ic50=False,                 # If IC50-labelled datapoints should be excluded
                 exclude_nmr=False,                  # If NMR structures should be excluded
                 resolution_threshold=5.,            # If structures with a resolution above this threshold should be excluded
                 precision_strict=False,             # If only structures with affinity labels with '=' should be included
                 delete_protein = False,             # If protein nodes should be deleted from the graph (ablation study)
-                delete_ligand = False):             # If ligand nodes should be deleted from the graph (ablation study)
+                delete_ligand = False,              # If ligand nodes should be deleted from the graph (ablation study)
+                masternode=True,                    # If a masternode (mn) should be included
+                masternode_connectivity = 'all',    # If a mn is included, to which nodes it should be connected ('all', 'ligand', 'protein')
+                masternode_edges='undirected',      # If the mn should be connected with undirected or directed edges ("undirected", "in", or "out")
+                edge_features=True,                 # If edge features should be included
+                atom_features=True):                # If atom features should be included
+                             
         
         super().__init__(root)
 
         self.data_dir = root
-        self.filepaths = filepaths
+        self.dataset = dataset
+        self.data_split = data_split
         self.protein_embeddings = protein_embeddings
         self.ligand_embeddings = ligand_embeddings
-        self.PDBbind_data_dict = 'PDBbind_data_dict.json'
 
+        # Load the PDBbind data dictionary containing all metadata for the complexes
+        self.PDBbind_data_dict = 'PDBbind_data_dict.json'
         with open('PDBbind_data_dict.json', 'r', encoding='utf-8') as json_file:
             self.pdbbind_dict = json.load(json_file)
 
-        self.input_data = {}
+        # Load the dictionary containing the data split for the PDBbind dataset
+        with open(self.data_split, 'r', encoding='utf-8') as json_file:
+            self.pdbbind_data_split = json.load(json_file) 
+
+
+        # Generate the list of filepaths to the graphs that should be loaded
+        pdbbind_data_split = self.pdbbind_data_split[self.dataset]
+        dataset_filepaths = [os.path.join(self.data_dir, f"{key}_graph.pth") for key in pdbbind_data_split]
+        self.filepaths = [filepath for filepath in dataset_filepaths if os.path.isfile(filepath)]
+
+
         
 
         #------------------------------------------------------------------------------------------
         # Process all the graphs according to kwargs
         # -------------------------------------------------------------------------------------------
+        self.input_data = {}
         ind = 0
         for file in self.filepaths:
             
