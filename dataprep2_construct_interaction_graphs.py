@@ -735,44 +735,82 @@ for protein, ligand in tqdm(zip(proteins, ligands), total=len(proteins), desc='P
     edge_index_prot = [[],[]]
     edge_attr_prot = []
 
+    '''    
+    for index, neighbor_list in enumerate(connections): 
+        for enzyme_residue in neighbor_list:
+            
+            edge_index_prot[0]+=[index]
+            edge_index_prot[1]+=[mapping[enzyme_residue]]
+
+            distance = np.linalg.norm(pos[index]-pos[mapping[enzyme_residue]])
+
+            # Add the feature vector of the new edges to new_edge_attr (2x)
+            non_cov_feature_vec =   [0.,0.,1.,                # non-covalent interaction
+                                    distance/10,              # length divided by 10
+                                    0.,0.,0.,0.,0.,           # bondtype = non-covalent
+                                    0.,                       # is not conjugated
+                                    0.,                       # is not in ring
+                                    0.,0.,0.,0.,0.,0.]        # No stereo -> non-covalent
+
+            # Add the feature vector of the new edges to new_edge_attr
+            edge_attr_prot.append(non_cov_feature_vec)'''
+
     for index, neighbor_list in enumerate(connections): 
         for residue in neighbor_list:
+            resname == residues_dict[residue]['resname']
             
+
             # --- EDGE INDEX ---
             edge_index_prot[0]+=[index]
             edge_index_prot[1]+=[mapping[residue]]
 
             # --- EDGE ATTR ---
-            # Here we need to compute all distances between the ligand atom and the four backbone atoms
-            try:
-                ca_idx = residues_dict[residue]['atoms'].index('CA')
-                c_idx = residues_dict[residue]['atoms'].index('C')
-                n_idx = residues_dict[residue]['atoms'].index('N')
+            if resname in amino_acids:
 
-                ca_coords = residues_dict[residue]['coords'][ca_idx]
-                c_coords = residues_dict[residue]['coords'][c_idx]
-                n_coords = residues_dict[residue]['coords'][n_idx]
+                # The connected protein residue is an amino acid - compute all distances between the ligand atom and 
+                # the four backbone atoms and construct a feature vector for the edge using the distances
+
+                try:
+                    ca_idx = residues_dict[residue]['atoms'].index('CA')
+                    c_idx = residues_dict[residue]['atoms'].index('C')
+                    n_idx = residues_dict[residue]['atoms'].index('N')
+
+                    ca_coords = residues_dict[residue]['coords'][ca_idx]
+                    c_coords = residues_dict[residue]['coords'][c_idx]
+                    n_coords = residues_dict[residue]['coords'][n_idx]
+                    
+                    cb_coords = calculate_cbeta_position(ca_coords, c_coords, n_coords)
                 
-                cb_coords = calculate_cbeta_position(ca_coords, c_coords, n_coords)
+                except ValueError as ve: 
+                    incomplete_residue = (residue, resname)
+                    break
+
+                atm_ca = np.linalg.norm(pos[index] - ca_coords)
+                atm_n = np.linalg.norm(pos[index] - n_coords)
+                atm_c = np.linalg.norm(pos[index]- c_coords)
+                atm_cb = np.linalg.norm(pos[index] - cb_coords)
+
+                # Add the feature vector of the new edges to new_edge_attr (2x)
+                non_cov_feature_vec =   [0.,0.,1.,                                  # non-covalent interaction
+                                        atm_ca/10, atm_n/10, atm_c/10, atm_cb/10,    # atm-bckbone distances divided by 10
+                                        0.,0.,0.,0.,0.,                             # bondtype = non-covalent
+                                        0.,                                         # is not conjugated
+                                        0.,                                         # is not in ring
+                                        0.,0.,0.,0.,0.,0.]                          # No stereo -> non-covalent
+
+            else:
+
+                # The residue is a hetatm - compute the distance between the ligand atom and the hetatm
+                dist = np.linalg.norm(pos[index]-pos[mapping[residue]])
+
+                # Add the feature vector of the new edges to new_edge_attr (2x)
+                non_cov_feature_vec =   [0.,0.,1.,                                  # non-covalent interaction
+                                        dist/10,dist/10,dist/10, dist/10,           # length divided by 10
+                                        0.,0.,0.,0.,0.,                             # bondtype = non-covalent
+                                        0.,                                         # is not conjugated
+                                        0.,                                         # is not in ring
+                                        0.,0.,0.,0.,0.,0.]                          # No stereo -> non-covalent
             
-            except ValueError as ve: 
-                incomplete_residue = (residue, resname)
-                break
-
-            atm_ca = np.linalg.norm(pos[index] - ca_coords)
-            atm_n = np.linalg.norm(pos[index] - n_coords)
-            atm_c = np.linalg.norm(pos[index]- c_coords)
-            atm_cb = np.linalg.norm(pos[index] - cb_coords)
-
-            # Add the feature vector of the new edges to new_edge_attr (2x)
-            non_cov_feature_vec =   [0.,0.,1.,                                  # non-covalent interaction
-                                    atm_ca/10, atm_n/10, atm_c/10, atm_cb/10,    # atm-bckbone distances divided by 10
-                                    0.,0.,0.,0.,0.,                             # bondtype = non-covalent
-                                    0.,                                         # is not conjugated
-                                    0.,                                         # is not in ring
-                                    0.,0.,0.,0.,0.,0.]                          # No stereo -> non-covalent
-
-
             # Add the feature vector of the new edges to new_edge_attr
             edge_attr_prot.append(non_cov_feature_vec)
 
