@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import argparse
 import torch
 import json
 import warnings
@@ -66,11 +67,15 @@ class IG_Dataset(Dataset):
             id = grph.id
             pos = grph.pos
             print(id)
-            if float(self.pdbbind_dict[id]['resolution']) > resolution_threshold: continue
+
+            # --- FILTERING ---
             if precision_strict and self.pdbbind_dict[id]['precision'] != "=": continue
             if exclude_ic50 and "IC50" in self.pdbbind_dict[id].keys(): continue
             if refined_only and 'refined' not in self.pdbbind_dict[id]['dataset']: continue
             if exclude_nmr and self.pdbbind_dict[id]['resolution'] == 'NMR': continue
+            try: 
+                if float(self.pdbbind_dict[id]['resolution']) > resolution_threshold: continue
+            except ValueError: pass # If the resolution cannot be converted to string, it is an NMR structure
 
             
             # Get the affinity label and normalize it
@@ -255,35 +260,69 @@ class IG_Dataset(Dataset):
     def get(self, idx):
         graph = self.input_data[idx]
         return graph
+
+
+
+
+def save_dataset(dataset, path):
+    torch.save(dataset, path)
+
+
+
+def main():
+
+    parser = argparse.ArgumentParser()
+
+    # Dataset construction
+    parser.add_argument("--data_dir", required=True, help="The source path of the data e.g.")
+    parser.add_argument("--data_split", required=True, help="Path to a dictionary (json) that contains the split of the data into training and test set")
+    parser.add_argument("--dataset", required=True, help="The dataset that should be loaded ['train', 'casf2013', 'casf2016']")
+    parser.add_argument('--save_path', type=str, required=True, help='Path to save the dataset')
+
+    parser.add_argument("--refined_only", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If only the refined dataset should be used for training")
+    parser.add_argument("--exclude_ic50", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If datapoints with IC50 affinity values should be excluded")
+    parser.add_argument("--exclude_nmr", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If datapoints generated with NMR should be excluded")
+    parser.add_argument("--resolution_threshold", default=5., type=float, help="Threshold for exclusion of datapoints with high resolution")
+    parser.add_argument("--precision_strict", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If datapoints with unprecise affinity (>,<,..) should be excluded")
+
+    # Graph Construction
+    #parser.add_argument("--protein_embeddings", default=[], type=list, help="List of all ligand embeddings that should be included")
+    parser.add_argument('--protein_embeddings', nargs='+', help='Provide string to identify protein embeddings that should be incorporated (--protein embeddings string1 string2 string3).\
+                        The strings should correspond to the keys that are used to save the embeddings in the graph object of the complexes'),
+    parser.add_argument('--ligand_embeddings', nargs='+', help='Provide names of embeddings that should be incorporated (--ligand_embeddings string1 string2 string3).\
+                        The strings should correspond to the keys that are used to save the embeddings in the graph object of the complexes'),
+    # parser.add_argument("--ligand_embeddings", default=[], type=list, help="List of all ligand embeddings that should be included")
+    parser.add_argument("--masternode", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If a masternode (mn) should be included in the graphs")
+    parser.add_argument("--masternode_connectivity", default='all', help="If a mn is included, to which nodes it should be connected ('all', 'ligand', 'protein')")
+    parser.add_argument("--masternode_edges", default='undirected', help='If the mn should be connected with undirected or directed edges ("undirected", "in", or "out")')
+    parser.add_argument("--atom_features", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Wheter or not Atom Features should be included")
+    parser.add_argument("--edge_features", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Wheter or not Edge Features should be included")
+    parser.add_argument("--delete_ligand", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If ligand nodes should be deleted from the graph (ablation study)")
+    parser.add_argument("--delete_protein", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If protein nodes should be deleted from the graph (ablation study)")
+
+
+    # Add additional arguments as needed
+    args = parser.parse_args()
+
+    protein_embeddings = args.protein_embeddings
+    ligand_embeddings = args.ligand_embeddings
+
+    dataset = IG_Dataset(args.data_dir, args.dataset, args.data_split,
+                        protein_embeddings, ligand_embeddings,
+                        refined_only=args.refined_only,
+                        exclude_ic50=args.exclude_ic50,
+                        exclude_nmr=args.exclude_nmr,
+                        resolution_threshold=args.resolution_threshold,
+                        precision_strict=args.precision_strict,
+                        delete_protein=args.delete_protein,
+                        delete_ligand=args.delete_ligand,
+                        masternode=args.masternode,
+                        masternode_connectivity=args.masternode_connectivity,
+                        masternode_edges=args.masternode_edges,
+                        edge_features=args.edge_features, 
+                        atom_features=args.atom_features)
     
+    save_dataset(dataset, args.save_path)
 
-
-
-'''
-# Find out if the graph is part of the test or training data and save into the corresponding folder: 
-# -------------------------------------------------------------------------------------------
-log_string += 'Successful - Saved in '
-save_folders = []
-
-in_casf_2013 = False
-in_casf_2016 = False
-in_refined = False
-
-if complex_id in casf_2013_complexes:
-    in_casf_2013 = True
-    log_string += 'CASF2013 '
-    save_folders.append(casf2013_folder)
-    
-if complex_id in casf_2016_complexes:
-    in_casf_2016 = True
-    log_string += 'CASF2016 '
-    save_folders.append(casf2016_folder)
-
-if (not in_casf_2013) and (not in_casf_2016):
-    log_string += 'Training Data'
-    save_folders.append(train_folder)
-    in_refined = complex_id in refined_complexes
-#------------------------------------------------------------------------------------------ 
-
-metadata = [in_refined, affmetric_encoding[affinity_metric], resolution, precision_encoding[precision], float(log_kd_ki)]
-'''
+if __name__ == "__main__":
+    main()
