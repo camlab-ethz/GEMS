@@ -65,6 +65,8 @@ c4_training_set.py
 *aggregate_results*
 NetComp/
 
+*dataset.pt
+
 #Ignore test_files
 *test.ipynb
 *_old.py
