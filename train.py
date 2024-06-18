@@ -292,7 +292,7 @@ print(device, torch.cuda.current_device(), torch.cuda.get_device_name())
 # Initialize the model and optimizer
 model_class = getattr(sys.modules[__name__], args.model)
 Model = model_class(dropout_prob=dropout_prob, in_channels=node_feat_dim, edge_dim=edge_feat_dim, conv_dropout_prob=conv_dropout_prob).to(device)
-Model = Model.double()
+Model = Model.float()
 torch.save(Model, f'{save_dir}/model_configuration.pt')
 
 parameters = count_parameters(Model)

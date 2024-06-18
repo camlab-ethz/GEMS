@@ -4,7 +4,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem-per-cpu=8G
-#SBATCH --time=03:00:00
+#SBATCH --time=01:00:00
 #SBATCH --gres=gpu:1
 #SBATCH --gpus=1
 #SBATCH --tmp=20G
@@ -23,9 +23,9 @@ conda activate PYG
 #---------------------------------
 dataset="c4"
 working_dir="/cluster/work/math/dagraber/DTI/"
-project_name="DTI5"
+project_name="PDBbind"
 experiment="DTI5f_${dataset}"
-run_name="testrun_06"
+run_name="testrun_11"
 
 #---------------------------------
 # Dataset Construction
@@ -125,7 +125,7 @@ dropout=0
 num_epochs=10
 fold_to_train=(0)
 
-model="GAT4mnbn"
+model="GAT0bn"
 
 
 # Training Hyperparameters
@@ -235,25 +235,14 @@ for fold in "${fold_to_train[@]}"; do
     echo "Evaluating Fold ${fold}"
 
     config_test="python test.py \
-                --test_data_dir $test_data_dir \
-                --train_data_dir $data_dir \
                 --model_name $run_name \
                 --model_arch $model \
                 --save_dir $results_path \
-                --stdict_paths $stdict \
-                --filtering $filtering \
-                --embedding_descriptor $embedding_descriptor \
-                --embedding $emb \
-                --edge_features $ef \
-                --atom_features $af \
-                --masternode $masternode \
-                --refined_only $refined_only \
-                --exclude_ic50 $exclude_ic50 \
-                --resolution_threshold $resolution_threshold \
-                --precision_strict $precision_strict \
-                --exclude_nmr $exclude_nmr \
-                --delete_ligand $delete_ligand \
-                --delete_protein $delete_protein"
+                --casf2013_dataset $casf2013_dataset_path \
+                --casf2016_dataset $casf2016_dataset_path \
+                --train_dataset $train_dataset_path \
+                --stdict_paths $stdict"
+  
 
     $config_test
     echo
@@ -275,29 +264,16 @@ echo
 old_IFS="$IFS"
 IFS=','
 all_stdicts_string="${all_stdicts[*]}"
-#all_stdicts_string="${all_stdicts[@]}"
 IFS="$old_IFS"
 
 config_ensemble="python test.py \
-            --test_data_dir $test_data_dir \
-            --train_data_dir $data_dir \
             --model_name $run_name \
             --model_arch $model \
-            --save_dir $experiment_path \
-            --stdict_paths $all_stdicts_string \
-            --filtering $filtering \
-            --embedding_descriptor $embedding_descriptor \
-            --embedding $emb \
-            --edge_features $ef \
-            --atom_features $af \
-            --masternode $masternode \
-            --refined_only $refined_only \
-            --exclude_ic50 $exclude_ic50 \
-            --resolution_threshold $resolution_threshold \
-            --precision_strict $precision_strict \
-            --exclude_nmr $exclude_nmr \
-            --delete_ligand $delete_ligand \
-            --delete_protein $delete_protein"
+            --save_dir $results_path \
+            --casf2013_dataset $casf2013_dataset_path \
+            --casf2016_dataset $casf2016_dataset_path \
+            --train_dataset $train_dataset_path \
+            --stdict_paths $all_stdicts_string"
 
 echo "Evaluating Ensemble Model"
 $config_ensemble

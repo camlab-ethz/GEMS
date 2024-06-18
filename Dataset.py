@@ -67,7 +67,6 @@ class PDBbind_Dataset(Dataset):
             grph = torch.load(file)
             id = grph.id
             pos = grph.pos
-            print(id)
 
             # --- FILTERING ---
             if precision_strict and self.pdbbind_dict[id]['precision'] != "=": continue
@@ -154,7 +153,8 @@ class PDBbind_Dataset(Dataset):
                         0., 0., 0.,0.,0.,                       # bondtype = None
                         0.,                                     # is not conjugated
                         0.,                                     # is not in ring
-                        0., 0., 0., 0., 0., 0.])                # No stereo
+                        0., 0., 0., 0., 0., 0.],                # No stereo
+                        dtype=torch.float)
 
                 mn_edge_matrix = mn_edge_attr.repeat(edge_index_master.shape[1], 1)
 
@@ -200,11 +200,11 @@ class PDBbind_Dataset(Dataset):
                 edge_index[edge_index == n_nodes] = n_lig_nodes
                 edge_attr = edge_attr[mask, :]
 
-                train_graph = Data(x = x,
-                                edge_index=edge_index,
-                                edge_attr=edge_attr, 
-                                y=pK_scaled, 
-                                n_nodes=torch.tensor([n_nodes, n_lig_nodes, n_prot_nodes], dtype=torch.int64) #needed for reading out masternode features
+                train_graph = Data(x = x.float(),
+                                edge_index=edge_index.long(),
+                                edge_attr=edge_attr.float(),
+                                y=torch.tensor(pK_scaled, dtype=torch.float),
+                                n_nodes=torch.tensor(n_nodes, dtype=torch.long) #needed for reading out masternode features
                                 #,pos=pos
                                 #,id=id
                 )
@@ -221,20 +221,20 @@ class PDBbind_Dataset(Dataset):
                 edge_index = edge_index[:, mask] - n_lig_nodes
                 edge_attr = edge_attr[mask, :]
 
-                train_graph = Data(x = x,
-                                edge_index=edge_index,
-                                edge_attr=edge_attr,
-                                y=pK_scaled, 
-                                n_nodes=torch.tensor(n_nodes, dtype=torch.int64) #needed for reading out masternode features
+                train_graph = Data(x = x.float(),
+                                edge_index=edge_index.long(),
+                                edge_attr=edge_attr.float(),
+                                y=torch.tensor(pK_scaled, dtype=torch.float),
+                                n_nodes=torch.tensor(n_nodes, dtype=torch.long) #needed for reading out masternode features
                                 #,pos=pos
                                 #,id=id
                 )
 
             # --- 
             else: 
-                train_graph = Data(x = x, 
-                                edge_index=edge_index,
-                                edge_attr=edge_attr, 
+                train_graph = Data(x = x.float(), 
+                                edge_index=edge_index.long(),
+                                edge_attr=edge_attr.float(),
                                 # To do: If we want to do convolution on only ligand or protein edges, 
                                 # we need to pass the corresponding edge_index conaining these edges, but in such 
                                 # architectures we can't do the ablation anymore because there we don't have
@@ -243,8 +243,8 @@ class PDBbind_Dataset(Dataset):
                                 #edge_index_prot=edge_index_prot,
                                 #edge_attr_lig=edge_attr_lig,
                                 #edge_attr_prot=edge_attr_prot,
-                                y=torch.tensor(pK_scaled),
-                                n_nodes=torch.tensor(n_nodes, dtype=torch.int64) #needed for reading out masternode features
+                                y=torch.tensor(pK_scaled, dtype=torch.float),
+                                n_nodes=torch.tensor(n_nodes, dtype=torch.long) #needed for reading out masternode features
                                 #,pos=pos
                                 #,id=id
                 )
