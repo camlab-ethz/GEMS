@@ -88,7 +88,7 @@ for ligand in tqdm(ligands):
     
     embedding = smiles_to_embedding(smiles, tokenizer, model)
 
-    torch.save(embedding, save_filepath)
+    torch.save(embedding.float(), save_filepath)
     log_string += 'Successful'
 
 

@@ -97,7 +97,8 @@ for protein in tqdm(proteins):
     with open(protein.path) as pdbfile:
         prot = parse_pdb(parser, id, pdbfile)    
         
-    emb = np.array([], dtype=np.int64).reshape(0,embedding_size)
+    #emb = np.array([], dtype=np.int64).reshape(0,embedding_size)
+    emb = torch.empty(0, embedding_size, dtype=torch.float)
 
     for chain in prot:
 
@@ -109,7 +110,7 @@ for protein in tqdm(proteins):
 
             try:
                 embeddings = get_aa_embeddings_ankh(sequence)
-                emb = np.vstack((emb, embeddings.cpu()))
+                emb = torch.vstack((emb, embeddings.cpu()))
                 
             except Exception as e:
                 log_string += str(e)
@@ -122,7 +123,7 @@ for protein in tqdm(proteins):
         log.write(log_string + "\n")
         continue
     else:
-        torch.save(emb, save_filepath)
+        torch.save(emb.float(), save_filepath)
         log_string += 'Successful'
 
     log.write(log_string + "\n")
