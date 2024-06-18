@@ -146,7 +146,8 @@ def make_undirected_with_self_loops(edge_index, edge_attr, undirected=True, self
                                               0., 0., 0., 0., 0.,  # bondtype = None
                                               0.,  # is not conjugated
                                               0.,  # is not in ring
-                                              0., 0., 0., 0., 0., 0.])  # No stereo -> self-loop
+                                              0., 0., 0., 0., 0., 0.],  # No stereo -> self-loop
+                                              dtype=torch.float)
     if undirected: edge_index, edge_attr = to_undirected(edge_index, edge_attr)
     if self_loops: edge_index, edge_attr = add_self_loops(edge_index, edge_attr, fill_value=self_loop_feature_vector)
     return edge_index, edge_attr
@@ -198,7 +199,7 @@ def get_atom_features(mol, all_atoms, padding_len=0):
                     padding    
         
         x.append(results)
-    return np.array(x)
+    return np.array(x, dtype=np.float32)
 
 
 
@@ -264,7 +265,7 @@ def edge_index_and_attr(mol, pos, undirected = True, self_loops = True):
 
     # Make undirected and add self loops if necessary
     edge_index = torch.tensor(edge_index, dtype=torch.int64)
-    edge_attr = torch.tensor(edge_attr, dtype=torch.float64)
+    edge_attr = torch.tensor(edge_attr, dtype=torch.float)
     edge_index, edge_attr = make_undirected_with_self_loops(edge_index, edge_attr, undirected=undirected, self_loops=self_loops)
     return edge_index, edge_attr
 
@@ -413,7 +414,7 @@ for i, (protein, ligand) in enumerate(zip(proteins, ligands)):
         # LIGAND ATOMCOORDS - Get coordinate Matrix of the ligand (Continue only if the ligand has at least 5 heavy atoms)
         conformer = ligand_mol.GetConformer()
         coordinates = conformer.GetPositions()
-        ligand_atomcoords = np.array(coordinates)
+        ligand_atomcoords = np.array(coordinates, dtype=np.float32)
         if ligand_atomcoords.shape[0]<5: 
             raise SkipComplexException('Ligand is smaller than 5 Atoms and is skipped')
 
@@ -424,7 +425,7 @@ for i, (protein, ligand) in enumerate(zip(proteins, ligands)):
             protein_dict = parse_pdb(parser, id, pdbfile)
 
         # Iterate over the chains in the protein_dict and collect data on the amino acids and hetatms
-        protein_atomcoords = np.array([], dtype=np.int64).reshape(0,3)
+        protein_atomcoords = np.array([], dtype=np.float32).reshape(0,3)
         res_list = []
         residue_memberships = []
         residues_dict = {} # Create a dictionary with all residues consecutively without chain distinction (for graph construction)
@@ -602,7 +603,7 @@ for i, (protein, ligand) in enumerate(zip(proteins, ligands)):
         # Initialize embedding protein feature matrix for each protein embedding
         # Add a row of zeros for each ligand atom (no embedding for ligand atoms)
         if protein_embeddings:
-            x_emb = [np.zeros([x.shape[0], aa_embeddings[j].shape[1]], dtype=np.float64) for j,_ in enumerate(protein_embeddings)]
+            x_emb = [np.zeros([x.shape[0], aa_embeddings[j].shape[1]], dtype=np.float32) for j,_ in enumerate(protein_embeddings)]
 
         
         # Iterate over the residues that were identified as neighbors of ligand atoms (<5A distance)
@@ -632,7 +633,7 @@ for i, (protein, ligand) in enumerate(zip(proteins, ligands)):
 
                 # Add feature vector (one-hot-encoding of amino acid type) to feature matrix x
                 aa_identity = np.array(one_of_k_encoding(resname, amino_acids))[np.newaxis,:]
-                padding = np.zeros([1, num_atomfeatures], dtype=np.float64)
+                padding = np.zeros([1, num_atomfeatures], dtype=np.float32)
                 features = np.hstack((padding, aa_identity))
                 
                 x = np.vstack((x, features))
@@ -663,7 +664,7 @@ for i, (protein, ligand) in enumerate(zip(proteins, ligands)):
                 # For each embedding protein feature matrix, add the a row of zeros
                 if protein_embeddings:
                     for j,_ in enumerate(protein_embeddings):
-                        padding = np.zeros([1, aa_embeddings[j].shape[1]], dtype=np.float64)
+                        padding = np.zeros([1, aa_embeddings[j].shape[1]], dtype=np.float32)
 
                         x_emb[j] = np.vstack((x_emb[j], padding))
 
@@ -748,7 +749,7 @@ for i, (protein, ligand) in enumerate(zip(proteins, ligands)):
 
 
         edge_index_prot = torch.tensor(edge_index_prot, dtype=torch.int64)
-        edge_attr_prot = torch.tensor(edge_attr_prot, dtype=torch.float64)
+        edge_attr_prot = torch.tensor(edge_attr_prot, dtype=torch.float)
 
         # Merging the two edge_indeces and edge_attrs into an overall edge_index and edge_attr
         edge_index = torch.concatenate( [edge_index_lig, edge_index_prot], axis=1 )
@@ -790,12 +791,12 @@ for i, (protein, ligand) in enumerate(zip(proteins, ligands)):
             pos = np.vstack((pos, np.mean(pos, axis=0)))
 
             # Add a row of zeros to the feature matrix x
-            x = np.vstack((x, np.zeros([1, x.shape[1]], dtype=np.float64)))
+            x = np.vstack((x, np.zeros([1, x.shape[1]], dtype=np.float32)))
 
             # Add a row of zeros to the embedding feature matrices of the x_emb
             if protein_embeddings:
                 for j,_ in enumerate(protein_embeddings):
-                    x_emb[j] = np.vstack((x_emb[j], np.zeros([1, x_emb[j].shape[1]], dtype=np.float64)))
+                    x_emb[j] = np.vstack((x_emb[j], np.zeros([1, x_emb[j].shape[1]], dtype=np.float32)))
 
         #------------------------------------------------------------------------------------------
 
@@ -829,17 +830,17 @@ for i, (protein, ligand) in enumerate(zip(proteins, ligands)):
         # Save the graph data dictionary
         graph = Data(
             
-                x= torch.tensor(x, dtype=torch.float64),
+                x= torch.tensor(x, dtype=torch.float),
 
                 edge_index= edge_index,
                 edge_index_lig= edge_index_lig,
                 edge_index_prot= edge_index_prot,
 
-                edge_attr= edge_attr,
-                edge_attr_lig= edge_attr_lig,
-                edge_attr_prot= edge_attr_prot,
+                edge_attr= edge_attr.float(),
+                edge_attr_lig= edge_attr_lig.float(),
+                edge_attr_prot= edge_attr_prot.float(),
                 
-                pos= torch.tensor(pos, dtype=torch.float64),
+                pos= torch.tensor(pos, dtype=torch.float),
                 id= id,
         )
 
@@ -852,13 +853,13 @@ for i, (protein, ligand) in enumerate(zip(proteins, ligands)):
         if protein_embeddings:
             #graph.protein_embeddings = protein_embeddings
             for j, emb_name in enumerate(protein_embeddings):
-                graph[emb_name] = torch.tensor(x_emb[j], dtype=torch.float64)
+                graph[emb_name] = torch.tensor(x_emb[j], dtype=torch.float)
 
         
         # Add the ligand embeddings to the graph_data_dict
         if ligand_embeddings:
             for j, emb_name in enumerate(ligand_embeddings):
-                graph[emb_name] = lig_embeddings[j]
+                graph[emb_name] = lig_embeddings[j].float()
         
         
         # Save the dictionary of graph data using torch.save
