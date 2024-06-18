@@ -7,6 +7,8 @@ import numpy as np
 import wandb
 import time
 
+from torch_geometric.data import Dataset
+from Dataset import *
 from torch_geometric.loader import DataLoader
 from sklearn.model_selection import StratifiedKFold
 from torch.utils.data import Subset
