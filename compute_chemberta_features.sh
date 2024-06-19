@@ -4,7 +4,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem-per-cpu=8G
-#SBATCH --time=01:00:00
+#SBATCH --time=15:00:00
 #SBATCH --gres=gpu:1
 #SBATCH --gpus=1
 #SBATCH --tmp=20G
@@ -16,4 +16,4 @@ source /cluster/project/math/dagraber/miniconda3/etc/profile.d/conda.sh
 conda activate graphgen
 
 
-python dataprep1_chemberta_features.py --data_dir /cluster/work/math/dagraber/DTI/PDBbind_test --model ChemBERTa-10M-MLM
+python dataprep1_chemberta_features.py --data_dir /cluster/work/math/dagraber/DTI/PDBbind --model ChemBERTa-10M-MLM
