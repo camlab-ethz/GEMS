@@ -31,9 +31,9 @@ def main():
 
     # Graph Construction
     #parser.add_argument("--protein_embeddings", default=[], type=list, help="List of all ligand embeddings that should be included")
-    parser.add_argument('--protein_embeddings', nargs='+', help='Provide string to identify protein embeddings that should be incorporated (--protein embeddings string1 string2 string3).\
+    parser.add_argument('--protein_embeddings', nargs='+', default=[], help='Provide string to identify protein embeddings that should be incorporated (--protein embeddings string1 string2 string3).\
                         The strings should correspond to the keys that are used to save the embeddings in the graph object of the complexes'),
-    parser.add_argument('--ligand_embeddings', nargs='+', help='Provide names of embeddings that should be incorporated (--ligand_embeddings string1 string2 string3).\
+    parser.add_argument('--ligand_embeddings', nargs='+', default=[], help='Provide names of embeddings that should be incorporated (--ligand_embeddings string1 string2 string3).\
                         The strings should correspond to the keys that are used to save the embeddings in the graph object of the complexes'),
     # parser.add_argument("--ligand_embeddings", default=[], type=list, help="List of all ligand embeddings that should be included")
     parser.add_argument("--masternode", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If a masternode (mn) should be included in the graphs")
