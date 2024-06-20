@@ -36,7 +36,7 @@ def evaluate(models, loader, criterion, device):
     total_loss = 0.0
     y_true = []
     y_pred = []
-    id = []
+    #id = []
 
     # Disable gradient calculation during evaluation
     with torch.no_grad():
@@ -55,7 +55,7 @@ def evaluate(models, loader, criterion, device):
             total_loss += loss.item()
             y_true.extend(targets.tolist())
             y_pred.extend(output.tolist())
-            id.extend(graphbatch.id)
+            #id.extend(graphbatch.id)
 
     # Calculate evaluation metrics
     eval_loss = total_loss / len(loader)
@@ -73,7 +73,7 @@ def evaluate(models, loader, criterion, device):
     true_labels_unscaled = torch.tensor(y_true) * (max - min) + min
     predictions_unscaled = torch.tensor(y_pred) * (max - min) + min
     rmse = criterion(predictions_unscaled, true_labels_unscaled)
-    return eval_loss, r, rmse, r2_score, true_labels_unscaled, predictions_unscaled, id
+    return eval_loss, r, rmse, r2_score, true_labels_unscaled, predictions_unscaled#, id
 #-------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -166,8 +166,12 @@ dropout_prob = 0
 criterion = RMSELoss()
 
 model_class = getattr(sys.modules[__name__], model_arch)
-models = [model_class(dropout_prob=dropout_prob, in_channels=node_feat_dim, edge_dim=edge_feat_dim,
-            conv_dropout_prob=conv_dropout_prob).float().to(device) for _ in range(len(stdict_paths))]
+models = [model_class(
+            dropout_prob=dropout_prob, 
+            in_channels=node_feat_dim,
+            edge_dim=edge_feat_dim,
+            conv_dropout_prob=conv_dropout_prob).float().to(device)
+            for _ in range(len(stdict_paths))]
 
 
 ## MODEL NAME ##
@@ -190,15 +194,15 @@ train_metrics = evaluate(models, train_loader, criterion, device)
 fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(24, 8))
 
 # Plot the predictions for CASF2016
-loss, r, rmse, r2, y_true, y_pred, ids = casf2016_metrics
+loss, r, rmse, r2, y_true, y_pred = casf2016_metrics #,id    
 plot_predictions(ax1, y_true, y_pred, f"CASF2016 Predictions\nR = {r:.3f}, RMSE = {rmse:.3f}", 'CASF2016 Benchmark Data')
 
 # Plot the predictions for CASF2013
-loss, r, rmse, r2, y_true, y_pred, ids = casf2013_metrics
+loss, r, rmse, r2, y_true, y_pred = casf2013_metrics #,id
 plot_predictions(ax2, y_true, y_pred, f"CASF2013 Predictions\nR = {r:.3f}, RMSE = {rmse:.3f}", 'CASF2013 Benchmark Data')
 
 # Plot the predictions for the training data
-loss, r, rmse, r2, y_true, y_pred, ids = train_metrics
+loss, r, rmse, r2, y_true, y_pred = train_metrics #,id
 plot_predictions(ax3, y_true, y_pred, f"Training Predictions\nR = {r:.3f}, RMSE = {rmse:.3f}", 'Training Data')
 
 plt.tight_layout()
