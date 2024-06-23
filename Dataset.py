@@ -205,8 +205,8 @@ class PDBbind_Dataset(Dataset):
                                 edge_attr=edge_attr.float(),
                                 y=torch.tensor(pK_scaled, dtype=torch.float),
                                 n_nodes=torch.tensor(n_nodes, dtype=torch.long) #needed for reading out masternode features
-                                #,pos=pos
-                                #,id=id
+                                ,pos=pos
+                                ,id=id
                 )
             elif delete_ligand and not masternode: raise ValueError('Cannot delete ligand nodes without masternode')
             elif delete_ligand and masternode:
@@ -226,8 +226,8 @@ class PDBbind_Dataset(Dataset):
                                 edge_attr=edge_attr.float(),
                                 y=torch.tensor(pK_scaled, dtype=torch.float),
                                 n_nodes=torch.tensor(n_nodes, dtype=torch.long) #needed for reading out masternode features
-                                #,pos=pos
-                                #,id=id
+                                ,pos=pos
+                                ,id=id
                 )
 
             # --- 
@@ -245,8 +245,8 @@ class PDBbind_Dataset(Dataset):
                                 #edge_attr_prot=edge_attr_prot,
                                 y=torch.tensor(pK_scaled, dtype=torch.float),
                                 n_nodes=torch.tensor(n_nodes, dtype=torch.long) #needed for reading out masternode features
-                                #,pos=pos
-                                #,id=id
+                                ,pos=pos
+                                ,id=id
                 )
 
 
