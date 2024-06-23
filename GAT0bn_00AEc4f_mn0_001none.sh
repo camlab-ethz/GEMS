@@ -29,17 +29,18 @@ split="c4"
 filtering="f"
 dataset="00AE"
 
+masternode="False"
+masternode_connectivity="all"
+masternode_edges="undirected"
+
+protein_embeddings="" #embeddings as space-separated strings
+ligand_embeddings="" #embeddings as space-separated strings
+
 refined_only="False"
 exclude_ic50="False"
 exclude_nmr="False"
 resolution_threshold=5
 precision_strict="False"
-
-protein_embeddings="" #embeddings as space-separated strings
-ligand_embeddings="" #embeddings as space-separated strings
-masternode="True"
-masternode_connectivity="all"
-masternode_edges="undirected"
 
 atom_features="True"
 edge_features="True"
