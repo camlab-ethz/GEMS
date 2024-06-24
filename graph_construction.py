@@ -805,12 +805,28 @@ for i, (protein, ligand) in enumerate(zip(proteins, ligands)):
         #------------------------------------------------------------------------------------------
         # Check the shapes of the input tensors
         #------------------------------------------------------------------------------------------
-        shape_inconsistency = False
 
-        
+        consistent = x.shape[0] == pos.shape[0]
+        if consistent: N = x.shape[0]
+        else: raise SkipComplexException(f'Inconsistent shapes of x and pos: {x.shape, pos.shape}')
+
         if pos.shape[1] != 3: raise SkipComplexException('POS has wrong shape')
         if x.shape[1] != num_atomfeatures + len(amino_acids): raise SkipComplexException(f'X has wrong shape {x.shape}')
-    
+
+        if not edge_index.max().item() < N: 
+            raise SkipComplexException(f'Edge index out of bounds: {edge_index.max().item()} {N}')
+        if not edge_index_lig.max().item() < N:
+            raise SkipComplexException(f'Edge index lig out of bounds: {edge_index_lig.max().item()} {N}')
+        if not edge_index_prot.max().item() < N:
+            raise SkipComplexException(f'Edge index prot out of bounds: {edge_index_prot.max().item()} {N}')
+        if not edge_index_master.max().item() < N:
+            raise SkipComplexException(f'Edge index master out of bounds: {edge_index_master.max().item()} {N}')
+        if not edge_index_master_lig.max().item() < N:
+            raise SkipComplexException(f'Edge index master lig out of bounds: {edge_index_master_lig.max().item()} {N}')
+        if not edge_index_master_prot.max().item() < N:
+            raise SkipComplexException(f'Edge index master prot out of bounds: {edge_index_master_prot.max().item()} {N}')
+        
+
         if protein_embeddings:
             for j, emb in enumerate(protein_embeddings):
                 if x.shape[0] != x_emb[j].shape[0]:
@@ -824,8 +840,6 @@ for i, (protein, ligand) in enumerate(zip(proteins, ligands)):
                         {edge_index_prot.shape, edge_attr_prot.shape}')
 
         #------------------------------------------------------------------------------------------
-
-
 
         # Save the graph data dictionary
         graph = Data(
