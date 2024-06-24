@@ -30,12 +30,10 @@ def main():
     parser.add_argument("--precision_strict", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If datapoints with unprecise affinity (>,<,..) should be excluded")
 
     # Graph Construction
-    #parser.add_argument("--protein_embeddings", default=[], type=list, help="List of all ligand embeddings that should be included")
     parser.add_argument('--protein_embeddings', nargs='+', default=[], help='Provide string to identify protein embeddings that should be incorporated (--protein embeddings string1 string2 string3).\
                         The strings should correspond to the keys that are used to save the embeddings in the graph object of the complexes'),
     parser.add_argument('--ligand_embeddings', nargs='+', default=[], help='Provide names of embeddings that should be incorporated (--ligand_embeddings string1 string2 string3).\
                         The strings should correspond to the keys that are used to save the embeddings in the graph object of the complexes'),
-    # parser.add_argument("--ligand_embeddings", default=[], type=list, help="List of all ligand embeddings that should be included")
     parser.add_argument("--masternode", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If a masternode (mn) should be included in the graphs")
     parser.add_argument("--masternode_connectivity", default='all', help="If a mn is included, to which nodes it should be connected ('all', 'ligand', 'protein')")
     parser.add_argument("--masternode_edges", default='undirected', help='If the mn should be connected with undirected or directed edges ("undirected", "in", or "out")')
