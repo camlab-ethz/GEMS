@@ -16,6 +16,7 @@ def find_last_saved_line(file_path):
 
 def parse_line(line):
     """Extract data from the line."""
+    line = line.replace("-", " ")
     pattern = r"Epoch (\d+):.*Loss:\s+(\d+.\d+).*Pearson:\s+(\d+.\d+).*R2:\s+(\d+.\d+).*RMSE:\s+(\d+.\d+).*Loss:\s+(\d+.\d+).*Pearson:\s+(\d+.\d+).*R2:\s+(\d+.\d+).*RMSE:\s+(\d+.\d+)"
     match = re.search(pattern, line)
     return match.groups() if match else None
