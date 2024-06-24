@@ -26,16 +26,16 @@ data_dir="/cluster/work/math/dagraber/DTI/PDBbind"
 project_name="PDBbind"
 
 #---
-split="c4"
+split="c0"
 filtering="f"
-dataset="00AE"
+dataset="B0AE"
 #---
 
 masternode="False"
 masternode_connectivity="all"
 masternode_edges="undirected"
 
-protein_embeddings="" #embeddings as space-separated strings
+protein_embeddings="ankh_base" #embeddings as space-separated strings
 ligand_embeddings="" #embeddings as space-separated strings
 
 refined_only="False"

@@ -26,7 +26,7 @@ data_dir="/cluster/work/math/dagraber/DTI/PDBbind"
 project_name="PDBbind"
 
 #---
-split="c4"
+split="c0"
 filtering="f"
 dataset="00AE"
 #---

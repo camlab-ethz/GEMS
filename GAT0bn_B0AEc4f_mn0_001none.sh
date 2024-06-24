@@ -28,14 +28,14 @@ project_name="PDBbind"
 #---
 split="c4"
 filtering="f"
-dataset="00AE"
+dataset="B0AE"
 #---
 
 masternode="False"
 masternode_connectivity="all"
 masternode_edges="undirected"
 
-protein_embeddings="" #embeddings as space-separated strings
+protein_embeddings="ankh_base" #embeddings as space-separated strings
 ligand_embeddings="" #embeddings as space-separated strings
 
 refined_only="False"
@@ -131,8 +131,8 @@ if [ ! -f "$train_dataset_path" ]; then
         --save_path $train_dataset_path \
         --refined_only $refined_only --exclude_ic50 $exclude_ic50 --exclude_nmr $exclude_nmr \
         --resolution_threshold $resolution_threshold --precision_strict $precision_strict \
-        ${protein_embeddings_str:+--protein_embeddings $protein_embeddings_str} \
-        ${ligand_embeddings_str:+--ligand_embeddings $ligand_embeddings_str} \
+        ${protein_embeddings:+--protein_embeddings $protein_embeddings} \
+        ${ligand_embeddings:+--ligand_embeddings $ligand_embeddings} \
         --masternode $masternode --masternode_connectivity $masternode_connectivity --masternode_edges $masternode_edges \
         --atom_features $atom_features --edge_features $edge_features \
         --delete_ligand $delete_ligand --delete_protein $delete_protein
@@ -152,8 +152,8 @@ if [ ! -f "$casf2013_dataset_path" ]; then
         --save_path $casf2013_dataset_path \
         --refined_only $refined_only --exclude_ic50 $exclude_ic50 --exclude_nmr $exclude_nmr \
         --resolution_threshold $resolution_threshold --precision_strict $precision_strict \
-        ${protein_embeddings_str:+--protein_embeddings $protein_embeddings_str} \
-        ${ligand_embeddings_str:+--ligand_embeddings $ligand_embeddings_str} \
+        ${protein_embeddings:+--protein_embeddings $protein_embeddings} \
+        ${ligand_embeddings:+--ligand_embeddings $ligand_embeddings} \
         --masternode $masternode --masternode_connectivity $masternode_connectivity --masternode_edges $masternode_edges \
         --atom_features $atom_features --edge_features $edge_features \
         --delete_ligand $delete_ligand --delete_protein $delete_protein
@@ -173,8 +173,8 @@ if [ ! -f "$casf2016_dataset_path" ]; then
         --save_path $casf2016_dataset_path \
         --refined_only $refined_only --exclude_ic50 $exclude_ic50 --exclude_nmr $exclude_nmr \
         --resolution_threshold $resolution_threshold --precision_strict $precision_strict \
-        ${protein_embeddings_str:+--protein_embeddings $protein_embeddings_str} \
-        ${ligand_embeddings_str:+--ligand_embeddings $ligand_embeddings_str} \
+        ${protein_embeddings:+--protein_embeddings $protein_embeddings} \
+        ${ligand_embeddings:+--ligand_embeddings $ligand_embeddings} \
         --masternode $masternode --masternode_connectivity $masternode_connectivity --masternode_edges $masternode_edges \
         --atom_features $atom_features --edge_features $edge_features \
         --delete_ligand $delete_ligand --delete_protein $delete_protein
