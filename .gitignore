@@ -39,6 +39,9 @@ NetComp/
 
 PDBbind*dataset*.pt
 
+*ProteinMPNN*
+GAT*.sh
+
 #Ignore test_files
 *test.ipynb
 *_old.py
