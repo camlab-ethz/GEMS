@@ -218,6 +218,7 @@ val_dataset = Subset(dataset, val_idx)
 
 print(f'Length Training Dataset: {len(train_dataset)}')
 print(f'Length Validation Dataset: {len(val_dataset)}')
+print(f'Example Graph: {train_dataset[0]}')
 
 train_loader = DataLoader(dataset = train_dataset, batch_size=batch_size, shuffle=True, num_workers=4, persistent_workers=True, pin_memory=True)
 eval_loader_train = DataLoader(dataset = train_dataset, batch_size=512, shuffle=True, num_workers=4, persistent_workers=True, pin_memory=True)
