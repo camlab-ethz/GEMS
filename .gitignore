@@ -43,6 +43,7 @@ PDBbind*dataset*.pt
 GAT*.sh
 
 #Ignore test_files
+*test*
 *test.ipynb
 *_old.py
 stuff/
