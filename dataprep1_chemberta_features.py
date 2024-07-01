@@ -59,7 +59,7 @@ log.write("\n")
 
 
 # Generate a lists of all ligands
-ligands = sorted([ligand for ligand in os.scandir(data_dir) if ligand.name.endswith('ligand_san.sdf')], key=lambda x: x.name)
+ligands = sorted([ligand for ligand in os.scandir(data_dir) if ligand.name.endswith('ligand.sdf')], key=lambda x: x.name)
 num_ligands = len(ligands)
 
 print(f'Number of ligands to be processed: {num_ligands}')

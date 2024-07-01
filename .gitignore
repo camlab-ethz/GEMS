@@ -43,6 +43,7 @@ PDBbind*dataset*.pt
 
 *ProteinMPNN*
 GAT*.sh
+*tar.gz
 
 #Ignore test_files
 *test*
