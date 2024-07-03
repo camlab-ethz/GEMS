@@ -18,7 +18,7 @@ def main():
     parser = argparse.ArgumentParser()
 
     # Dataset construction
-    parser.add_argument("--data_dir", required=True, help="The source path of the data e.g.")
+    parser.add_argument("--data_dir", required=True, help="The source path of the data (ligand SDFs, protein PDBs, embeddings)")
     parser.add_argument("--data_split", required=True, help="Path to a dictionary (json) that contains the split of the data into training and test set")
     parser.add_argument("--dataset", required=True, help="The dataset that should be loaded ['train', 'casf2013', 'casf2016']")
     parser.add_argument('--save_path', type=str, required=True, help='Path to save the dataset')
