@@ -1,6 +1,7 @@
 # Ignore all folders with data
 experiments/
 experiments_v2020/
+experiments_v2021/
 
 PDBbind1/*ankh*
 PDBbind1/*ChemBERT*
