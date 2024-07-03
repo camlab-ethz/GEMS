@@ -117,8 +117,7 @@ def parse_args():
     parser.add_argument("--model_name", required=True, help="The name of the run")
 
     # Location of the test data 
-    parser.add_argument("--casf2013_dataset_path", required=True, help="The path to the casf2014 test dataset pt file")
-    parser.add_argument("--casf2016_dataset_path", required=True, help="The path to the casf2016 test dataset pt file")
+    parser.add_argument("--test_dataset_path", required=True, help="The path to the test dataset pt file")
     parser.add_argument("--train_dataset_path", required=True, help="The path to the training dataset pt file")
 
     parser.add_argument("--stdict_paths", type=str, required=True, help="String of comma-separated paths to stdicts that should be tested as an ensemble")
@@ -130,33 +129,26 @@ args = parse_args()
 
 
 # Paths
-casf2013_dataset_path = args.casf2013_dataset_path
-casf2016_dataset_path = args.casf2016_dataset_path
+test_dataset_path = args.test_dataset_path
 train_dataset_path = args.train_dataset_path
+
 stdict_paths = args.stdict_paths.split(',')
 save_path = args.save_path
 
 
 # Load the datasets
-casf2013_dataset = torch.load(casf2013_dataset_path)
-casf2016_dataset = torch.load(casf2016_dataset_path)
+test_dataset = torch.load(test_dataset_path)
 train_dataset = torch.load(train_dataset_path)
 
 
-node_feat_dim = casf2013_dataset[0].x.shape[1]
-edge_feat_dim = casf2013_dataset[0].edge_attr.shape[1]
+node_feat_dim = test_dataset[0].x.shape[1]
+edge_feat_dim = test_dataset[0].edge_attr.shape[1]
 N = len(train_dataset)
 
 
 # Loaders
-casf2013_loader = DataLoader(dataset = casf2013_dataset, batch_size=128, shuffle=True, num_workers=4, persistent_workers=True)
-casf2016_loader = DataLoader(dataset = casf2016_dataset, batch_size=128, shuffle=True, num_workers=4, persistent_workers=True)
-train_loader = DataLoader(dataset = train_dataset, batch_size=128, shuffle=True, num_workers=4, persistent_workers=True)
-
-
-# Title of the plots that will be generated
-plot_titles = os.path.basename(train_dataset_path)
-
+test_loader = DataLoader(dataset = test_dataset, batch_size=128, shuffle=True, num_workers=4, persistent_workers=True)
+train_loader = DataLoader(dataset = train_dataset, batch_size=256, shuffle=True, num_workers=4, persistent_workers=True)
 
 
 # Emsemble Model
@@ -178,34 +170,34 @@ models = [model_class(
 ## MODEL NAME ##
 model_name = args.model_name
 model_paths = list(stdict_paths)
-#model_paths = [os.path.join(state_dict_path, file) for file in os.listdir(state_dict_path) if file.startswith(model_name)]
-for m in model_paths: print(m)
+#for m in model_paths: print(m)
 models = [load_model_state(model, path) for model, path in zip(models, model_paths)]
 
 
-
-
-# Performance on the complete test datasets
-#-------------------------------------------------------------------------------------------------------------------------
-casf2016_metrics = evaluate(models, casf2016_loader, criterion, device)
-casf2013_metrics = evaluate(models, casf2013_loader, criterion, device)
+# Run inference
+test_metrics = evaluate(models, test_loader, criterion, device)
 train_metrics = evaluate(models, train_loader, criterion, device)
 
+
+
+# Plotting
+#-------------------------------------------------------------------------------------------------------------------------
+
+# Title of the plots that will be generated
+train_dataset_name = os.path.basename(train_dataset_path).split('.')[0]
+test_dataset_name = os.path.basename(test_dataset_path).split('.')[0]
+
 # Create a figure with two subplots
-fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(24, 8))
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8))
 
-# Plot the predictions for CASF2016
-loss, r, rmse, r2, y_true, y_pred = casf2016_metrics #,id    
-plot_predictions(ax1, y_true, y_pred, f"CASF2016 Predictions\nR = {r:.3f}, RMSE = {rmse:.3f}", 'CASF2016 Benchmark Data')
-
-# Plot the predictions for CASF2013
-loss, r, rmse, r2, y_true, y_pred = casf2013_metrics #,id
-plot_predictions(ax2, y_true, y_pred, f"CASF2013 Predictions\nR = {r:.3f}, RMSE = {rmse:.3f}", 'CASF2013 Benchmark Data')
+# Plot the predictions for test data
+loss, r, rmse, r2, y_true, y_pred = test_metrics #,id    
+plot_predictions(ax1, y_true, y_pred, f"Test Predictions\n{test_dataset_name}\nR = {r:.3f}, RMSE = {rmse:.3f}", "Test Predictions")
 
 # Plot the predictions for the training data
 loss, r, rmse, r2, y_true, y_pred = train_metrics #,id
-plot_predictions(ax3, y_true, y_pred, f"Training Predictions\nR = {r:.3f}, RMSE = {rmse:.3f}", 'Training Data')
+plot_predictions(ax2, y_true, y_pred, f"Training Predictions\n{train_dataset_name}\nR = {r:.3f}, RMSE = {rmse:.3f}", 'Training Predictions')
 
 plt.tight_layout()
-plt.savefig(f'{save_path}/test_scatterplot.png', dpi=300)
+plt.savefig(f'{save_path}/{test_dataset_name}_predictions.png', dpi=300)
 #-------------------------------------------------------------------------------------------------------------------------
