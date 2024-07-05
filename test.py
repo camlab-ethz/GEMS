@@ -12,6 +12,7 @@ from torch.utils.data import Subset
 from models_masternode import *
 from models_global_pool import *
 from GEAN import *
+from GATE import *
 
 
 class RMSELoss(torch.nn.Module):
