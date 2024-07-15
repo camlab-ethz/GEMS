@@ -186,7 +186,7 @@ class PDBbind_Dataset(Dataset):
 
             # For ablation studies: Generate graphs with all protein nodes removed          
             if delete_protein and delete_ligand: raise ValueError('Cannot delete both protein and ligand nodes')
-            elif delete_protein and not masternode: raise ValueError('Cannot delete protein nodes without masternode')
+            
             elif delete_protein and masternode:
                 # Remove all nodes that don't belong to the ligand from feature matrix, keep masternode
                 x = torch.concatenate( [x[:n_lig_nodes,:] , x[-1,:].view(1,-1)] )
@@ -206,8 +206,28 @@ class PDBbind_Dataset(Dataset):
                                 y=torch.tensor(pK_scaled, dtype=torch.float),
                                 n_nodes=torch.tensor(n_nodes, dtype=torch.long) #needed for reading out masternode features
                                 ,pos=pos
-                                ,id=id
-                )
+                                ,id=id)
+                
+            elif delete_protein and not masternode:
+                # Remove all nodes that don't belong to the ligand from feature matrix
+                x = x[:n_lig_nodes,:]
+
+                # Remove all coordinates of nodes that don't belong to the ligand
+                pos = pos[:n_lig_nodes,:]
+
+                # Keep only edges that are between ligand atoms
+                mask = (edge_index < n_lig_nodes).all(dim=0)
+                edge_index = edge_index[:, mask]
+                edge_attr = edge_attr[mask, :]
+
+                train_graph = Data(x = x.float(),
+                                edge_index=edge_index.long(),
+                                edge_attr=edge_attr.float(),
+                                y=torch.tensor(pK_scaled, dtype=torch.float)
+                                ,pos=pos
+                                ,id=id)
+                
+
             elif delete_ligand and not masternode: raise ValueError('Cannot delete ligand nodes without masternode')
             elif delete_ligand and masternode:
                 # Remove all nodes that don't belong to the ligand from feature matrix, keep masternode
