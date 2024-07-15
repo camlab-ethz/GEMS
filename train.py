@@ -14,8 +14,12 @@ from sklearn.model_selection import StratifiedKFold
 from torch.utils.data import Subset
 from models_masternode import *
 from models_global_pool import *
-from GEAN import *
-from GATE import *
+from GATE0 import *
+from GATE1 import *
+from GATE2 import *
+from GATE3 import *
+from GATE4 import *
+from GATE5 import *
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
 def parse_args():
