@@ -129,6 +129,7 @@ class GATE3a(nn.Module):
         u = self.u_bn1(u)
 
         _, _, u = self.layer2(x, edge_index, edge_attr, u, batch=graphbatch.batch)
+        u = self.dropout_layer(u)
 
         # Fully-Connected Layers
         out = self.fc1(u)
@@ -174,6 +175,7 @@ class GATE3ar(nn.Module):
         u = self.u_bn1(u)
 
         _, _, u = self.layer2(x, edge_index, edge_attr, u, batch=graphbatch.batch)
+        u = self.dropout_layer(u)
 
         # Fully-Connected Layers
         out = self.fc1(u)
@@ -229,6 +231,7 @@ class GATE3b(nn.Module):
         u = self.u_bn2(u)
         
         _, _, u = self.layer3(x, edge_index, edge_attr, u, batch=graphbatch.batch)
+        u = self.dropout_layer(u)
         
         # Fully-Connected Layers
         out = self.fc1(u)
@@ -284,6 +287,7 @@ class GATE3br(nn.Module):
         u = self.u_bn2(u)
         
         _, _, u = self.layer3(x, edge_index, edge_attr, u, batch=graphbatch.batch)
+        u = self.dropout_layer(u)
         
         # Fully-Connected Layers
         out = self.fc1(u)
