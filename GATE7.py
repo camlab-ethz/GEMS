@@ -11,12 +11,11 @@ from torch_scatter import scatter, scatter_mean
 
 
 '''
-GATE5
-Based on GATE1 but
-- edge embeddings are larger (n=256)
+BASED ON GATE3 ARCHITECTURES
+GATE5 are architectures with 2-3 layers with prediction based on updating the global features (n=64) of the model
+with GLOBAL ADD POOLING in each layer of the model. A final regression head transforms the global vector into a prediction.
 
-architectures with 2-3 layers followed by a global edge pooling and potentially with residual connections.
-
+The architectures are as follows:
 
 GATE5a: 2 layers, no residuals
 GATE5b: 3 layers, no residuals
@@ -25,8 +24,6 @@ GATE5br: 3 layers, with residuals
 
 dropout and conv_dropout are possible
 '''
-
-
 
 
 class EdgeModel(torch.nn.Module):
@@ -89,7 +86,7 @@ class GlobalModel(torch.nn.Module):
             nn.Linear(int(n_edge_f/2), global_f))
 
     def forward(self, x, edge_index, edge_attr, u, batch):
-        out = torch.cat([u, scatter(edge_attr, batch[edge_index[0]], dim=0, reduce='mean')], dim=1)
+        out = torch.cat([u, scatter(edge_attr, batch[edge_index[0]], dim=0, reduce='sum')], dim=1)
         out = self.dropout_layer(out)
         return self.global_mlp(out)
 
@@ -103,87 +100,40 @@ class GATE5a(nn.Module):
         super(GATE5a, self).__init__()
         
         # Build each layer separately
-        self.layer1 = self.build_layer(node_f=in_channels, edge_f=edge_dim, node_f_hidden=128, edge_f_hidden=128, node_f_out=256, edge_f_out=256, residuals=False, dropout=conv_dropout_prob)
+        self.layer1 = self.build_layer(node_f=in_channels, edge_f=edge_dim, node_f_hidden=128, edge_f_hidden=64, node_f_out=256, edge_f_out=128, global_f=64, residuals=False, dropout=conv_dropout_prob)
         self.node_bn1 = BatchNorm1d(256)
-        self.edge_bn1 = BatchNorm1d(256)
+        self.edge_bn1 = BatchNorm1d(128)
+        self.u_bn1 = BatchNorm1d(64)
 
-        self.layer2 = self.build_layer(node_f=256, edge_f=256, node_f_hidden=256, edge_f_hidden=256, node_f_out=256, edge_f_out=256, residuals=False, dropout=conv_dropout_prob)
-        
+        self.layer2 = self.build_layer(node_f=256, edge_f=128, node_f_hidden=256, edge_f_hidden=128, node_f_out=256, edge_f_out=128, global_f=64, residuals=False, dropout=conv_dropout_prob)
+
         self.dropout_layer = nn.Dropout(dropout_prob)
-        self.fc1 = nn.Linear(256, 64)
-        self.fc2 = nn.Linear(64, 1)
+        self.fc1 = nn.Linear(64, 16)
+        self.fc2 = nn.Linear(16, 1)
 
-    def build_layer(self, node_f, edge_f, node_f_hidden, edge_f_hidden, node_f_out, edge_f_out, residuals, dropout):
+    def build_layer(self, node_f, edge_f, node_f_hidden, edge_f_hidden, node_f_out, edge_f_out, global_f, residuals, dropout):
         return geom_nn.MetaLayer(
             edge_model=EdgeModel(node_f, edge_f, edge_f_hidden, edge_f_out, residuals=residuals, dropout=dropout),
             node_model=NodeModel(node_f, edge_f_out, node_f_hidden, node_f_out, residuals=residuals, dropout=dropout),
-            #global_model=GlobalModel(node_f_out, global_f=1, dropout=dropout)
+            global_model=GlobalModel(edge_f_out, global_f, dropout=dropout)
         )
 
     def forward(self, graphbatch):
         edge_index = graphbatch.edge_index
+        
+        # Initialize global feature of length 1 for each graph in the batch
+        initial_global = torch.zeros((graphbatch.num_graphs, 64)).to(graphbatch.x.device)
 
-        x, edge_attr, _ = self.layer1(graphbatch.x, edge_index, graphbatch.edge_attr, u=None, batch=graphbatch.batch)
+        x, edge_attr, u = self.layer1(graphbatch.x, edge_index, graphbatch.edge_attr, u=initial_global, batch=graphbatch.batch)
         x = self.node_bn1(x)
         edge_attr = self.edge_bn1(edge_attr)
+        u = self.u_bn1(u)
 
-        _, edge_attr, _ = self.layer2(x, edge_index, edge_attr, None, batch=graphbatch.batch)
+        _, _, u = self.layer2(x, edge_index, edge_attr, u, batch=graphbatch.batch)
+        u = self.dropout_layer(u)
 
-        # Pool the nodes of each interaction graph
-        out = scatter(edge_attr, graphbatch.batch[edge_index[0]], dim=0, reduce='mean')
-        out = self.dropout_layer(out)
-        
         # Fully-Connected Layers
-        out = self.fc1(out)
-        out = F.relu(out)
-        out = self.fc2(out)
-        return out
-    
-
-
-class GATE5b(nn.Module):
-    def __init__(self, dropout_prob, in_channels, edge_dim, conv_dropout_prob):
-        super(GATE5b, self).__init__()
-     
-        # Build each layer separately
-        self.layer1 = self.build_layer(node_f=in_channels, edge_f=edge_dim, node_f_hidden=128, edge_f_hidden=128, node_f_out=256, edge_f_out=256, residuals=False, dropout=conv_dropout_prob)
-        self.node_bn1 = BatchNorm1d(256)
-        self.edge_bn1 = BatchNorm1d(256)
-        self.layer2 = self.build_layer(node_f=256, edge_f=256, node_f_hidden=256, edge_f_hidden=256, node_f_out=256, edge_f_out=256, residuals=False, dropout=conv_dropout_prob)
-        self.edge_bn2 = BatchNorm1d(256)
-        self.node_bn2 = BatchNorm1d(256)
-        self.layer3 = self.build_layer(node_f=256, edge_f=256, node_f_hidden=256, edge_f_hidden=256, node_f_out=256, edge_f_out=256, residuals=False, dropout=conv_dropout_prob)
-        
-        self.dropout_layer = nn.Dropout(dropout_prob)
-        self.fc1 = nn.Linear(256, 64)
-        self.fc2 = nn.Linear(64, 1)
-
-    def build_layer(self, node_f, edge_f, node_f_hidden, edge_f_hidden, node_f_out, edge_f_out, residuals, dropout):
-        return geom_nn.MetaLayer(
-            edge_model=EdgeModel(node_f, edge_f, edge_f_hidden, edge_f_out, residuals=residuals, dropout=dropout),
-            node_model=NodeModel(node_f, edge_f_out, node_f_hidden, node_f_out, residuals=residuals, dropout=dropout),
-            #global_model=GlobalModel(node_f_out, global_f=1, dropout=dropout)
-        )
-
-    def forward(self, graphbatch):
-        edge_index = graphbatch.edge_index
-
-        x, edge_attr, _ = self.layer1(graphbatch.x, edge_index, graphbatch.edge_attr, u=None, batch=graphbatch.batch)
-        x = self.node_bn1(x)
-        edge_attr = self.edge_bn1(edge_attr)
-
-        x, edge_attr, _ = self.layer2(x, edge_index, edge_attr, u=None, batch=graphbatch.batch)
-        x = self.node_bn2(x)
-        edge_attr = self.edge_bn2(edge_attr)
-
-        _, edge_attr, _ = self.layer3(x, edge_index, edge_attr, u=None, batch=graphbatch.batch)
-
-        # Pool the nodes of each interaction graph
-        out = scatter(edge_attr, graphbatch.batch[edge_index[0]], dim=0, reduce='mean')
-        out = self.dropout_layer(out)
-        
-        # Fully-Connected Layers
-        out = self.fc1(out)
+        out = self.fc1(u)
         out = F.relu(out)
         out = self.fc2(out)
         return out
@@ -196,37 +146,97 @@ class GATE5ar(nn.Module):
         super(GATE5ar, self).__init__()
         
         # Build each layer separately
-        self.layer1 = self.build_layer(node_f=in_channels, edge_f=edge_dim, node_f_hidden=128, edge_f_hidden=128, node_f_out=256, edge_f_out=256, residuals=False, dropout=conv_dropout_prob)
+        self.layer1 = self.build_layer(node_f=in_channels, edge_f=edge_dim, node_f_hidden=128, edge_f_hidden=64, node_f_out=256, edge_f_out=128, global_f=64, residuals=False, dropout=conv_dropout_prob)
         self.node_bn1 = BatchNorm1d(256)
-        self.edge_bn1 = BatchNorm1d(256)
-        self.layer2 = self.build_layer(node_f=256, edge_f=256, node_f_hidden=256, edge_f_hidden=256, node_f_out=256, edge_f_out=256, residuals=True, dropout=conv_dropout_prob)
-        
-        self.dropout_layer = nn.Dropout(dropout_prob)
-        self.fc1 = nn.Linear(256, 64)
-        self.fc2 = nn.Linear(64, 1)
+        self.edge_bn1 = BatchNorm1d(128)
+        self.u_bn1 = BatchNorm1d(64)
 
-    def build_layer(self, node_f, edge_f, node_f_hidden, edge_f_hidden, node_f_out, edge_f_out, residuals, dropout):
+        self.layer2 = self.build_layer(node_f=256, edge_f=128, node_f_hidden=256, edge_f_hidden=128, node_f_out=256, edge_f_out=128, global_f=64, residuals=True, dropout=conv_dropout_prob)
+
+        self.dropout_layer = nn.Dropout(dropout_prob)
+        self.fc1 = nn.Linear(64, 16)
+        self.fc2 = nn.Linear(16, 1)
+
+    def build_layer(self, node_f, edge_f, node_f_hidden, edge_f_hidden, node_f_out, edge_f_out, global_f, residuals, dropout):
         return geom_nn.MetaLayer(
             edge_model=EdgeModel(node_f, edge_f, edge_f_hidden, edge_f_out, residuals=residuals, dropout=dropout),
             node_model=NodeModel(node_f, edge_f_out, node_f_hidden, node_f_out, residuals=residuals, dropout=dropout),
-            #global_model=GlobalModel(node_f_out, global_f=1, dropout=dropout)
+            global_model=GlobalModel(edge_f_out, global_f, dropout=dropout)
         )
 
     def forward(self, graphbatch):
         edge_index = graphbatch.edge_index
+        
+        # Initialize global feature of length 1 for each graph in the batch
+        initial_global = torch.zeros((graphbatch.num_graphs, 64)).to(graphbatch.x.device)
 
-        x, edge_attr, _ = self.layer1(graphbatch.x, edge_index, graphbatch.edge_attr, u=None, batch=graphbatch.batch)
+        x, edge_attr, u = self.layer1(graphbatch.x, edge_index, graphbatch.edge_attr, u=initial_global, batch=graphbatch.batch)
         x = self.node_bn1(x)
         edge_attr = self.edge_bn1(edge_attr)
+        u = self.u_bn1(u)
 
-        _, edge_attr, _ = self.layer2(x, edge_index, edge_attr, None, batch=graphbatch.batch)
+        _, _, u = self.layer2(x, edge_index, edge_attr, u, batch=graphbatch.batch)
+        u = self.dropout_layer(u)
 
-        # Pool the nodes of each interaction graph
-        out = scatter(edge_attr, graphbatch.batch[edge_index[0]], dim=0, reduce='mean')
-        out = self.dropout_layer(out)
+        # Fully-Connected Layers
+        out = self.fc1(u)
+        out = F.relu(out)
+        out = self.fc2(out)
+        return out
+
+
+
+
+class GATE5b(nn.Module):
+    def __init__(self, dropout_prob, in_channels, edge_dim, conv_dropout_prob):
+        super(GATE5b, self).__init__()
+        
+        # Build each layer separately
+        self.layer1 = self.build_layer(node_f=in_channels, edge_f=edge_dim, node_f_hidden=128, edge_f_hidden=64, node_f_out=256, edge_f_out=128, global_f=64, residuals=False, dropout=conv_dropout_prob)
+        self.node_bn1 = BatchNorm1d(256)
+        self.edge_bn1 = BatchNorm1d(128)
+        self.u_bn1 = BatchNorm1d(64)
+
+        self.layer2 = self.build_layer(node_f=256, edge_f=128, node_f_hidden=256, edge_f_hidden=128, node_f_out=256, edge_f_out=128, global_f=64, residuals=False, dropout=conv_dropout_prob)
+        self.node_bn2 = BatchNorm1d(256)
+        self.edge_bn2 = BatchNorm1d(128)
+        self.u_bn2 = BatchNorm1d(64)
+        
+        self.layer3 = self.build_layer(node_f=256, edge_f=128, node_f_hidden=256, edge_f_hidden=128, node_f_out=256, edge_f_out=128, global_f=64, residuals=False, dropout=conv_dropout_prob)
+
+        self.dropout_layer = nn.Dropout(dropout_prob)
+        self.fc1 = nn.Linear(64, 16)
+        self.fc2 = nn.Linear(16, 1)
+
+    def build_layer(self, node_f, edge_f, node_f_hidden, edge_f_hidden, node_f_out, edge_f_out, global_f, residuals, dropout):
+        return geom_nn.MetaLayer(
+            edge_model=EdgeModel(node_f, edge_f, edge_f_hidden, edge_f_out, residuals=residuals, dropout=dropout),
+            node_model=NodeModel(node_f, edge_f_out, node_f_hidden, node_f_out, residuals=residuals, dropout=dropout),
+            global_model=GlobalModel(edge_f_out, global_f, dropout=dropout)
+        )
+
+    def forward(self, graphbatch):
+        edge_index = graphbatch.edge_index
+        
+        # Initialize global feature of length 1 for each graph in the batch
+        initial_global = torch.zeros((graphbatch.num_graphs, 64)).to(graphbatch.x.device)
+
+        x, edge_attr, u = self.layer1(graphbatch.x, edge_index, graphbatch.edge_attr, u=initial_global, batch=graphbatch.batch)
+        x = self.node_bn1(x)
+        edge_attr = self.edge_bn1(edge_attr)
+        u = self.u_bn1(u)
+
+        x, edge_attr, u = self.layer2(x, edge_index, edge_attr, u, batch=graphbatch.batch)
+        x = self.node_bn2(x)
+        edge_attr = self.edge_bn2(edge_attr)
+        u = self.u_bn2(u)
+        
+        _, _, u = self.layer3(x, edge_index, edge_attr, u, batch=graphbatch.batch)
+        u = self.dropout_layer(u)
+
         
         # Fully-Connected Layers
-        out = self.fc1(out)
+        out = self.fc1(u)
         out = F.relu(out)
         out = self.fc2(out)
         return out
@@ -234,50 +244,56 @@ class GATE5ar(nn.Module):
 
 
 
-
 class GATE5br(nn.Module):
     def __init__(self, dropout_prob, in_channels, edge_dim, conv_dropout_prob):
         super(GATE5br, self).__init__()
-     
-        # Build each layer separately
-        self.layer1 = self.build_layer(node_f=in_channels, edge_f=edge_dim, node_f_hidden=128, edge_f_hidden=128, node_f_out=256, edge_f_out=256, residuals=False, dropout=conv_dropout_prob)
-        self.node_bn1 = BatchNorm1d(256)
-        self.edge_bn1 = BatchNorm1d(256)
-        self.layer2 = self.build_layer(node_f=256, edge_f=256, node_f_hidden=256, edge_f_hidden=256, node_f_out=256, edge_f_out=256, residuals=True, dropout=conv_dropout_prob)
-        self.edge_bn2 = BatchNorm1d(256)
-        self.node_bn2 = BatchNorm1d(256)
-        self.layer3 = self.build_layer(node_f=256, edge_f=256, node_f_hidden=256, edge_f_hidden=256, node_f_out=256, edge_f_out=256, residuals=True, dropout=conv_dropout_prob)
         
-        self.dropout_layer = nn.Dropout(dropout_prob)
-        self.fc1 = nn.Linear(256, 64)
-        self.fc2 = nn.Linear(64, 1)
+        # Build each layer separately
+        self.layer1 = self.build_layer(node_f=in_channels, edge_f=edge_dim, node_f_hidden=128, edge_f_hidden=64, node_f_out=256, edge_f_out=128, global_f=64, residuals=False, dropout=conv_dropout_prob)
+        self.node_bn1 = BatchNorm1d(256)
+        self.edge_bn1 = BatchNorm1d(128)
+        self.u_bn1 = BatchNorm1d(64)
 
-    def build_layer(self, node_f, edge_f, node_f_hidden, edge_f_hidden, node_f_out, edge_f_out, residuals, dropout):
+        self.layer2 = self.build_layer(node_f=256, edge_f=128, node_f_hidden=256, edge_f_hidden=128, node_f_out=256, edge_f_out=128, global_f=64, residuals=True, dropout=conv_dropout_prob)
+        self.node_bn2 = BatchNorm1d(256)
+        self.edge_bn2 = BatchNorm1d(128)
+        self.u_bn2 = BatchNorm1d(64)
+        
+        self.layer3 = self.build_layer(node_f=256, edge_f=128, node_f_hidden=256, edge_f_hidden=128, node_f_out=256, edge_f_out=128, global_f=64, residuals=True, dropout=conv_dropout_prob)
+
+        self.dropout_layer = nn.Dropout(dropout_prob)
+        self.fc1 = nn.Linear(64, 16)
+        self.fc2 = nn.Linear(16, 1)
+
+    def build_layer(self, node_f, edge_f, node_f_hidden, edge_f_hidden, node_f_out, edge_f_out, global_f, residuals, dropout):
         return geom_nn.MetaLayer(
             edge_model=EdgeModel(node_f, edge_f, edge_f_hidden, edge_f_out, residuals=residuals, dropout=dropout),
             node_model=NodeModel(node_f, edge_f_out, node_f_hidden, node_f_out, residuals=residuals, dropout=dropout),
-            #global_model=GlobalModel(node_f_out, global_f=1, dropout=dropout)
+            global_model=GlobalModel(edge_f_out, global_f, dropout=dropout)
         )
 
     def forward(self, graphbatch):
         edge_index = graphbatch.edge_index
+        
+        # Initialize global feature of length 1 for each graph in the batch
+        initial_global = torch.zeros((graphbatch.num_graphs, 64)).to(graphbatch.x.device)
 
-        x, edge_attr, _ = self.layer1(graphbatch.x, edge_index, graphbatch.edge_attr, u=None, batch=graphbatch.batch)
+        x, edge_attr, u = self.layer1(graphbatch.x, edge_index, graphbatch.edge_attr, u=initial_global, batch=graphbatch.batch)
         x = self.node_bn1(x)
         edge_attr = self.edge_bn1(edge_attr)
+        u = self.u_bn1(u)
 
-        x, edge_attr, _ = self.layer2(x, edge_index, edge_attr, u=None, batch=graphbatch.batch)
+        x, edge_attr, u = self.layer2(x, edge_index, edge_attr, u, batch=graphbatch.batch)
         x = self.node_bn2(x)
         edge_attr = self.edge_bn2(edge_attr)
-
-        _, edge_attr, _ = self.layer3(x, edge_index, edge_attr, u=None, batch=graphbatch.batch)
-
-        # Pool the nodes of each interaction graph
-        out = scatter(edge_attr, graphbatch.batch[edge_index[0]], dim=0, reduce='mean')
-        out = self.dropout_layer(out)
+        u = self.u_bn2(u)
+        
+        _, _, u = self.layer3(x, edge_index, edge_attr, u, batch=graphbatch.batch)
+        u = self.dropout_layer(u)
         
         # Fully-Connected Layers
-        out = self.fc1(out)
+        out = self.fc1(u)
         out = F.relu(out)
         out = self.fc2(out)
         return out
+

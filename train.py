@@ -20,6 +20,7 @@ from GATE2 import *
 from GATE3 import *
 from GATE4 import *
 from GATE5 import *
+from GATE6 import *
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
 def parse_args():

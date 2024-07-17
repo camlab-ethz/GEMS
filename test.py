@@ -17,6 +17,7 @@ from GATE2 import *
 from GATE3 import *
 from GATE4 import *
 from GATE5 import *
+from GATE6 import *
 
 
 class RMSELoss(torch.nn.Module):

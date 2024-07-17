@@ -11,12 +11,14 @@ from torch_scatter import scatter, scatter_mean
 
 
 '''
-GATE1 are architectures with 2-3 layers followed by a global edge pooling and potentially with residual connections.
+Based on GATE1, but edge embeddings are larger (n=256) and node_embeddings are smaller (n=128)
+GATE4 are architectures with 2-3 layers followed by a global edge pooling and potentially with residual connections.
 
-GATE1a: 2 layers, no residuals
-GATE1b: 3 layers, no residuals
-GATE1ar: 2 layers, with residuals
-GATE1br: 3 layers, with residuals
+
+GATE4a: 2 layers, no residuals
+GATE4b: 3 layers, no residuals
+GATE4ar: 2 layers, with residuals
+GATE4br: 3 layers, with residuals
 
 dropout and conv_dropout are possible
 '''
@@ -98,14 +100,14 @@ class GATE4a(nn.Module):
         super(GATE4a, self).__init__()
         
         # Build each layer separately
-        self.layer1 = self.build_layer(node_f=in_channels, edge_f=edge_dim, node_f_hidden=128, edge_f_hidden=64, node_f_out=256, edge_f_out=128, residuals=False, dropout=conv_dropout_prob)
-        self.node_bn1 = BatchNorm1d(256)
-        self.edge_bn1 = BatchNorm1d(128)
+        self.layer1 = self.build_layer(node_f=in_channels, edge_f=edge_dim, node_f_hidden=64, edge_f_hidden=128, node_f_out=128, edge_f_out=256, residuals=False, dropout=conv_dropout_prob)
+        self.node_bn1 = BatchNorm1d(128)
+        self.edge_bn1 = BatchNorm1d(256)
 
-        self.layer2 = self.build_layer(node_f=256, edge_f=128, node_f_hidden=256, edge_f_hidden=128, node_f_out=256, edge_f_out=128, residuals=False, dropout=conv_dropout_prob)
+        self.layer2 = self.build_layer(node_f=128, edge_f=256, node_f_hidden=128, edge_f_hidden=256, node_f_out=128, edge_f_out=256, residuals=False, dropout=conv_dropout_prob)
         
         self.dropout_layer = nn.Dropout(dropout_prob)
-        self.fc1 = nn.Linear(128, 64)
+        self.fc1 = nn.Linear(256, 64)
         self.fc2 = nn.Linear(64, 1)
 
     def build_layer(self, node_f, edge_f, node_f_hidden, edge_f_hidden, node_f_out, edge_f_out, residuals, dropout):
@@ -125,7 +127,7 @@ class GATE4a(nn.Module):
         _, edge_attr, _ = self.layer2(x, edge_index, edge_attr, None, batch=graphbatch.batch)
 
         # Pool the nodes of each interaction graph
-        out = scatter(edge_attr, graphbatch.batch[edge_index[0]], dim=0, reduce='add')
+        out = scatter(edge_attr, graphbatch.batch[edge_index[0]], dim=0, reduce='mean')
         out = self.dropout_layer(out)
         
         # Fully-Connected Layers
@@ -141,16 +143,16 @@ class GATE4b(nn.Module):
         super(GATE4b, self).__init__()
      
         # Build each layer separately
-        self.layer1 = self.build_layer(node_f=in_channels, edge_f=edge_dim, node_f_hidden=128, edge_f_hidden=64, node_f_out=256, edge_f_out=128, residuals=False, dropout=conv_dropout_prob)
-        self.node_bn1 = BatchNorm1d(256)
-        self.edge_bn1 = BatchNorm1d(128)
-        self.layer2 = self.build_layer(node_f=256, edge_f=128, node_f_hidden=256, edge_f_hidden=128, node_f_out=256, edge_f_out=128, residuals=False, dropout=conv_dropout_prob)
-        self.edge_bn2 = BatchNorm1d(128)
-        self.node_bn2 = BatchNorm1d(256)
-        self.layer3 = self.build_layer(node_f=256, edge_f=128, node_f_hidden=256, edge_f_hidden=128, node_f_out=256, edge_f_out=128, residuals=False, dropout=conv_dropout_prob)
+        self.layer1 = self.build_layer(node_f=in_channels, edge_f=edge_dim, node_f_hidden=64, edge_f_hidden=128, node_f_out=128, edge_f_out=256, residuals=False, dropout=conv_dropout_prob)
+        self.node_bn1 = BatchNorm1d(128)
+        self.edge_bn1 = BatchNorm1d(256)
+        self.layer2 = self.build_layer(node_f=128, edge_f=256, node_f_hidden=128, edge_f_hidden=256, node_f_out=128, edge_f_out=256, residuals=False, dropout=conv_dropout_prob)
+        self.edge_bn2 = BatchNorm1d(256)
+        self.node_bn2 = BatchNorm1d(128)
+        self.layer3 = self.build_layer(node_f=128, edge_f=256, node_f_hidden=128, edge_f_hidden=256, node_f_out=128, edge_f_out=256, residuals=False, dropout=conv_dropout_prob)
         
         self.dropout_layer = nn.Dropout(dropout_prob)
-        self.fc1 = nn.Linear(128, 64)
+        self.fc1 = nn.Linear(256, 64)
         self.fc2 = nn.Linear(64, 1)
 
     def build_layer(self, node_f, edge_f, node_f_hidden, edge_f_hidden, node_f_out, edge_f_out, residuals, dropout):
@@ -174,7 +176,7 @@ class GATE4b(nn.Module):
         _, edge_attr, _ = self.layer3(x, edge_index, edge_attr, u=None, batch=graphbatch.batch)
 
         # Pool the nodes of each interaction graph
-        out = scatter(edge_attr, graphbatch.batch[edge_index[0]], dim=0, reduce='add')
+        out = scatter(edge_attr, graphbatch.batch[edge_index[0]], dim=0, reduce='mean')
         out = self.dropout_layer(out)
         
         # Fully-Connected Layers
@@ -191,13 +193,13 @@ class GATE4ar(nn.Module):
         super(GATE4ar, self).__init__()
         
         # Build each layer separately
-        self.layer1 = self.build_layer(node_f=in_channels, edge_f=edge_dim, node_f_hidden=128, edge_f_hidden=64, node_f_out=256, edge_f_out=128, residuals=False, dropout=conv_dropout_prob)
-        self.node_bn1 = BatchNorm1d(256)
-        self.edge_bn1 = BatchNorm1d(128)
-        self.layer2 = self.build_layer(node_f=256, edge_f=128, node_f_hidden=256, edge_f_hidden=128, node_f_out=256, edge_f_out=128, residuals=True, dropout=conv_dropout_prob)
+        self.layer1 = self.build_layer(node_f=in_channels, edge_f=edge_dim, node_f_hidden=64, edge_f_hidden=128, node_f_out=128, edge_f_out=256, residuals=False, dropout=conv_dropout_prob)
+        self.node_bn1 = BatchNorm1d(128)
+        self.edge_bn1 = BatchNorm1d(256)
+        self.layer2 = self.build_layer(node_f=128, edge_f=256, node_f_hidden=128, edge_f_hidden=256, node_f_out=128, edge_f_out=256, residuals=True, dropout=conv_dropout_prob)
         
         self.dropout_layer = nn.Dropout(dropout_prob)
-        self.fc1 = nn.Linear(128, 64)
+        self.fc1 = nn.Linear(256, 64)
         self.fc2 = nn.Linear(64, 1)
 
     def build_layer(self, node_f, edge_f, node_f_hidden, edge_f_hidden, node_f_out, edge_f_out, residuals, dropout):
@@ -217,7 +219,7 @@ class GATE4ar(nn.Module):
         _, edge_attr, _ = self.layer2(x, edge_index, edge_attr, None, batch=graphbatch.batch)
 
         # Pool the nodes of each interaction graph
-        out = scatter(edge_attr, graphbatch.batch[edge_index[0]], dim=0, reduce='add')
+        out = scatter(edge_attr, graphbatch.batch[edge_index[0]], dim=0, reduce='mean')
         out = self.dropout_layer(out)
         
         # Fully-Connected Layers
@@ -235,16 +237,16 @@ class GATE4br(nn.Module):
         super(GATE4br, self).__init__()
      
         # Build each layer separately
-        self.layer1 = self.build_layer(node_f=in_channels, edge_f=edge_dim, node_f_hidden=128, edge_f_hidden=64, node_f_out=256, edge_f_out=128, residuals=False, dropout=conv_dropout_prob)
-        self.node_bn1 = BatchNorm1d(256)
-        self.edge_bn1 = BatchNorm1d(128)
-        self.layer2 = self.build_layer(node_f=256, edge_f=128, node_f_hidden=256, edge_f_hidden=128, node_f_out=256, edge_f_out=128, residuals=True, dropout=conv_dropout_prob)
-        self.edge_bn2 = BatchNorm1d(128)
-        self.node_bn2 = BatchNorm1d(256)
-        self.layer3 = self.build_layer(node_f=256, edge_f=128, node_f_hidden=256, edge_f_hidden=128, node_f_out=256, edge_f_out=128, residuals=True, dropout=conv_dropout_prob)
+        self.layer1 = self.build_layer(node_f=in_channels, edge_f=edge_dim, node_f_hidden=64, edge_f_hidden=128, node_f_out=128, edge_f_out=256, residuals=False, dropout=conv_dropout_prob)
+        self.node_bn1 = BatchNorm1d(128)
+        self.edge_bn1 = BatchNorm1d(256)
+        self.layer2 = self.build_layer(node_f=128, edge_f=256, node_f_hidden=128, edge_f_hidden=256, node_f_out=128, edge_f_out=256, residuals=True, dropout=conv_dropout_prob)
+        self.edge_bn2 = BatchNorm1d(256)
+        self.node_bn2 = BatchNorm1d(128)
+        self.layer3 = self.build_layer(node_f=128, edge_f=256, node_f_hidden=128, edge_f_hidden=256, node_f_out=128, edge_f_out=256, residuals=True, dropout=conv_dropout_prob)
         
         self.dropout_layer = nn.Dropout(dropout_prob)
-        self.fc1 = nn.Linear(128, 64)
+        self.fc1 = nn.Linear(256, 64)
         self.fc2 = nn.Linear(64, 1)
 
     def build_layer(self, node_f, edge_f, node_f_hidden, edge_f_hidden, node_f_out, edge_f_out, residuals, dropout):
@@ -268,7 +270,7 @@ class GATE4br(nn.Module):
         _, edge_attr, _ = self.layer3(x, edge_index, edge_attr, u=None, batch=graphbatch.batch)
 
         # Pool the nodes of each interaction graph
-        out = scatter(edge_attr, graphbatch.batch[edge_index[0]], dim=0, reduce='add')
+        out = scatter(edge_attr, graphbatch.batch[edge_index[0]], dim=0, reduce='mean')
         out = self.dropout_layer(out)
         
         # Fully-Connected Layers
