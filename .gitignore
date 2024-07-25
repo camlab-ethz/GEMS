@@ -34,6 +34,11 @@ clustering/
 slurm*
 Slurm*/
 export/
+*pair*
+*sim*
+TM-align/
+TMalign/
+*TMalign*
 *stdicts*
 c4_training_set.py
 *aggregate_results*
