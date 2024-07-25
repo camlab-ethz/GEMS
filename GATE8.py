@@ -11,19 +11,20 @@ from torch_scatter import scatter, scatter_mean
 
 
 '''
-GATE7
+GATE8
 BASED ON GATE3 but
-- global feature is larger (n=256) 
+- global feature is larger (n=256)
+- global feature computation is based on global add pooling on nodes
 
 architectures with 2-3 layers with prediction based on updating the global features of the model
 in each layer of the model. A final regression head transforms the global vector into a prediction.
 
 The architectures are as follows:
 
-GATE7a: 2 layers, no residuals
-GATE7b: 3 layers, no residuals
-GATE7ar: 2 layers, with residuals
-GATE7br: 3 layers, with residuals
+GATE8a: 2 layers, no residuals
+GATE8b: 3 layers, no residuals
+GATE8ar: 2 layers, with residuals
+GATE8br: 3 layers, with residuals
 
 dropout and conv_dropout are possible
 '''
@@ -78,18 +79,17 @@ class NodeModel(torch.nn.Module):
         return out
 
 
-# Global Model pools edge features and returns a transformed edge representation
 class GlobalModel(torch.nn.Module):
-    def __init__(self, n_edge_f, global_f, dropout):
+    def __init__(self, n_node_f, global_f, dropout):
         super().__init__()
         self.dropout_layer = nn.Dropout(dropout)
         self.global_mlp = nn.Sequential(
-            nn.Linear(n_edge_f + global_f, global_f), 
+            nn.Linear(n_node_f + global_f, global_f), 
             nn.ReLU(), 
             nn.Linear(global_f, global_f))
 
     def forward(self, x, edge_index, edge_attr, u, batch):
-        out = torch.cat([u, scatter(edge_attr, batch[edge_index[0]], dim=0, reduce='mean')], dim=1)
+        out = torch.cat([u, global_add_pool(x, batch=batch)], dim=1)
         out = self.dropout_layer(out)
         return self.global_mlp(out)
 
@@ -98,11 +98,10 @@ class GlobalModel(torch.nn.Module):
 
 
 
-class GATE7a(nn.Module):
+class GATE8a(nn.Module):
     def __init__(self, dropout_prob, in_channels, edge_dim, conv_dropout_prob):
-        super(GATE7a, self).__init__()
+        super(GATE8a, self).__init__()
         
-        # Build each layer separately
         self.layer1 = self.build_layer(node_f=in_channels, edge_f=edge_dim, node_f_hidden=128, edge_f_hidden=64, node_f_out=256, edge_f_out=128, global_f=256, residuals=False, dropout=conv_dropout_prob)
         self.node_bn1 = BatchNorm1d(256)
         self.edge_bn1 = BatchNorm1d(128)
@@ -118,13 +117,12 @@ class GATE7a(nn.Module):
         return geom_nn.MetaLayer(
             edge_model=EdgeModel(node_f, edge_f, edge_f_hidden, edge_f_out, residuals=residuals, dropout=dropout),
             node_model=NodeModel(node_f, edge_f_out, node_f_hidden, node_f_out, residuals=residuals, dropout=dropout),
-            global_model=GlobalModel(edge_f_out, global_f, dropout=dropout)
+            global_model=GlobalModel(node_f_out, global_f, dropout=dropout)
         )
 
     def forward(self, graphbatch):
         edge_index = graphbatch.edge_index
         
-        # Initialize global feature of length 1 for each graph in the batch
         initial_global = torch.zeros((graphbatch.num_graphs, 256)).to(graphbatch.x.device)
 
         x, edge_attr, u = self.layer1(graphbatch.x, edge_index, graphbatch.edge_attr, u=initial_global, batch=graphbatch.batch)
@@ -144,11 +142,10 @@ class GATE7a(nn.Module):
 
 
 
-class GATE7ar(nn.Module):
+class GATE8ar(nn.Module):
     def __init__(self, dropout_prob, in_channels, edge_dim, conv_dropout_prob):
-        super(GATE7ar, self).__init__()
+        super(GATE8ar, self).__init__()
         
-        # Build each layer separately
         self.layer1 = self.build_layer(node_f=in_channels, edge_f=edge_dim, node_f_hidden=128, edge_f_hidden=64, node_f_out=256, edge_f_out=128, global_f=256, residuals=False, dropout=conv_dropout_prob)
         self.node_bn1 = BatchNorm1d(256)
         self.edge_bn1 = BatchNorm1d(128)
@@ -164,13 +161,12 @@ class GATE7ar(nn.Module):
         return geom_nn.MetaLayer(
             edge_model=EdgeModel(node_f, edge_f, edge_f_hidden, edge_f_out, residuals=residuals, dropout=dropout),
             node_model=NodeModel(node_f, edge_f_out, node_f_hidden, node_f_out, residuals=residuals, dropout=dropout),
-            global_model=GlobalModel(edge_f_out, global_f, dropout=dropout)
+            global_model=GlobalModel(node_f_out, global_f, dropout=dropout)
         )
 
     def forward(self, graphbatch):
         edge_index = graphbatch.edge_index
         
-        # Initialize global feature of length 1 for each graph in the batch
         initial_global = torch.zeros((graphbatch.num_graphs, 256)).to(graphbatch.x.device)
 
         x, edge_attr, u = self.layer1(graphbatch.x, edge_index, graphbatch.edge_attr, u=initial_global, batch=graphbatch.batch)
@@ -190,11 +186,10 @@ class GATE7ar(nn.Module):
 
 
 
-class GATE7b(nn.Module):
+class GATE8b(nn.Module):
     def __init__(self, dropout_prob, in_channels, edge_dim, conv_dropout_prob):
-        super(GATE7b, self).__init__()
+        super(GATE8b, self).__init__()
         
-        # Build each layer separately
         self.layer1 = self.build_layer(node_f=in_channels, edge_f=edge_dim, node_f_hidden=128, edge_f_hidden=64, node_f_out=256, edge_f_out=128, global_f=256, residuals=False, dropout=conv_dropout_prob)
         self.node_bn1 = BatchNorm1d(256)
         self.edge_bn1 = BatchNorm1d(128)
@@ -215,13 +210,12 @@ class GATE7b(nn.Module):
         return geom_nn.MetaLayer(
             edge_model=EdgeModel(node_f, edge_f, edge_f_hidden, edge_f_out, residuals=residuals, dropout=dropout),
             node_model=NodeModel(node_f, edge_f_out, node_f_hidden, node_f_out, residuals=residuals, dropout=dropout),
-            global_model=GlobalModel(edge_f_out, global_f, dropout=dropout)
+            global_model=GlobalModel(node_f_out, global_f, dropout=dropout)
         )
 
     def forward(self, graphbatch):
         edge_index = graphbatch.edge_index
         
-        # Initialize global feature of length 1 for each graph in the batch
         initial_global = torch.zeros((graphbatch.num_graphs, 256)).to(graphbatch.x.device)
 
         x, edge_attr, u = self.layer1(graphbatch.x, edge_index, graphbatch.edge_attr, u=initial_global, batch=graphbatch.batch)
@@ -246,11 +240,10 @@ class GATE7b(nn.Module):
 
 
 
-class GATE7br(nn.Module):
+class GATE8br(nn.Module):
     def __init__(self, dropout_prob, in_channels, edge_dim, conv_dropout_prob):
-        super(GATE7br, self).__init__()
+        super(GATE8br, self).__init__()
         
-        # Build each layer separately
         self.layer1 = self.build_layer(node_f=in_channels, edge_f=edge_dim, node_f_hidden=128, edge_f_hidden=64, node_f_out=256, edge_f_out=128, global_f=256, residuals=False, dropout=conv_dropout_prob)
         self.node_bn1 = BatchNorm1d(256)
         self.edge_bn1 = BatchNorm1d(128)
@@ -271,13 +264,12 @@ class GATE7br(nn.Module):
         return geom_nn.MetaLayer(
             edge_model=EdgeModel(node_f, edge_f, edge_f_hidden, edge_f_out, residuals=residuals, dropout=dropout),
             node_model=NodeModel(node_f, edge_f_out, node_f_hidden, node_f_out, residuals=residuals, dropout=dropout),
-            global_model=GlobalModel(edge_f_out, global_f, dropout=dropout)
+            global_model=GlobalModel(node_f_out, global_f, dropout=dropout)
         )
 
     def forward(self, graphbatch):
         edge_index = graphbatch.edge_index
         
-        # Initialize global feature of length 1 for each graph in the batch
         initial_global = torch.zeros((graphbatch.num_graphs, 256)).to(graphbatch.x.device)
 
         x, edge_attr, u = self.layer1(graphbatch.x, edge_index, graphbatch.edge_attr, u=initial_global, batch=graphbatch.batch)

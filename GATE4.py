@@ -11,7 +11,11 @@ from torch_scatter import scatter, scatter_mean
 
 
 '''
-Based on GATE1, but edge embeddings are larger (n=256) and node_embeddings are smaller (n=128)
+GATE4
+Based on GATE1 but 
+- edge embeddings are larger (n=256)
+- node_embeddings are smaller (n=128)
+
 GATE4 are architectures with 2-3 layers followed by a global edge pooling and potentially with residual connections.
 
 
