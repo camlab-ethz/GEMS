@@ -37,7 +37,7 @@ class PDBbind_Dataset(Dataset):
         self.data_split = data_split
         self.protein_embeddings = protein_embeddings
         self.ligand_embeddings = ligand_embeddings
-        if len(self.ligand_embeddings) > 0 and not masternode: warnings.warn("Ligand embeddings are not used if no masternode is included.")
+
 
         # Load the PDBbind data dictionary containing all metadata for the complexes
         self.PDBbind_data_dict = 'PDBbind_data_dict.json'
@@ -85,7 +85,7 @@ class PDBbind_Dataset(Dataset):
             pK_scaled = (pK - min) / (max - min)
 
 
-            # --- NODE FEATURES ---
+            # --- AMINO ACID EMBEDDINGS ---
             x = grph.x
             
             # Append the amino acid embeddings to the feature matrices
@@ -93,6 +93,20 @@ class PDBbind_Dataset(Dataset):
                 emb_tensor = grph[emb]
                 if emb_tensor is not None:
                     x = torch.concatenate((x, emb_tensor), axis=1)
+
+
+            # --- LIGAND EMBEDDINGS ---
+            ligand_embedding = None
+
+            # Concatenate all ligand embeddings into a single vector
+            for emb in self.ligand_embeddings:
+                emb_vector = grph[emb]
+                if emb_vector is None: print(f"Embedding {emb} not found for {id}")
+                else:
+                    if ligand_embedding is None: ligand_embedding = emb_vector
+                    else:
+                        ligand_embedding = torch.concatenate((ligand_embedding, emb_vector), axis=1)
+                        ligand_embedding = ligand_embedding.float()
 
 
             # --- EDGE INDECES, EDGE ATTRIBUTES--- 
@@ -106,16 +120,16 @@ class PDBbind_Dataset(Dataset):
             edge_attr_prot = grph.edge_attr_prot
 
 
+
             # If a masternode should be included in the graph, add the corresponding edge_index
             if masternode:
 
-                # Append the ligand embeddings to the feature matrices 
-                # (only to the masternode, which is the last row in the feature matrix)
-                for emb in self.ligand_embeddings:
-                    emb_vector = grph[emb]
-                    if emb_tensor is not None:
-                        emb_tensor = torch.concatenate((torch.zeros(x.shape[0]-1, emb_vector.shape[1]), emb_vector), axis=0)
-                        x = torch.concatenate((x, emb_tensor), axis=1)
+                # If ligand embedding should be saved in the masternode (last row in the feature matrix)
+                # for emb in self.ligand_embeddings:
+                #     emb_vector = grph[emb]
+                #     if emb_vector is not None:
+                #         emb_tensor = torch.concatenate((torch.zeros(x.shape[0]-1, emb_vector.shape[1]), emb_vector), axis=0)
+                #         x = torch.concatenate((x, emb_tensor), axis=1)
 
                 # Depending on the desired masternode connectivity (to all nodes, to ligand nodes or to protein nodes),
                 # choose the correct edge index master from the graph object
@@ -169,6 +183,7 @@ class PDBbind_Dataset(Dataset):
                 pos = pos[:-1, :]
 
 
+
             # --- ABLATION STUDIES ---
             # For ablation studies: Generate feature matrices without node/edge features
             if not atom_features:
@@ -204,9 +219,11 @@ class PDBbind_Dataset(Dataset):
                                 edge_index=edge_index.long(),
                                 edge_attr=edge_attr.float(),
                                 y=torch.tensor(pK_scaled, dtype=torch.float),
-                                n_nodes=torch.tensor(n_nodes, dtype=torch.long) #needed for reading out masternode features
-                                ,pos=pos
-                                ,id=id)
+                                n_nodes=torch.tensor([n_nodes, n_lig_nodes, n_prot_nodes], dtype=torch.long),
+                                lig_emb=ligand_embedding
+                                #,pos=pos
+                                #,id=id
+                                )
                 
             elif delete_protein and not masternode:
                 # Remove all nodes that don't belong to the ligand from feature matrix
@@ -223,12 +240,16 @@ class PDBbind_Dataset(Dataset):
                 train_graph = Data(x = x.float(),
                                 edge_index=edge_index.long(),
                                 edge_attr=edge_attr.float(),
-                                y=torch.tensor(pK_scaled, dtype=torch.float)
-                                ,pos=pos
-                                ,id=id)
+                                y=torch.tensor(pK_scaled, dtype=torch.float),
+                                n_nodes=torch.tensor([n_nodes, n_lig_nodes, n_prot_nodes], dtype=torch.long),
+                                lig_emb=ligand_embedding
+                                #,pos=pos
+                                #,id=id
+                                )
                 
 
             elif delete_ligand and not masternode: raise ValueError('Cannot delete ligand nodes without masternode')
+
             elif delete_ligand and masternode:
                 # Remove all nodes that don't belong to the ligand from feature matrix, keep masternode
                 x = x[n_lig_nodes:, :]
@@ -245,12 +266,16 @@ class PDBbind_Dataset(Dataset):
                                 edge_index=edge_index.long(),
                                 edge_attr=edge_attr.float(),
                                 y=torch.tensor(pK_scaled, dtype=torch.float),
-                                n_nodes=torch.tensor(n_nodes, dtype=torch.long) #needed for reading out masternode features
-                                ,pos=pos
-                                ,id=id
-                )
+                                n_nodes=torch.tensor([n_nodes, n_lig_nodes, n_prot_nodes], dtype=torch.long),
+                                lig_emb=ligand_embedding
+                                #,pos=pos
+                                #,id=id
+                                )
 
-            # --- 
+
+
+
+            # --- NO ABLATION - Complete Interaction Graphs ---
             else: 
                 train_graph = Data(x = x.float(), 
                                 edge_index=edge_index.long(),
@@ -264,10 +289,11 @@ class PDBbind_Dataset(Dataset):
                                 #edge_attr_lig=edge_attr_lig,
                                 #edge_attr_prot=edge_attr_prot,
                                 y=torch.tensor(pK_scaled, dtype=torch.float),
-                                n_nodes=torch.tensor(n_nodes, dtype=torch.long) #needed for reading out masternode features
-                                ,pos=pos
-                                ,id=id
-                )
+                                n_nodes=torch.tensor([n_nodes, n_lig_nodes, n_prot_nodes], dtype=torch.long),
+                                lig_emb=ligand_embedding
+                                #,pos=pos
+                                #,id=id
+                                )
 
 
             #print(train_graph)
