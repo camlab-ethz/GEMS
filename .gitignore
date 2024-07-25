@@ -52,8 +52,6 @@ GAT*.sh
 *tar.gz
 
 #Ignore test_files
-*test*
-*test.ipynb
 *_old.py
 stuff/
 
