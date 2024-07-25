@@ -18,6 +18,14 @@ from GATE3 import *
 from GATE4 import *
 from GATE5 import *
 from GATE6 import *
+from GATE7 import *
+from GATE8 import *
+from GATE9 import *
+from GATE10 import *
+from GATE11 import *
+from GATE12 import *
+from GATE13 import *
+from GATE14 import *
 
 
 class RMSELoss(torch.nn.Module):

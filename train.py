@@ -21,6 +21,14 @@ from GATE3 import *
 from GATE4 import *
 from GATE5 import *
 from GATE6 import *
+from GATE7 import *
+from GATE8 import *
+from GATE9 import *
+from GATE10 import *
+from GATE11 import *
+from GATE12 import *
+from GATE13 import *
+from GATE14 import *
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
 def parse_args():
@@ -125,8 +133,8 @@ if early_stopping:
             #self.min_validation_r = float('inf')
 
         def early_stop(self, val_r, train_r):
-            if abs(val_r - train_r) > self.min_delta:
-                print(f'Early Stopping: Difference Validation R - Train R has become higher than {self.min_delta} epochs')
+            if abs(val_r - train_r) > self.min_delta and val_r > 0 and train_r > 0: 
+                print(f'Early Stopping: Difference Validation R - Train R has become higher than {self.min_delta}')
                 return True
             if val_r > self.min_validation_r:
                 self.min_validation_r = val_r
