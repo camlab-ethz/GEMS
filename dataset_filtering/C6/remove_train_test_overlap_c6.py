@@ -82,17 +82,12 @@ for test_idx, test_complex in test_set:
     # - have TM-score higher than 0.8 to the test complex
     # - Tanimoto similarity and ligand positioning RMSD compared to the test complex fulfill the following formula:
     #   S = Tanimoto + (1 - RMSD) > 0.8
-    
-    # Extract the indexes of the complexes that satisfy the conditions, if there are any, else continue
-    # mask = (train_or_test == 1) & (metrics[:, 0] > 0.4) & (metrics[:, 2] > 0.8) & (metrics[:, 3] < 0.5)
 
     mask1 = (metrics[:, 0] == 1.0)
     mask2 = (train_or_test == 1) & (metrics[:, 2] > 0.8) & (metrics[:, 0] + (1 - metrics[:, 3]) > 0.8)
     # Combine mask1 and mask2 with OR to get final mask
     mask = mask1 | mask2
     
-
-
     # Get the indexes and names of the complexes that satisfy the conditions
     similar_complexes_idx = mask.nonzero()[0]
     similar_complexes_names = [complexes[idx] for idx in similar_complexes_idx]
