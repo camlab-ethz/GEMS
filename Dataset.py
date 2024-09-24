@@ -222,7 +222,7 @@ class PDBbind_Dataset(Dataset):
                                 n_nodes=torch.tensor([n_nodes, n_lig_nodes, n_prot_nodes], dtype=torch.long),
                                 lig_emb=ligand_embedding
                                 #,pos=pos
-                                #,id=id
+                                ,id=id
                                 )
                 
             elif delete_protein and not masternode:
@@ -244,7 +244,7 @@ class PDBbind_Dataset(Dataset):
                                 n_nodes=torch.tensor([n_nodes, n_lig_nodes, n_prot_nodes], dtype=torch.long),
                                 lig_emb=ligand_embedding
                                 #,pos=pos
-                                #,id=id
+                                ,id=id
                                 )
                 
 
@@ -269,7 +269,7 @@ class PDBbind_Dataset(Dataset):
                                 n_nodes=torch.tensor([n_nodes, n_lig_nodes, n_prot_nodes], dtype=torch.long),
                                 lig_emb=ligand_embedding
                                 #,pos=pos
-                                #,id=id
+                                ,id=id
                                 )
 
 
@@ -292,7 +292,7 @@ class PDBbind_Dataset(Dataset):
                                 n_nodes=torch.tensor([n_nodes, n_lig_nodes, n_prot_nodes], dtype=torch.long),
                                 lig_emb=ligand_embedding
                                 #,pos=pos
-                                #,id=id
+                                ,id=id
                                 )
 
 
