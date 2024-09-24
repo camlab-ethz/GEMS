@@ -34,6 +34,8 @@ from GATE16 import *
 from GATE17 import *
 from GATE18 import *
 from GATE19 import *
+from GATE20 import *
+from GATE21 import *
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
 def parse_args():
@@ -45,24 +47,25 @@ def parse_args():
     # Model type and training parameters
     parser.add_argument("--model", required=True, help="The name of the model architecture")
     parser.add_argument("--log_path", required=True, help="The path for saving results and logs.")
-    parser.add_argument("--loss_func", default='MSE', help="The loss function that will be used ['MSE', 'RMSE', 'wMSE', 'L1', 'Huber']")
-    parser.add_argument("--optim", default='Adam', help="The optimizer that will be used ['Adam', 'Adagrad', 'SGD']")
-    parser.add_argument("--wandb", default=True, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Wheter or not the run should be streamed to Weights and Biases")
+    parser.add_argument("--loss_func", default='RMSE', help="The loss function that will be used ['MSE', 'RMSE', 'wMSE', 'L1', 'Huber']")
+    parser.add_argument("--optim", default='SGD', help="The optimizer that will be used ['Adam', 'Adagrad', 'SGD']")
+    parser.add_argument("--wandb", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Wheter or not the run should be streamed to Weights and Biases")
     parser.add_argument("--project_name", help="Project Name for the saving of run data to Weights and Biases")
     parser.add_argument("--run_name", required=True, help="Name of the Run to display in saved data and in Weights and Biases (string)")
     parser.add_argument("--n_folds", default=5, type=int, help="The number of stratified folds that should be generated (n-fold-CV)")
     parser.add_argument("--fold_to_train", default=0, type=int, help="Of the n_folds generated, on which fold should the model be trained")
-    parser.add_argument("--num_epochs", default=1000, type=int, help="Number of Epochs the model should be trained (int)")
+    parser.add_argument("--num_epochs", default=2000, type=int, help="Number of Epochs the model should be trained (int)")
     parser.add_argument("--batch_size", default=256, type=int, help="The Batch Size that should be used for training (int)")
-    parser.add_argument("--learning_rate", default=0.01, type=float, help="The learning rate with which the model should train (float)")
+    parser.add_argument("--learning_rate", default=0.001, type=float, help="The learning rate with which the model should train (float)")
     parser.add_argument("--weight_decay", default=0.001, type=float, help="The weight decay parameter with which the model should train (float)")
     parser.add_argument("--conv_dropout", default=0, type=float, help="The dropout probability that should be applied in the convolutional layers")
     parser.add_argument("--dropout", default=0, type=float, help="The dropout probability that should be applied in the dropout layer")
+    parser.add_argument("--random_seed", default=0, type=int, help="The random seed that should be used for the splitting of the dataset")
 
     # Early stopping
-    parser.add_argument("--early_stopping",  default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If early stopping should be used to prevent overfitting")
+    parser.add_argument("--early_stopping",  default=True, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If early stopping should be used to prevent overfitting")
     parser.add_argument("--early_stop_patience", default=100, type=int, help="For how many epochs the validation loss can cease to decrease without triggering early stop")
-    parser.add_argument("--early_stop_min_delta", default=0.3, type=float, help="How far train loss and val loss are allowed to diverge without triggering early stop")
+    parser.add_argument("--early_stop_min_delta", default=0.5, type=float, help="How far train loss and val loss are allowed to diverge without triggering early stop")
 
     # If the learning rate should be adaptive LINEAR
     parser.add_argument("--alr_lin",  default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Linear learning rate reduction scheme will be used")
@@ -88,7 +91,7 @@ def parse_args():
 
 args = parse_args()
 
-torch.manual_seed(0)
+
 
 
 # Training Parameters and Config
@@ -101,10 +104,10 @@ log_path = args.log_path
 project_name = args.project_name
 run_name = args.run_name
 wandb_tracking = args.wandb
+torch.manual_seed(0)
+random_seed = args.random_seed
 
 if wandb_tracking: print(f'Saving into Project Folder {project_name}')
-
-random_seed = 42
 
 # Training Parameters
 loss_function = args.loss_func
@@ -235,6 +238,14 @@ val_idx = val_indices[fold_to_train]
 
 train_dataset = Subset(dataset, train_idx)
 val_dataset = Subset(dataset, val_idx)
+
+# Save split dictionary to json at save dir (if the dataset contains the key "id")
+if 'id' in train_dataset[0].keys():
+    split = {}
+    split['validation'] = [grph['id'] for grph in val_dataset]
+    split['train'] = [grph['id'] for grph in train_dataset]
+    with open(f'{save_dir}/train_val_split.json', 'w', encoding='utf-8') as json_file:
+        json.dump(split, json_file, ensure_ascii=False, indent=4)
 
 print(f'Length Training Dataset: {len(train_dataset)}')
 print(f'Length Validation Dataset: {len(val_dataset)}')
