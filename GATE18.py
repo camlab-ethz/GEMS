@@ -336,3 +336,62 @@ class GATE18d(nn.Module):
         out = F.relu(out)
         out = self.fc2(out)
         return out
+    
+
+
+class GATE18e(nn.Module):
+    def __init__(self, dropout_prob, in_channels, edge_dim, conv_dropout_prob):
+        super(GATE18e, self).__init__()
+
+        self.NodeTransform = FeatureTransformMLP(in_channels, 256, 64, dropout=dropout_prob)
+        
+        self.layer1 = self.build_layer( node_f=64, node_f_hidden=64, node_f_out=64, 
+                                        edge_f=edge_dim, edge_f_hidden=64, edge_f_out=64,
+                                        glob_f=384, glob_f_hidden=384, glob_f_out=384,
+                                        residuals=False, dropout=conv_dropout_prob
+                                        )
+        
+        self.node_bn1 = BatchNorm1d(64)
+        self.edge_bn1 = BatchNorm1d(64)
+        self.u_bn1 = BatchNorm1d(384)
+
+        self.layer2 = self.build_layer( node_f=64, node_f_hidden=64, node_f_out=64,
+                                        edge_f=64, edge_f_hidden=64, edge_f_out=64,
+                                        glob_f=384, glob_f_hidden=384, glob_f_out=384,
+                                        residuals=False, dropout=conv_dropout_prob
+                                        )
+
+        self.dropout_layer = nn.Dropout(dropout_prob)
+        self.fc1 = nn.Linear(384, 64)
+        self.fc2 = nn.Linear(64, 1)
+
+    def build_layer(self, 
+                    node_f, node_f_hidden, node_f_out, 
+                    edge_f, edge_f_hidden, edge_f_out,
+                    glob_f, glob_f_hidden, glob_f_out,
+                    residuals, dropout):
+        return geom_nn.MetaLayer(
+            edge_model=EdgeModel(node_f, edge_f, edge_f_hidden, edge_f_out, residuals=residuals, dropout=dropout),
+            node_model=NodeModel(node_f, edge_f_out, node_f_hidden, node_f_out, residuals=residuals, dropout=dropout),
+            global_model=GlobalModel(node_f_out, glob_f, glob_f_hidden, glob_f_out, dropout=dropout)
+        )
+
+    def forward(self, graphbatch):
+        edge_index = graphbatch.edge_index
+        
+        x = self.NodeTransform(graphbatch.x)
+        u = torch.zeros((graphbatch.num_graphs, 384)).to(x.device)
+
+        x, edge_attr, u = self.layer1(x, edge_index, graphbatch.edge_attr, u=u, batch=graphbatch.batch)
+        x = self.node_bn1(x)
+        edge_attr = self.edge_bn1(edge_attr)
+        u = self.u_bn1(u)
+
+        _, _, u = self.layer2(x, edge_index, edge_attr, u, batch=graphbatch.batch)
+        u = self.dropout_layer(u)
+
+        # Fully-Connected Layers
+        out = self.fc1(u)
+        out = F.relu(out)
+        out = self.fc2(out)
+        return out
