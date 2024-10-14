@@ -23,6 +23,12 @@ from torch_geometric.utils import to_undirected, add_self_loops
 from torch_geometric.data import Data, Batch
 
 
+'''
+This script takes protein-ligand complexes in PDB and SDF format and generates featurized interaction graphs.
+The data_dir should contain protein structures in PDB format and ligand structures in SDF format named with the same identifier (e.g. 1abc_protein.pdb and 1abc_ligand.sdf).
+The script generates interaction graphs for pair of SDF and PDB files and saves them as .pth files in the data_dir.
+'''
+
 def arg_parser():
     parser = argparse.ArgumentParser(description="Inputs to Graph Generation Script")
     parser.add_argument('--data_dir', type=str, required=True, help='Path to the data directory containing all proteins(PDB) and ligands (SDF)')
@@ -311,6 +317,11 @@ class SkipComplexException(Exception):
 class FatalException(Exception):
     """Exception to end the script completely."""
     pass
+
+
+
+
+
 
 # Parse the arguments
 args = arg_parser()
