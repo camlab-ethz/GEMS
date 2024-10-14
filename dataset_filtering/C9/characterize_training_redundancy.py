@@ -2,12 +2,12 @@ import h5py
 import json
 import numpy as np
 
-input_data_split = 'PDBbind_data_splits/PDBbind_c6_data_split.json'
-output_data_split = 'PDBbind_data_splits/PDBbind_c8_data_split.json'
+input_data_split = 'PDBbind_data_splits/PDBbind_c0_data_split.json'
+output_data_split = 'PDBbind_data_splits/PDBbind_c9_data_split.json'
 
 # Thresholds for filtering based on TM-scores, S = tanimoto+(1-RMSE) and label differences
 TM_threshold = 0.8
-S_threshold = 1.0
+S_threshold = 1.3
 label_threshold = 0.5
 
 # Initialize log file
@@ -53,7 +53,7 @@ pairwise_label_diff = labels[:, np.newaxis] - labels[np.newaxis, :]
 pairwise_label_diff = np.abs(pairwise_label_diff)
 
 # # Import similarity matrix from hdf5 file
-with h5py.File('pairwise_similarity_matrix.hdf5', 'r') as f:
+with h5py.File('pairwise_similarity_matrix/pairwise_similarity_matrix_optimal.hdf5', 'r') as f:
     dset = f['distances']
     similarity_matrix = np.array(dset)
 
