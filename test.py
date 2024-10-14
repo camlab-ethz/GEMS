@@ -19,18 +19,18 @@ from models_global_pool import *
 # from GATE5 import *
 # from GATE6 import *
 # from GATE7 import *
-from GATE8 import *
-from GATE9 import *
-from GATE10 import *
-from GATE11 import *
-from GATE12 import *
-from GATE13 import *
-from GATE14 import *
-from GATE15 import *
-from GATE16 import *
-from GATE17 import *
+# from GATE8 import *
+# from GATE9 import *
+# from GATE10 import *
+# from GATE11 import *
+# from GATE12 import *
+# from GATE13 import *
+# from GATE14 import *
+# from GATE15 import *
+# from GATE16 import *
+# from GATE17 import *
 from GATE18 import *
-from GATE19 import *
+# from GATE19 import *
 
 
 class RMSELoss(torch.nn.Module):
