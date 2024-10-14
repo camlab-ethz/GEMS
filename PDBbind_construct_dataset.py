@@ -18,8 +18,8 @@ def main():
     parser = argparse.ArgumentParser()
 
     # Dataset construction
-    parser.add_argument("--data_dir", required=True, help="The source path of the data (ligand SDFs, protein PDBs, embeddings)")
-    parser.add_argument("--data_split", required=True, help="Path to a dictionary (json) that contains the split of the data into training and test set")
+    parser.add_argument("--data_dir", required=True, help="The path to the folder containing all Data() (graphs) of the dataset.")
+    parser.add_argument("--data_split", required=True, help="Filepath to dictionary (json file) containing the data split for the PDBbind dataset")
     parser.add_argument("--dataset", required=True, help="The dataset that should be loaded ['train', 'casf2013', 'casf2016']")
     parser.add_argument('--save_path', type=str, required=True, help='Path to save the dataset')
 
@@ -42,8 +42,6 @@ def main():
     parser.add_argument("--delete_ligand", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If ligand nodes should be deleted from the graph (ablation study)")
     parser.add_argument("--delete_protein", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If protein nodes should be deleted from the graph (ablation study)")
 
-
-    # Add additional arguments as needed
     args = parser.parse_args()
 
     protein_embeddings = args.protein_embeddings
