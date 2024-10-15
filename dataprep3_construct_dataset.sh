@@ -11,11 +11,17 @@ module load eth_proxy
 source /cluster/project/math/dagraber/miniconda3/etc/profile.d/conda.sh
 conda activate BAP
 
+# command="python dataprep3_construct_dataset.py \
+#                 --data_dir inference_test \
+#                 --protein_embeddings ankh_base esm2_t6 \
+#                 --ligand_embeddings ChemBERTa_77M \
+#                 --data_dict PDBbind_data/PDBbind_data_dict.json
+#                 --save_path inference_test/dataset_inference_151024.pt"
+
 command="python dataprep3_construct_dataset.py \
                 --data_dir inference_test \
                 --protein_embeddings ankh_base esm2_t6 \
                 --ligand_embeddings ChemBERTa_77M \
-                --data_dict PDBbind_data/PDBbind_data_dict.json
                 --save_path inference_test/dataset_inference_151024.pt"
-                
+
 $command

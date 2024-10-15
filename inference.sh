@@ -15,4 +15,4 @@ module load eth_proxy
 source /cluster/project/math/dagraber/miniconda3/etc/profile.d/conda.sh
 conda activate BAP
 
-python inference.py --model_arch GATE18d --dataset_path inference_test/dataset_inference_151024.pt
+python inference.py --model_arch GATE18d --dataset_path dataset_inference_151024.pt

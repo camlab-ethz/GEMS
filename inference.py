@@ -29,7 +29,7 @@ def load_model_state(model, state_dict_path, device):
 
 # Evaluation Function
 #-------------------------------------------------------------------------------------------------------------------------------
-def evaluate(models, loader, criterion, device):
+def evaluate(models, loader, criterion, device, labels):
     
     # Initialize variables to accumulate the evaluation results
     total_loss = 0.0
@@ -56,23 +56,32 @@ def evaluate(models, loader, criterion, device):
             y_pred.extend(output.tolist())
             id.extend(graphbatch.id)
 
-    # Calculate evaluation metrics
-    eval_loss = total_loss / len(loader)
 
-    # Pearson Correlation Coefficient
-    corr_matrix = np.corrcoef(y_true, y_pred)
-    r = corr_matrix[0, 1]
+    if labels:
+        # Calculate evaluation metrics
+        eval_loss = total_loss / len(loader)
 
-    # R2 Score
-    r2_score = 1 - np.sum((np.array(y_true) - np.array(y_pred)) ** 2) / np.sum((np.array(y_true) - np.mean(np.array(y_true))) ** 2)
+        # Pearson Correlation Coefficient
+        corr_matrix = np.corrcoef(y_true, y_pred)
+        r = corr_matrix[0, 1]
 
-    # RMSE in pK unit
-    min=0
-    max=16
-    true_labels_unscaled = torch.tensor(y_true) * (max - min) + min
-    predictions_unscaled = torch.tensor(y_pred) * (max - min) + min
-    rmse = criterion(predictions_unscaled, true_labels_unscaled)
-    return eval_loss, r, rmse, r2_score, true_labels_unscaled, predictions_unscaled, id
+        # R2 Score
+        r2_score = 1 - np.sum((np.array(y_true) - np.array(y_pred)) ** 2) / np.sum((np.array(y_true) - np.mean(np.array(y_true))) ** 2)
+
+        # RMSE in pK unit
+        min=0
+        max=16
+        true_labels_unscaled = torch.tensor(y_true) * (max - min) + min
+        predictions_unscaled = torch.tensor(y_pred) * (max - min) + min
+        rmse = criterion(predictions_unscaled, true_labels_unscaled)
+        return eval_loss, r, rmse, r2_score, true_labels_unscaled, predictions_unscaled, id
+    
+    else:
+        min=0
+        max=16
+        true_labels_unscaled = torch.tensor(y_true)
+        predictions_unscaled = torch.tensor(y_pred) * (max - min) + min
+        return true_labels_unscaled, predictions_unscaled, id
 #-------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -139,6 +148,9 @@ node_feat_dim = dataset[0].x.shape[1]
 edge_feat_dim = dataset[0].edge_attr.shape[1]
 print(f"Dataset Loaded with {len(dataset)} samples")
 
+# Check if the dataset has labels
+labels = dataset[0].y > 0
+print(f"Dataset has labels: {labels}")
 
 # Loaders
 test_loader = DataLoader(dataset = dataset, batch_size=128, shuffle=True, num_workers=4, persistent_workers=True)
@@ -165,27 +177,36 @@ model_paths = list(stdict_paths)
 models = [load_model_state(model, path, device) for model, path in zip(models, model_paths)]
 
 # Run inference
-test_metrics = evaluate(models, test_loader, criterion, device)
+test_metrics = evaluate(models, test_loader, criterion, device, labels)
 
 
 
-# Plotting
+# Save the output, plot the results if there are labels in the dataset
 #-------------------------------------------------------------------------------------------------------------------------
+if labels:
+    # Create a figure with a single plot (no subplots)
+    fig, ax1 = plt.subplots(figsize=(8, 8))
 
-# Create a figure with a single plot (no subplots)
-fig, ax1 = plt.subplots(figsize=(8, 8))
+    # Plot the predictions for test data only
+    #loss, r, rmse, r2, y_true, y_pred = test_metrics
+    loss, r, rmse, r2, y_true, y_pred, ids = test_metrics
+    plot_predictions(ax1, y_true, y_pred, f"Predictions Inference\nR = {r:.3f}, RMSE = {rmse:.3f}", "Inference Predictions")
 
-# Plot the predictions for test data only
-#loss, r, rmse, r2, y_true, y_pred = test_metrics
-loss, r, rmse, r2, y_true, y_pred, ids = test_metrics
-plot_predictions(ax1, y_true, y_pred, f"Predictions Inference\nR = {r:.3f}, RMSE = {rmse:.3f}", "Inference Predictions")
+    # Save the y_true and y_pred in a single CSV file using the csv module
+    with open(f'{dataset_path.split(".")[0]}_predictions.csv', mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(['id', 'y_true', 'y_pred'])  # Write the header
+        writer.writerows(zip(ids, y_true.tolist(), y_pred.tolist()))  # Write the data
 
-# Save the y_true and y_pred in a single CSV file using the csv module
-with open(f'{dataset_path.split(".")[0]}_predictions.csv', mode='w', newline='') as file:
-    writer = csv.writer(file)
-    writer.writerow(['id', 'y_true', 'y_pred'])  # Write the header
-    writer.writerows(zip(ids, y_true.tolist(), y_pred.tolist()))  # Write the data
+    plt.tight_layout()
+    plt.savefig(f'{dataset_path.split(".")[0]}_predictions.png', dpi=300)
 
-plt.tight_layout()
-plt.savefig(f'{dataset_path.split(".")[0]}_predictions.png', dpi=300)
+else:
+    y_true, y_pred, ids = test_metrics
+
+    # Save the y_true and y_pred in a single CSV file using the csv module
+    with open(f'{dataset_path.split(".")[0]}_predictions.csv', mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(['id', 'y_true', 'y_pred'])  # Write the header
+        writer.writerows(zip(ids, y_true.tolist(), y_pred.tolist()))  # Write the data
 #-------------------------------------------------------------------------------------------------------------------------
