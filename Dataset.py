@@ -64,6 +64,8 @@ class Dataset(Dataset):
             with open(data_dict, 'r', encoding='utf-8') as json_file:
                 self.data_dict = json.load(json_file)
             self.labels = True
+        else:
+            self.labels = False
 
 
         # Load the dictionary containing the data split for the dataset, if one is given
