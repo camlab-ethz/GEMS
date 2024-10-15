@@ -5,51 +5,82 @@ import json
 from torch_geometric.data import Dataset, Data
 
 
-class PDBbind_Dataset(Dataset):
+class Dataset(Dataset):
+
+    """
+    A class used to represent a Dataset for protein-ligand interaction graphs. Takes as input a folder containing the graph.pth file for each graph that has been preprocessed 
+    with the dataprep4_graph_construction.py script
+
+    - Loads all graphs from a folder
+    - If a data split dictionary is given, only the graphs that are included in the key that is provided in the dataset parameter are loaded.
+    - If inference is set to True, labels are set to 0
+    - If inference is set to False, a data dictionary containing the affinity labels for each complex has to be provided
+
+    - For ablation studies, there are options to delete all protein_nodes from the graphs
+    - To measure the contribution of atomic features and edge features, these can be excluded from the graph
+
+    - A masternode can be included in the graph, which is connected to all nodes in the graph. The masternode can be connected to all nodes, only to ligand nodes or only to protein nodes.
+    - The edges between the masternode and the other nodes can be directed from the ligand/protein nodes to the masternode, from the masternode to the ligand/protein nodes or undirected.
+    - If a masternode is included, ablation tests can also include the deletion of ligand nodes from the graph.
+
+    """
+
+
+
     def __init__(self,
-                # Dataset Construction
-                root,                               # Path to the folder containing the graphs  
-                dataset,                            # Wheter the training or test data should be loaded ['train', 'casf2013', 'casf2016']
-                data_split,                         # Filepath to dictionary (json file) containing the data split for the PDBbind dataset
-                protein_embeddings,                 # List of all protein embeddings that should be included
-                ligand_embeddings,                  # List of all ligand embeddings that should be included
-                refined_only=False,                 # If only refined complexes should be included
-                exclude_ic50=False,                 # If IC50-labelled datapoints should be excluded
-                exclude_nmr=False,                  # If NMR structures should be excluded
-                resolution_threshold=5.,            # If structures with a resolution above this threshold should be excluded
-                precision_strict=False,             # If only structures with affinity labels with '=' should be included
+                root,                               # Path to the folder containing the graphs
+
+                # EMBEDDINGS TO BE INCLUDED
+                protein_embeddings,                 # List of all protein embeddings that should be included (have to be saved in the graph Data() object already)
+                ligand_embeddings,                  # List of all ligand embeddings that should be included (have to be saved in the graph Data() object already).
+
+                # WHICH GRAPHS AND LABELS TO INCLUDE
+                data_dict=None,                     # Path to dictionary containing the affinity labels of the complexes as dict[complex_id] = {'log_kd_ki': affinity}
+                data_split=None,                    # Filepath to dictionary (json file) containing the data split for the graphs in the folder
+                dataset=None,                       # If a split dict is given, which subset should be loaded ['train', 'test'] as defined in the data_split file
+
+                # ABLATION
                 delete_protein = False,             # If protein nodes should be deleted from the graph (ablation study)
                 delete_ligand = False,              # If ligand nodes should be deleted from the graph (ablation study)
-                masternode=True,                    # If a masternode (mn) should be included
+                edge_features=True,                 # If edge features should be included
+                atom_features=True,                 # If atom features should be included
+
+                # INCLUDE A MASTERNODE
+                masternode=False,                   # If a masternode (mn) should be included
                 masternode_connectivity = 'all',    # If a mn is included, to which nodes it should be connected ('all', 'ligand', 'protein')
                 masternode_edges='undirected',      # If the mn should be connected with undirected or directed edges ("undirected", "in", or "out")
-                edge_features=True,                 # If edge features should be included
-                atom_features=True):                # If atom features should be included
+                ):                
                              
         
         super().__init__(root)
 
+        # Data Directory and Embeddings to be included
         self.data_dir = root
-        self.dataset = dataset
-        self.data_split = data_split
         self.protein_embeddings = protein_embeddings
         self.ligand_embeddings = ligand_embeddings
 
-
-        # Load the PDBbind data dictionary containing all metadata for the complexes
-        self.PDBbind_data_dict = 'PDBbind_data_dict.json'
-        with open('PDBbind_data_dict.json', 'r', encoding='utf-8') as json_file:
-            self.pdbbind_dict = json.load(json_file)
-
-        # Load the dictionary containing the data split for the PDBbind dataset
-        with open(self.data_split, 'r', encoding='utf-8') as json_file:
-            self.pdbbind_data_split = json.load(json_file) 
+        
+        if data_dict is not None:
+            with open(data_dict, 'r', encoding='utf-8') as json_file:
+                self.data_dict = json.load(json_file)
+            self.labels = True
 
 
-        # Generate the list of filepaths to the graphs that should be loaded
-        pdbbind_data_split = self.pdbbind_data_split[self.dataset]
-        dataset_filepaths = [os.path.join(self.data_dir, f"{key}_graph.pth") for key in pdbbind_data_split]
-        self.filepaths = [filepath for filepath in dataset_filepaths if os.path.isfile(filepath)]
+        # Load the dictionary containing the data split for the dataset, if one is given
+        # In no splitting dict is given, include all graphs in the folder in the dataset
+        if data_split is not None:
+            self.dataset = dataset
+            self.data_split = data_split
+            with open(self.data_split, 'r', encoding='utf-8') as json_file:
+                self.split_dict = json.load(json_file) 
+
+            # Generate the list of filepaths to the graphs that should be loaded
+            included_complexes = self.split_dict[self.dataset]
+            dataset_filepaths = [os.path.join(self.data_dir, f"{key}_graph.pth") for key in included_complexes]
+            self.filepaths = [filepath for filepath in dataset_filepaths if os.path.isfile(filepath)]
+
+        else: 
+            self.filepaths = [file.path for file in os.scandir(self.data_dir) if file.name.endswith('graph.pth')]
 
         
         
@@ -65,21 +96,12 @@ class PDBbind_Dataset(Dataset):
             id = grph.id
             pos = grph.pos
 
-            # --- FILTERING ---
-            if precision_strict and self.pdbbind_dict[id]['precision'] != "=": continue
-            if exclude_ic50 and "IC50" in self.pdbbind_dict[id].keys(): continue
-            if refined_only and 'refined' not in self.pdbbind_dict[id]['dataset']: continue
-            if exclude_nmr and self.pdbbind_dict[id]['resolution'] == 'NMR': continue
-            try: 
-                if float(self.pdbbind_dict[id]['resolution']) > resolution_threshold: continue
-            except ValueError: pass # If the resolution cannot be converted to string, it is an NMR structure
-
-            
-            # Get the affinity label and normalize it
-            min=0
-            max=16
-            pK = self.pdbbind_dict[id]['log_kd_ki']
-            pK_scaled = (pK - min) / (max - min)
+            if self.labels:
+                min=0
+                max=16
+                pK = self.data_dict[id]['log_kd_ki']
+                pK_scaled = (pK - min) / (max - min)
+            else: pK_scaled = 0
 
 
             # --- AMINO ACID EMBEDDINGS ---
@@ -120,13 +142,6 @@ class PDBbind_Dataset(Dataset):
 
             # If a masternode should be included in the graph, add the corresponding edge_index
             if masternode:
-
-                # If ligand embedding should be saved in the masternode (last row in the feature matrix)
-                # for emb in self.ligand_embeddings:
-                #     emb_vector = grph[emb]
-                #     if emb_vector is not None:
-                #         emb_tensor = torch.concatenate((torch.zeros(x.shape[0]-1, emb_vector.shape[1]), emb_vector), axis=0)
-                #         x = torch.concatenate((x, emb_tensor), axis=1)
 
                 # Depending on the desired masternode connectivity (to all nodes, to ligand nodes or to protein nodes),
                 # choose the correct edge index master from the graph object
@@ -293,7 +308,6 @@ class PDBbind_Dataset(Dataset):
                                 )
 
 
-            #print(train_graph)
             self.input_data[ind] = train_graph
             ind += 1
 
