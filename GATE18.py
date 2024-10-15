@@ -6,8 +6,6 @@ import torch_geometric.nn as geom_nn
 from torch_geometric.nn import GATv2Conv, global_add_pool
 from torch_geometric.nn import MessagePassing
 from torch_geometric.utils import add_self_loops
-from torch_scatter import scatter, scatter_mean
-
 
 
 '''
