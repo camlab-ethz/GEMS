@@ -50,6 +50,7 @@ LayerNorm.py
 *complexes_for_RL*
 pafnucy_data/
 test_pretty*
+inference_test/
 
 PDBbind*dataset*.pt
 
