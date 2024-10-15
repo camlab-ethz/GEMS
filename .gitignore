@@ -10,6 +10,7 @@ PDBbind1/.logs/
 troubleshooting/
 data_leakage_test/
 
+attention_weights/
 PDBbind0/
 PDBbind_test/
 PDBbind_v2020/
