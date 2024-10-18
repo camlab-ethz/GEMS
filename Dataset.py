@@ -5,7 +5,7 @@ import json
 from torch_geometric.data import Dataset, Data
 
 
-class Dataset(Dataset):
+class PDBbind_Dataset(Dataset): # RENAME THIS TO "DATASET" BEFORE PUBLIC RELEASE
 
     """
     A class used to represent a Dataset for protein-ligand interaction graphs. Takes as input a folder containing the graph.pth file for each graph that has been preprocessed 
