@@ -13,6 +13,7 @@ data_leakage_test/
 attention_weights/
 PDBbind0/
 PDBbind_test/
+PDBbind_v2016/
 PDBbind_v2020/
 PDBbind_v2021/
 PDBbind_v2021_by_2020
