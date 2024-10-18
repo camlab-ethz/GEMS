@@ -4,6 +4,7 @@ import os
 import torch
 import matplotlib.pyplot as plt
 import numpy as np
+from Dataset import *
 from torch_geometric.loader import DataLoader
 from GATE18 import *
 
@@ -31,7 +32,7 @@ def evaluate(models, loader, criterion, device):
     total_loss = 0.0
     y_true = []
     y_pred = []
-    #id = []
+    id = []
 
     # Disable gradient calculation during evaluation
     with torch.no_grad():
@@ -50,7 +51,7 @@ def evaluate(models, loader, criterion, device):
             total_loss += loss.item()
             y_true.extend(targets.tolist())
             y_pred.extend(output.tolist())
-            #id.extend(graphbatch.id)
+            id.extend(graphbatch.id)
 
     # Calculate evaluation metrics
     eval_loss = total_loss / len(loader)
@@ -58,6 +59,9 @@ def evaluate(models, loader, criterion, device):
     # Pearson Correlation Coefficient
     corr_matrix = np.corrcoef(y_true, y_pred)
     r = corr_matrix[0, 1]
+
+    # Link the predictions to the corresponding ids in a dictionary
+    id_to_pred = dict(zip(id, zip(y_true, y_pred)))
 
     # R2 Score
     r2_score = 1 - np.sum((np.array(y_true) - np.array(y_pred)) ** 2) / np.sum((np.array(y_true) - np.mean(np.array(y_true))) ** 2)
@@ -68,7 +72,7 @@ def evaluate(models, loader, criterion, device):
     true_labels_unscaled = torch.tensor(y_true) * (max - min) + min
     predictions_unscaled = torch.tensor(y_pred) * (max - min) + min
     rmse = criterion(predictions_unscaled, true_labels_unscaled)
-    return eval_loss, r, rmse, r2_score, true_labels_unscaled, predictions_unscaled#, id
+    return eval_loss, r, rmse, r2_score, true_labels_unscaled, predictions_unscaled, id_to_pred
 #-------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -87,18 +91,22 @@ def plot_error_histogram(ax, errors, title):
     ax.set_ylabel('Frequency')
 
 
-def plot_predictions(ax, y_true, y_pred, title, label):
-    ax.scatter(y_true, y_pred, alpha=0.5, c='blue', label=label)
-    axislim = 16
-    ax.plot([0, axislim], [0, axislim], color='red', linestyle='--')
-    ax.set_xlabel('True pK Values')
-    ax.set_ylabel('Predicted pK Values')
-    ax.set_ylim(0, axislim)
-    ax.set_xlim(0, axislim)
-    ax.axhline(0, color='grey', linestyle='--')
-    ax.axvline(0, color='grey', linestyle='--')
-    ax.set_title(title)
-    ax.legend()
+def plot_predictions(y_true, y_pred, title, metrics='', filepath=None, axislim=14):
+    plt.scatter(y_true, y_pred, alpha=0.5, c='blue')
+    
+    # Displaying the metrics in the top left corner of the plotting area
+    plt.text(0.05, 0.95, metrics, fontsize=14, transform=plt.gca().transAxes, 
+             verticalalignment='top', horizontalalignment='left')
+    
+    plt.plot([0, axislim], [0, axislim], color='red', linestyle='--')
+    plt.xlabel('True pK Values', fontsize=12)
+    plt.ylabel('Predicted pK Values', fontsize=12)
+    plt.ylim(0, axislim)
+    plt.yticks(fontsize=12)
+    plt.xlim(0, axislim)
+    plt.xticks(fontsize=12)
+    plt.title(title, fontsize=14, fontweight='bold')
+    plt.savefig(filepath, dpi=300)
 #-------------------------------------------------------------------------------------------------------------------------
 
 
@@ -112,7 +120,6 @@ def parse_args():
 
     # Location of the test data 
     parser.add_argument("--test_dataset_path", required=True, help="The path to the test dataset pt file")
-    parser.add_argument("--train_dataset_path", required=True, help="The path to the training dataset pt file")
 
     parser.add_argument("--stdict_paths", type=str, required=True, help="String of comma-separated paths to stdicts that should be tested as an ensemble")
     parser.add_argument("--save_path", required=True, help="The path where the results should be exported to")
@@ -124,25 +131,13 @@ args = parse_args()
 
 # Paths
 test_dataset_path = args.test_dataset_path
-train_dataset_path = args.train_dataset_path
-
 stdict_paths = args.stdict_paths.split(',')
 save_path = args.save_path
 
 
 # Load the datasets
 test_dataset = torch.load(test_dataset_path)
-train_dataset = torch.load(train_dataset_path)
-
-
-node_feat_dim = test_dataset[0].x.shape[1]
-edge_feat_dim = test_dataset[0].edge_attr.shape[1]
-N = len(train_dataset)
-
-
-# Loaders
 test_loader = DataLoader(dataset = test_dataset, batch_size=128, shuffle=True, num_workers=4, persistent_workers=True)
-train_loader = DataLoader(dataset = train_dataset, batch_size=256, shuffle=True, num_workers=4, persistent_workers=True)
 
 
 # Emsemble Model
@@ -151,6 +146,9 @@ model_arch = args.model_arch
 conv_dropout_prob = 0
 dropout_prob = 0
 criterion = RMSELoss()
+
+node_feat_dim = test_dataset[0].x.shape[1]
+edge_feat_dim = test_dataset[0].edge_attr.shape[1]
 
 model_class = getattr(sys.modules[__name__], model_arch)
 models = [model_class(
@@ -169,29 +167,40 @@ models = [load_model_state(model, path) for model, path in zip(models, model_pat
 
 
 # Run inference
-test_metrics = evaluate(models, test_loader, criterion, device)
-train_metrics = evaluate(models, train_loader, criterion, device)
-
+loss, r, rmse, r2_score, y_true, y_pred, id_to_pred = evaluate(models, test_loader, criterion, device)
 
 
 # Plotting
 #-------------------------------------------------------------------------------------------------------------------------
-
-# Title of the plots that will be generated
-train_dataset_name = os.path.basename(train_dataset_path).split('.')[0]
 test_dataset_name = os.path.basename(test_dataset_path).split('.')[0]
 
-# Create a figure with two subplots
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8))
+# Save the predictions to a json file
+with open(os.path.join(save_path, f'predictions_{test_dataset_name}.json'), 'w', encoding='utf-8') as json_file:
+    json.dump(id_to_pred, json_file, ensure_ascii=False, indent=4)
 
-# Plot the predictions for test data
-loss, r, rmse, r2, y_true, y_pred = test_metrics #,id    
-plot_predictions(ax1, y_true, y_pred, f"Test Predictions\n{test_dataset_name}\nR = {r:.3f}, RMSE = {rmse:.3f}", "Test Predictions")
+# Training Set
+if test_dataset_name.startswith('dataset_train'):
+    test_dataset_name = "Training Set"
+    filepath = os.path.join(save_path, f'predictions_dataset_train.png')
 
-# Plot the predictions for the training data
-loss, r, rmse, r2, y_true, y_pred = train_metrics #,id
-plot_predictions(ax2, y_true, y_pred, f"Training Predictions\n{train_dataset_name}\nR = {r:.3f}, RMSE = {rmse:.3f}", 'Training Predictions')
+# Test Set CASF2013
+elif test_dataset_name.startswith('dataset_casf2013'):
+    if test_dataset_name.endswith('c5'):
+        test_dataset_name = "CASF2013 Independent Subset"
+        filepath = os.path.join(save_path, f'predictions_dataset_casf2013_c5.png')
+    else:
+        test_dataset_name = "CASF2013 Benchmark Set"
+        filepath = os.path.join(save_path, f'predictions_dataset_casf2013.png')
 
-plt.tight_layout()
-plt.savefig(f'{save_path}/{test_dataset_name}_predictions.png', dpi=300)
+# Test Set CASF2016
+else:
+    if test_dataset_name.endswith('c5'):
+        test_dataset_name = "CASF2016 Independent Subset"
+        filepath = os.path.join(save_path, f'predictions_dataset_casf2016_c5.png')
+    else:
+        test_dataset_name = "CASF2016 Benchmark Set"
+        filepath = os.path.join(save_path, f'predictions_dataset_casf2016.png')
+
+# Apply the function to save individual plots
+plot_predictions(y_true, y_pred, test_dataset_name, metrics=f"R = {r:.3f}\nRMSE = {rmse:.3f}", filepath=filepath, axislim=14)
 #-------------------------------------------------------------------------------------------------------------------------
