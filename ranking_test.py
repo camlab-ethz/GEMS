@@ -58,7 +58,7 @@ def compute_pearson_correlations_in_clusters(casf2016_predictions):
 
         # Extract the true and predicted scores for the cluster
         true_scores = [data[i][1] for i in range(len(data)) if data[i][0] in ids]
-        predicted_scores = [casf2016_predictions[id] for id in ids]
+        predicted_scores = [casf2016_predictions[id][1] for id in ids]
         
         # Calculate the Spearman correlation
         spearman_correlation, _ = spearmanr(true_scores, predicted_scores)
@@ -82,18 +82,18 @@ model_path = args.model_path
 # -------------------------------------------------------------------------------------------------------------
 
 # If the model path is a specific predictions file of a specific model, load the predictions 
-if model_path.endswith('predictions.json'):
+if model_path.endswith('.json'):
     with open(model_path) as f:
         casf2016_predictions = json.load(f)
     spearman_correlations = compute_pearson_correlations_in_clusters(casf2016_predictions)
 
     # SAVE PEARSON CORRELATIONS TO A FILE AT MODEL PATH
-    save_path = model_path.replace('predictions.json', 'spearman_correlations.json')
+    save_path = model_path.replace('.json', '_spearman_correlations.json')
     with open(save_path, 'w') as f:
         json.dump(spearman_correlations, f)
 
     # Plot the Spearman correlations and save the plot where the prediction file is located
-    save_path = model_path.replace('predictions.json', 'spearman_correlations.png')
+    save_path = model_path.replace('.json', '_spearman_correlations.png')
     plot_spearman_correlations(spearman_correlations, save_path, xlabel=model_path.split('/')[-1])
 
 
