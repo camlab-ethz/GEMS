@@ -372,8 +372,8 @@ hetatm_smiles_dict = {'ZN': '[Zn+2]', 'MG': '[Mg+2]', 'NA': '[Na+1]', 'MN': '[Mn
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # Get sorted lists of proteins and ligands (dirEntry objects) in the data_dir
-proteins = sorted([protein for protein in os.scandir(data_dir) if protein.name.endswith('protein.pdb')], key=lambda x: x.name)
-ligands = sorted([ligand for ligand in os.scandir(data_dir) if ligand.name.endswith('ligand.sdf')], key=lambda x: x.name)
+proteins = sorted([protein for protein in os.scandir(data_dir) if protein.name.endswith('.pdb')], key=lambda x: x.name)
+ligands = sorted([ligand for ligand in os.scandir(data_dir) if ligand.name.endswith('.sdf')], key=lambda x: x.name)
 
 print("Construction of Featurized Interaction Graphs\n", flush=True)
 print(f'Number of Protein PDBs: {len(proteins)}', flush=True)
@@ -396,25 +396,26 @@ known_residues = amino_acids + known_hetatms
 
 
 # Start a loop over the complexes
-#----------------------------------------------------------
+#---------------------------------------------------------------
 for i, (protein, ligand) in enumerate(zip(proteins, ligands)):
 
     print(f'Processing Complex {protein.name} ({i+1}/{len(proteins)})', end=': ', flush=True)
 
     try:
-        id = protein.name.split('_')[0]
+        # If there is a mismatch between the protein and ligand names, skip the complex
+        # (there should be a 1:1 correspondence between protein and ligand files in the data_dir)
+        if protein.name.split('.pdb')[0] != ligand.name.split('.sdf')[0]:
+            raise FatalException(f'Protein {protein.name} and Ligand {ligand.name} do not match')
+        else:
+            id = protein.name.split('.pdb')[0]
+        
         protein_path = protein.path
         ligand_path = ligand.path
 
         # Check if the graph of this complex exists already
         if not replace_existing_graphs and os.path.exists(os.path.join(data_dir, f'{id}_graph.pth')):
             raise SkipComplexException('Graph already exists')
-
-        # If there is a mismatch between the protein and ligand names, skip the complex
-        # (there should be a 1:1 correspondence between protein and ligand files in the data_dir)
-        if protein.name.split('_')[0] != ligand.name.split('_')[0]:
-            raise FatalException(f'Protein {protein.name} and Ligand {ligand.name} do not match')
-
+        
 
         # LIGAND PARSING - Continue only if the parsed ligand has been processed successfully, else skip this complex
         lig = parse_sdf_file(ligand_path)

@@ -54,7 +54,7 @@ log.write("\n")
 
 
 # Generate a lists of all proteins
-proteins = sorted([protein for protein in os.scandir(data_dir) if protein.name.endswith('protein.pdb')], key=lambda x: x.name)
+proteins = sorted([protein for protein in os.scandir(data_dir) if protein.name.endswith('.pdb')], key=lambda x: x.name)
 num_proteins = len(proteins)
 
 print(f'Number of Proteins to be processed: {num_proteins}')
@@ -82,7 +82,7 @@ def get_aa_embeddings_ankh(protein_sequence):
 tic = time.time()
 for protein in tqdm(proteins):
 
-    id = protein.name.split('_')[0]
+    id = protein.name.split('.pdb')[0]
     log_string = f'{id}: '
 
     save_filepath = os.path.join(data_dir, f'{id}_{model_name}.pt')

@@ -59,7 +59,7 @@ log.write("\n")
 
 
 # Generate a lists of all ligands
-ligands = sorted([ligand for ligand in os.scandir(data_dir) if ligand.name.endswith('ligand.sdf')], key=lambda x: x.name)
+ligands = sorted([ligand for ligand in os.scandir(data_dir) if ligand.name.endswith('.sdf')], key=lambda x: x.name)
 num_ligands = len(ligands)
 
 print(f'Number of ligands to be processed: {num_ligands}')
@@ -70,7 +70,7 @@ print(f'Model Name: {model_name}')
 tic = time.time()
 for ligand in tqdm(ligands):
 
-    id = ligand.name.split('_')[0]
+    id = ligand.name.split('.sdf')[0]
     log_string = f'{id}: '
 
     save_filepath = os.path.join(data_dir, f"{id}_{model_descriptor.replace('-', '_')}.pt")
