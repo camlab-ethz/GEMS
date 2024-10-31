@@ -46,7 +46,7 @@ else: title = '(Data Leakage Removed)'
 
 
 # Import list of complexes from json file
-with open('PDBbind_complexes.json', 'r') as f:
+with open('PDBbind_data/PDBbind_complexes.json', 'r') as f:
     complexes = json.load(f)
 
 with open(f'PDBbind_data_splits/PDBbind_{data_split}_data_split.json', 'r') as f:
@@ -59,7 +59,7 @@ with open(f'PDBbind_data_splits/PDBbind_{data_split}_data_split.json', 'r') as f
 train_or_not = np.array([1 if complex in train_dataset else 0 for complex in complexes])
 
 # Import affinity dict and get true affinity for each complex
-with open('PDBbind_data_dict.json', 'r') as f:
+with open('PDBbind_data/PDBbind_data_dict.json', 'r') as f:
     affinity_data = json.load(f)
 
 distance_matrix = 'pairwise_similarity_matrix/pairwise_similarity_matrix_optimal.hdf5'
@@ -74,7 +74,7 @@ true_labels_casf2013 = [affinity_data[complex]['log_kd_ki'] for complex in casf2
 
 print(f"Computing predictions for CASF2016 test set\n\n")
 
-predicted_labels_casf2016 = []
+predicted_labels_casf2016 = {}
 for complex in casf2016:
     print(f"Finding similar training complexes for {complex}")
     complex_idx = complexes.index(complex)
@@ -96,54 +96,59 @@ for complex in casf2016:
     affinities = np.array([affinity_data[complex]['log_kd_ki'] for complex in names])
     weights = similarity_scores[top_indices]
     weighted_average = np.average(affinities, weights=weights)
-    predicted_labels_casf2016.append(weighted_average.item())
+    predicted_labels_casf2016[complex] = weighted_average.item()
     print(weights)
 
+
+# Export the predictions to a json file
+with open(f'CASF2016_predictions_{data_split}_top{top_n}.json', 'w', encoding='utf-8') as json_file:
+    json.dump(predicted_labels_casf2016, json_file, ensure_ascii=False, indent=4)
+
 # Compute the evaluation metrics
-predicted_labels_casf2016 = np.array(predicted_labels_casf2016)
+predicted_labels_casf2016 = np.array([predicted_labels_casf2016[complex] for complex in casf2016])
 corr_matrix = np.corrcoef(true_labels_casf2016, predicted_labels_casf2016)
 r = corr_matrix[0, 1]
 rmse = criterion(torch.tensor(predicted_labels_casf2016), torch.tensor(true_labels_casf2016))
 
 plot_predictions(true_labels_casf2016, predicted_labels_casf2016, f"CASF2016 Predictions {title}\nWeighted average of labels of top {top_n} similar complexes\nR = {r:.3f}, RMSE = {rmse:.3f}", "CASF-2016 Predictions")
-plt.savefig(f'data_leakage_test/CASF2016_complexes_{data_split}_top{top_n}', dpi=300)
+plt.savefig(f'CASF2016_complexes_{data_split}_top{top_n}', dpi=300)
 
 
 
 
-print(f"\n\nComputing predictions for CASF2013 test set\n\n")
+# print(f"\n\nComputing predictions for CASF2013 test set\n\n")
 
-predicted_labels_casf2013 = []
-for complex in casf2013:
-    print(f"Finding similar training complexes for {complex}")
+# predicted_labels_casf2013 = []
+# for complex in casf2013:
+#     print(f"Finding similar training complexes for {complex}")
     
-    complex_idx = complexes.index(complex)
+#     complex_idx = complexes.index(complex)
 
-    # Get the similarity data to all training complexes
-    with h5py.File(distance_matrix, 'r') as f:
-        metrics = f['distances'][complex_idx, :, :]
-        metrics[complex_idx, :] = 0 # Set the metrics of the complex itself to zero
-        metrics[train_or_not == 0, :] = 0 # Set the metrics of all complexes not in the training dataset to zero using the train_or_test mask
+#     # Get the similarity data to all training complexes
+#     with h5py.File(distance_matrix, 'r') as f:
+#         metrics = f['distances'][complex_idx, :, :]
+#         metrics[complex_idx, :] = 0 # Set the metrics of the complex itself to zero
+#         metrics[train_or_not == 0, :] = 0 # Set the metrics of all complexes not in the training dataset to zero using the train_or_test mask
 
-    # Calculate similarity scores
-    similarity_scores = np.sum(metrics[:, :3], axis=1) - metrics[:, 3]
-    sorted_indices = np.argsort(similarity_scores)
-    sorted_indices = list(reversed(sorted_indices))
+#     # Calculate similarity scores
+#     similarity_scores = np.sum(metrics[:, :3], axis=1) - metrics[:, 3]
+#     sorted_indices = np.argsort(similarity_scores)
+#     sorted_indices = list(reversed(sorted_indices))
 
-    # Get the top n similar complexes and average their labels
-    top_indices = sorted_indices[:top_n]
-    names = [complexes[idx] for idx in top_indices]
-    affinities = np.array([affinity_data[complex]['log_kd_ki'] for complex in names])
-    weights = similarity_scores[top_indices] + 0.01
-    print(weights)
-    weighted_average = np.average(affinities, weights=weights)
-    predicted_labels_casf2013.append(weighted_average.item())
+#     # Get the top n similar complexes and average their labels
+#     top_indices = sorted_indices[:top_n]
+#     names = [complexes[idx] for idx in top_indices]
+#     affinities = np.array([affinity_data[complex]['log_kd_ki'] for complex in names])
+#     weights = similarity_scores[top_indices] + 0.01
+#     print(weights)
+#     weighted_average = np.average(affinities, weights=weights)
+#     predicted_labels_casf2013.append(weighted_average.item())
 
-# Compute the evaluation metrics
-predicted_labels_casf2013 = np.array(predicted_labels_casf2013)
-corr_matrix = np.corrcoef(true_labels_casf2013, predicted_labels_casf2013)
-r = corr_matrix[0, 1]
-rmse = criterion(torch.tensor(predicted_labels_casf2013), torch.tensor(true_labels_casf2013))
+# # Compute the evaluation metrics
+# predicted_labels_casf2013 = np.array(predicted_labels_casf2013)
+# corr_matrix = np.corrcoef(true_labels_casf2013, predicted_labels_casf2013)
+# r = corr_matrix[0, 1]
+# rmse = criterion(torch.tensor(predicted_labels_casf2013), torch.tensor(true_labels_casf2013))
 
-plot_predictions(true_labels_casf2013, predicted_labels_casf2013, f"CASF2013 Predictions {title}\nWeighted average of labels of top {top_n} similar complexes\nR = {r:.3f}, RMSE = {rmse:.3f}", "CASF-2013 Predictions")
-plt.savefig(f'data_leakage_test/CASF2013_complexes_{data_split}_top{top_n}', dpi=300)
+# plot_predictions(true_labels_casf2013, predicted_labels_casf2013, f"CASF2013 Predictions {title}\nWeighted average of labels of top {top_n} similar complexes\nR = {r:.3f}, RMSE = {rmse:.3f}", "CASF-2013 Predictions")
+# plt.savefig(f'data_leakage_test/CASF2013_complexes_{data_split}_top{top_n}', dpi=300)
