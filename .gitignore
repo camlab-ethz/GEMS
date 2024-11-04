@@ -53,6 +53,7 @@ LayerNorm.py
 pafnucy_data/
 test_pretty*
 inference_test/
+find_clusters/
 
 PDBbind*dataset*.pt
 

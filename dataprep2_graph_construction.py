@@ -77,25 +77,6 @@ def parse_sdf_file(file_path):
 
 
 
-def find_files_with_patterns(directory, pattern1, pattern2):
-    """
-    Find files in a directory that match the given patterns.
-
-    Args:
-        directory (str): The directory to search for files.
-        pattern1 (str): The first pattern to match in the file names.
-        pattern2 (str): The second pattern to match in the file names.
-
-    Returns:
-        list: A list of file paths that match the given patterns.
-    """
-
-    search_pattern = os.path.join(directory, f"*{pattern1}*{pattern2}*")
-    matching_files = glob.glob(search_pattern)
-    
-    return matching_files
-
-
 
 def one_of_k_encoding_unk(x, allowable_set):
     """
@@ -542,7 +523,9 @@ for i, (protein, ligand) in enumerate(zip(proteins, ligands)):
             aa_embeddings = {}
 
             for j, emb in enumerate(protein_embeddings):
-                matching_files = find_files_with_patterns(data_dir, id, emb)
+
+                search_pattern = os.path.join(data_dir, f"{id}_{emb}*.pt")
+                matching_files = glob.glob(search_pattern)
                 if len(matching_files) == 1:
                     aa_embeddings[j] = torch.load(matching_files[0])
                 elif len(matching_files) == 0:
@@ -554,7 +537,7 @@ for i, (protein, ligand) in enumerate(zip(proteins, ligands)):
                     
             # Skip the complex if not all/too many embeddings are found
             if not found_all_emb: 
-                raise SkipComplexException(f'Not all protein embeddings found for {emb}')
+                raise SkipComplexException(f'Not all or too many {emb} embeddings found for {id}')
 
 
         # Load the ligand embeddings if there are any
@@ -563,7 +546,8 @@ for i, (protein, ligand) in enumerate(zip(proteins, ligands)):
             lig_embeddings = {}
 
             for j, emb in enumerate(ligand_embeddings):
-                matching_files = find_files_with_patterns(data_dir, id, emb)
+                search_pattern = os.path.join(data_dir, f"{id}_{emb}*.pt")
+                matching_files = glob.glob(search_pattern)
                 if len(matching_files) == 1:
                     lig_embeddings[j] = torch.load(matching_files[0])
                 elif len(matching_files) == 0:
@@ -576,7 +560,7 @@ for i, (protein, ligand) in enumerate(zip(proteins, ligands)):
             
             # Skip the complex if not all/too many embeddings are found
             if not found_all_emb:
-                raise SkipComplexException('Not all ligand embeddings found')
+                raise SkipComplexException(f'Not all or too many {emb} embeddings found for {id}')
         
         
 
