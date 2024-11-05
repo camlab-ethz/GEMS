@@ -52,8 +52,9 @@ LayerNorm.py
 *complexes_for_RL*
 pafnucy_data/
 test_pretty*
-inference_test/
+inference_test*/
 find_clusters/
+find_clusters_lorenzo/
 
 PDBbind*dataset*.pt
 

@@ -1,6 +1,7 @@
 import pickle
 import os
 import torch
+import glob
 from transformers import AutoTokenizer, AutoModel
 from rdkit import Chem
 import argparse
@@ -53,47 +54,57 @@ log_folder = os.path.join(data_dir, '.logs')
 if not os.path.exists(log_folder): os.makedirs(log_folder)
 log_file_path = os.path.join(log_folder, f'{model_descriptor}.txt')
 log = open(log_file_path, 'a')
-log.write("Generating ChemBERTa Embeddings for Proteins - Log File:\n")
+log.write("Generating ChemBERTa Embeddings for Ligands - Log File:\n")
 log.write(f"Model Descriptor: {model_descriptor}")
 log.write("\n")
 
 
-# Generate a lists of all ligands
-ligands = sorted([ligand for ligand in os.scandir(data_dir) if ligand.name.endswith('.sdf')], key=lambda x: x.name)
-num_ligands = len(ligands)
-
-print(f'Number of ligands to be processed: {num_ligands}')
-print(f'Model Name: {model_name}')
-
+# Generate a lists of all complex IDs
+complexes = sorted([compl for compl in os.scandir(data_dir) if compl.name.endswith('.pdb')], key=lambda x: x.name)
 
 # Start generating embeddings for all ligands iteratively
 tic = time.time()
-for ligand in tqdm(ligands):
+num_ligands = 0
+num_complexes = 0
 
-    id = ligand.name.split('.sdf')[0]
+for compl in tqdm(complexes):
+
+    id = compl.name.split('.')[0]
     log_string = f'{id}: '
 
-    save_filepath = os.path.join(data_dir, f"{id}_{model_descriptor.replace('-', '_')}.pt")
-    if os.path.exists(save_filepath):
-        log_string += 'Embedding already exists'
+    # Find the SDF file for the current complex
+    search_pattern = os.path.join(data_dir, f"{id}.sdf")
+    matching_files = glob.glob(search_pattern)
+    if len(matching_files) != 1:
+        log_string += f'SDF file "{id}.sdf" not found (or more than one)'
         log.write(log_string + "\n")
         continue
-        
-    smiles_list = sdf_to_smiles(ligand.path)
-    if len(smiles_list) == 1: smiles = smiles_list[0]
-    else:
-        log_string += 'SMILES string could not be extracted from SDF file'
+
+    # Extract the smiles codes of all ligands in the SDF file
+    smiles_list = sdf_to_smiles(matching_files[0])
+    if len(smiles_list) < 1:
+        log_string += 'No SMILES string extracted from SDF file'
         log.write(log_string + "\n")
         continue
+    log.write(log_string + f"{len(smiles_list)} Ligands to Process\n")
     
-    embedding = smiles_to_embedding(smiles, tokenizer, model)
+    # Generate embeddings for all ligands in the SDF file
+    for i, smiles in enumerate(smiles_list):
+        log_string = f"--- Ligand {i+1}: "
+        save_filepath = os.path.join(data_dir, f"{id}_{model_descriptor.replace('-', '_')}_L{i+1:05}.pt")
+        if os.path.exists(save_filepath):
+            log_string += 'Embedding already exists'
+            log.write(log_string + "\n")
+            continue
+        
+        embedding = smiles_to_embedding(smiles, tokenizer, model)
+        torch.save(embedding.float(), save_filepath)
+        log_string += 'Successful'
+        log.write(log_string + "\n")
+        num_ligands += 1
+    num_complexes += 1
 
-    torch.save(embedding.float(), save_filepath)
-    log_string += 'Successful'
 
-
-    log.write(log_string + "\n")
-
-print(f'Time taken for {num_ligands} ligands: {time.time() - tic} seconds')
+print(f'Time taken for {num_complexes} proteins with {num_ligands} ligands: {time.time() - tic} seconds')
 log.close()
 

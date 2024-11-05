@@ -2,6 +2,7 @@ import os
 import numpy as np
 import torch
 import json
+import glob
 from torch_geometric.data import Dataset, Data
 
 
@@ -76,10 +77,16 @@ class PDBbind_Dataset(Dataset): # RENAME THIS TO "DATASET" BEFORE PUBLIC RELEASE
             with open(self.data_split, 'r', encoding='utf-8') as json_file:
                 self.split_dict = json.load(json_file) 
 
-            # Generate the list of filepaths to the graphs that should be loaded
+            # Generate the list of filepaths to the graphs that should be loaded, 
+            # including only the complexes that are included in the split dict and 
+            # all their associated ligands
             included_complexes = self.split_dict[self.dataset]
-            dataset_filepaths = [os.path.join(self.data_dir, f"{key}_graph.pth") for key in included_complexes]
-            self.filepaths = [filepath for filepath in dataset_filepaths if os.path.isfile(filepath)]
+            
+            dataset_filepaths = []
+            for id in included_complexes:
+                search_pattern = os.path.join(self.data_dir, f"{id}_L*_graph.pth") #
+                matching_files = glob.glob(search_pattern)
+                dataset_filepaths.extend(matching_files)
 
         else: 
             self.filepaths = [file.path for file in os.scandir(self.data_dir) if file.name.endswith('graph.pth')]

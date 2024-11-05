@@ -11,7 +11,7 @@ module load eth_proxy
 source /cluster/project/math/dagraber/miniconda3/etc/profile.d/conda.sh
 conda activate BAP
 
-log_file="graphgen041124.txt"
+log_file="graphgen051124.txt"
 
 command="python dataprep2_graph_construction.py \
                 --data_dir inference_test \

@@ -22,6 +22,6 @@ command="python dataprep3_construct_dataset.py \
                 --data_dir inference_test \
                 --protein_embeddings ankh_base esm2_t6 \
                 --ligand_embeddings ChemBERTa_77M \
-                --save_path inference_test/dataset_inference_151024.pt"
+                --save_path dataset_inference_051124.pt"
 
 $command

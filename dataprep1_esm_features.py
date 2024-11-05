@@ -86,7 +86,7 @@ def get_aa_embeddings_esm2(sequence, crop_EOS_BOS=True):
 tic = time.time()
 for protein in tqdm(proteins):
 
-    id = protein.name.split('.pdb')[0]
+    id = protein.name.split('.')[0]
     log_string = f'{id}: '
 
     save_filepath = os.path.join(data_dir, f'{id}_{model_descriptor}.pt')

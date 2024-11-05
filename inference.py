@@ -196,7 +196,7 @@ if labels:
     with open(f'{dataset_path.split(".")[0]}_predictions.csv', mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(['id', 'y_true', 'y_pred'])  # Write the header
-        writer.writerows(zip(ids, y_true.tolist(), y_pred.tolist()))  # Write the data
+        writer.writerows(sorted(zip(ids, y_true.tolist(), y_pred.tolist()), key=lambda x: x[0]))  # Write the data
 
     plt.tight_layout()
     plt.savefig(f'{dataset_path.split(".")[0]}_predictions.png', dpi=300)
@@ -204,9 +204,9 @@ if labels:
 else:
     y_true, y_pred, ids = test_metrics
 
-    # Save the y_true and y_pred in a single CSV file using the csv module
+    # Save the sorted y_true and y_pred in a single CSV file using the csv module
     with open(f'{dataset_path.split(".")[0]}_predictions.csv', mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(['id', 'y_true', 'y_pred'])  # Write the header
-        writer.writerows(zip(ids, y_true.tolist(), y_pred.tolist()))  # Write the data
+        writer.writerows(sorted(zip(ids, y_true.tolist(), y_pred.tolist()), key=lambda x: x[0]))  # Write the sorted data
 #-------------------------------------------------------------------------------------------------------------------------
