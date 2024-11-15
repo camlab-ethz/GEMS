@@ -36,6 +36,7 @@ training_data/
 PDBbind_dataset_filtering/
 PDBbind_search_algorithms/
 old_models/
+aggregate_results.py
 *plots*
 wandb/
 clustering/
