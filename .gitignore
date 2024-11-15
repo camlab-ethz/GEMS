@@ -65,7 +65,7 @@ PDBbind*dataset*.pt
 *ProteinMPNN*
 GAT*.sh
 *tar.gz
-
+*.sh
 #Ignore test_files
 *_old.py
 stuff/
