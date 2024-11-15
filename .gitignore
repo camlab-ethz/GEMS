@@ -33,6 +33,8 @@ data/DTI5_c4a
 data/DTI5_c4b
 data/DTI5_grid_search
 training_data/
+PDBbind_dataset_filtering/
+PDBbind_search_algorithms/
 *plots*
 wandb/
 clustering/
