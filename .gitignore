@@ -35,6 +35,7 @@ data/DTI5_grid_search
 training_data/
 PDBbind_dataset_filtering/
 PDBbind_search_algorithms/
+old_models/
 *plots*
 wandb/
 clustering/
