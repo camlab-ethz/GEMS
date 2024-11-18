@@ -8,7 +8,6 @@ data_leakage_test/
 
 attention_weights/
 PDBbind_splits/
-PDBbind_data_split/
 PDBbind0/
 PDBbind_test/
 PDBbind_v2016/
