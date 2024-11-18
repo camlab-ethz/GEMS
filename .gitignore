@@ -3,14 +3,12 @@ experiments/
 experiments_v2020/
 experiments_v2021/
 
-PDBbind1/*ankh*
-PDBbind1/*ChemBERT*
-PDBbind1/*esm2*
-PDBbind1/.logs/
-troubleshooting/
+PDBbind/
 data_leakage_test/
 
 attention_weights/
+PDBbind_splits/
+PDBbind_data_split/
 PDBbind0/
 PDBbind_test/
 PDBbind_v2016/
