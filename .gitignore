@@ -30,6 +30,7 @@ find_most_similar*/
 *pairwise_similarity*
 *similarities*
 matrix_inspect.ipynb
+logs/
 
 
 # Ignore system files
@@ -41,7 +42,6 @@ __pycache__
 
 # Ignore log files
 *.log
-*.txt
 
 # Ignore Node.js modules
 node_modules/
