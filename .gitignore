@@ -1,6 +1,7 @@
 # Ignore all folders with data
 experiments/
 PDBbind/
+PDBbind_preprocessed/
 PDBbind_dataset_filtering/
 PDBbind_search_algorithms/
 
@@ -13,8 +14,6 @@ stuff/
 
 PDBbind_v2016/
 PDBbind_v2020/
-PDBbind_v2021/
-PDBbind_v2021_by_2020
 visualization/
 huggingface/
 bash_scripts/
@@ -30,6 +29,8 @@ find_most_similar*/
 
 *pairwise_similarity*
 *similarities*
+matrix_inspect.ipynb
+
 
 # Ignore system files
 .DS_Store
