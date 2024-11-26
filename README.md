@@ -15,8 +15,9 @@ David Graber [1,2,3], Peter Stockinger[2], Fabian Meyer [2], Siddhartha Mishra [
 <br />
 § corresponding authors
 <br/>
+**In this repository we provide the code to generate "CleanSplit" dataset from PDBBind, as well as workflows for training and inference of the GEMS model.**<br />
+<br />
 
-In this repository we provide the code to generate "CleanSplit" dataset from PDBBind, as well as workflows for training and inference of the GEMS model.
 
 ## Background
 The field of computational drug design requires accurate scoring functions to predict binding affinities for protein-ligand interactions. However, train-test data leakage between the PDBbind database and the CASF benchmark datasets has significantly inflated the performance metrics of currently available deep learning based binding affinity prediction models, leading to overestimation of their generalization capabilities. We address this issue by proposing PDBbind CleanSplit, a training dataset curated by a novel structure-based filtering algorithm that eliminates train-test data leakage as well as redundancies within the training set. Retraining the current best-performing model on CleanSplit caused its benchmark performance to drop to uncompetitive levels, indicating that the performance of existing models is largely driven by data leakage. In contrast, our graph neural network model, GEMS, maintains high benchmark performance when trained on CleanSplit. Leveraging a sparse graph modeling of protein-ligand interactions and transfer learning from language models, GEMS is able to generalize to strictly independent test datasets.
