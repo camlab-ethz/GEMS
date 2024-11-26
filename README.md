@@ -15,7 +15,7 @@ David Graber [1,2,3], Peter Stockinger[2], Fabian Meyer [2], Siddhartha Mishra [
 <br />
 § corresponding authors
 <br/>
-**In this repository we provide the code to generate "CleanSplit" dataset from PDBBind, as well as workflows for training and inference of the GEMS model.**<br />
+In this repository we provide the code to generate "CleanSplit" dataset from PDBBind, as well as workflows for training and inference of the GEMS model.<br />
 <br />
 
 
@@ -38,7 +38,7 @@ conda install biopython <br />
 conda install pytorch=2.0.1 pytorch-cuda=11.7 -c pytorch -c nvidia <br />
 conda install pyg=*=*cu117 -c pyg <br />
 
-**Optional for training:**<br />
+**Optional for training**<br />
 conda install wandb --channel conda-forge<br />
 
 **Installation from Dockerfile**<br />
