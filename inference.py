@@ -6,7 +6,7 @@ import torch
 import matplotlib.pyplot as plt
 import numpy as np
 from torch_geometric.loader import DataLoader
-from GATE18 import *
+from model.GATE18 import *
 
 
 class RMSELoss(torch.nn.Module):
@@ -131,11 +131,11 @@ args = parse_args()
 # Paths
 dataset_path = args.dataset_path
 stdict_paths = [
-                "models/GATE18d_B6AEc9PL_d0500_4_f0_best_stdict.pt",
-                "models/GATE18d_B6AEc9PL_d0500_4_f1_best_stdict.pt",
-                "models/GATE18d_B6AEc9PL_d0500_4_f2_best_stdict.pt",
-                "models/GATE18d_B6AEc9PL_d0500_4_f3_best_stdict.pt",
-                "models/GATE18d_B6AEc9PL_d0500_4_f4_best_stdict.pt"
+                "model/GATE18d_B6AEc9PL_d0500_4_f0_best_stdict.pt",
+                "model/GATE18d_B6AEc9PL_d0500_4_f1_best_stdict.pt",
+                "model/GATE18d_B6AEc9PL_d0500_4_f2_best_stdict.pt",
+                "model/GATE18d_B6AEc9PL_d0500_4_f3_best_stdict.pt",
+                "model/GATE18d_B6AEc9PL_d0500_4_f4_best_stdict.pt"
                 ]
 
 print(f"Running Inference with dataset {dataset_path} using model {args.model_arch}")
