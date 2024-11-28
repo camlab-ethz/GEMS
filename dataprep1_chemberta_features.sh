@@ -17,4 +17,4 @@ conda activate BAP
 
 
 #python dataprep1_chemberta_features.py --data_dir inference_test --model ChemBERTa-77M-MLM
-python -m dataprep.dataprep1_chemberta_features --data_dir inference_test --model ChemBERTa-77M-MLM
+python -m dataprep.chemberta_features --data_dir inference_test --model ChemBERTa-77M-MLM

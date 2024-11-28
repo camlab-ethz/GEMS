@@ -17,4 +17,4 @@ conda activate BAP
 
 
 #python dataprep1_ankh_features.py --data_dir inference_test --ankh_base True
-python -m dataprep.dataprep1_ankh_features --data_dir inference_test --ankh_base True
+python -m dataprep.ankh_features --data_dir inference_test --ankh_base True

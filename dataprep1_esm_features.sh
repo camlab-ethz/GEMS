@@ -17,4 +17,4 @@ conda activate BAP
 
 
 #python dataprep1_esm_features.py --data_dir inference_test --esm_checkpoint t6
-python -m dataprep.dataprep1_esm_features --data_dir inference_test --esm_checkpoint t6
+python -m dataprep.esm_features --data_dir inference_test --esm_checkpoint t6
