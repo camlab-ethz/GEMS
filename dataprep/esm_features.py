@@ -10,6 +10,26 @@ from utils.f_parse_pdb_general import parse_pdb
 import time
 
 
+"""
+This script generates ESM embeddings for proteins from PDB files.
+
+Functions:
+    get_aa_embeddings_esm2(sequence): Computes ESM embeddings for a given protein sequence.
+
+Command-line Arguments:
+    --data_dir: Path to the data directory containing all proteins (PDB files).
+    --esm_checkpoint: Which ESM checkpoint should be used [t6, t12, t30, t33].
+
+Example:
+    python esm_features.py --data_dir /path/to/data --esm_checkpoint t6
+
+Description:
+    The script initializes the ESM model and tokenizer and processes each protein in the specified data directory. 
+    It parses the PDB files, computes embeddings for each protein sequence, and saves the embeddings to disk.
+    A log file is maintained to track the progress and any errors encountered during the embedding generation process.
+"""
+
+
 def arg_parser():
     parser = argparse.ArgumentParser(description='Compute ESM embeddings for all proteins in a given directory.')
     parser.add_argument('--data_dir', type=str, required=True, help='Path to the data directory containing all proteins(PDB) and ligands (SDF)')

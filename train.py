@@ -15,8 +15,6 @@ from torch.utils.data import Subset
 from GATE18 import *
 
 
-os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
-
 def parse_args():
     parser = argparse.ArgumentParser(description="Training Parameters and Input Dataset Control")
 

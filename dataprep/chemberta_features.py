@@ -10,9 +10,30 @@ from tqdm import tqdm
 import time
 
 
+"""
+This script generates ChemBERTa embeddings for ligands from SDF files.
+
+Functions:
+    sdf_to_smiles(sdf_path): Converts SDF file to a list of SMILES strings.
+    smiles_to_embedding(smiles, tokenizer, model): Converts a SMILES string to a ChemBERTa embedding.
+
+Command-line Arguments:
+    --data_dir: Path to the data directory containing all ligands (SDF files).
+    --model: Which ChemBERTa model should be used [ChemBERTa-77M-MLM, ChemBERTa-10M-MLM].
+
+Example:
+    python chemberta_features.py --data_dir /path/to/data --model ChemBERTa-77M-MLM
+
+Description:
+    The script initializes the ChemBERTa model and tokenizer and processes each ligand in the specified data directory.
+    It extracts SMILES strings from the SDF files, computes embeddings for each ligand, and saves the embeddings to disk.
+    A log file is maintained to track the progress and any errors encountered during the embedding generation process.
+"""
+
+
 def arg_parser():
-    parser = argparse.ArgumentParser(description='Preprocess PDBbind data for DTI5')
-    parser.add_argument('--data_dir', type=str, required=True, help='Path to the data directory containing all proteins(PDB) and ligands (SDF)')
+    parser = argparse.ArgumentParser(description='Generate ChemBERTa embeddings for ligands')
+    parser.add_argument('--data_dir', type=str, required=True, help='Path to the data directory containing all ligands (SDF files)')
     parser.add_argument('--model', default='ChemBERTa-77M-MLM', type=str, help="Which ChemBERTa model should be used [ChemBERTa-77M-MLM, ChemBERTa-10M-MLM]")
     return parser.parse_args()
 

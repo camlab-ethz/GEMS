@@ -9,9 +9,18 @@ from torch_geometric.data import Dataset, Data
 from Dataset import Dataset
 
 
+"""
+This script constructs a dataset from the given data directory containing all Data() objects (graphs) of the dataset.
+For explanation of command-line arguments, see argparse below.
+
+Example Usage:
+    python construct_dataset.py --data_dir /path/to/data --protein_embeddings ankh_base esm2_t6 --ligand_embeddings ChemBERTa_77M ChemBERTa_10M
+    --data_dict /path/to/data_dict --data_split /path/to/data_split --dataset train --save_path /path/to/save.pt
+"""
+
+
 def save_dataset(dataset, path):
     torch.save(dataset, path)
-
 
 def main():
 
@@ -33,7 +42,7 @@ def main():
     parser.add_argument("--atom_features", default=True, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Wheter or not Atom Features should be included")
     parser.add_argument("--edge_features", default=True, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Wheter or not Edge Features should be included")
     parser.add_argument("--delete_ligand", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If ligand nodes should be deleted from the graph (ablation study)")
-    parser.add_argument("--delete_protein", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If protein nodes should be deleted from the graph (ablation study)")
+    parser.add_argument("--delete_protein", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If protein nodes should be deleted from the graph (ablation study, only if masternode included")
     
     # INCLUDE A MASTERNODE
     parser.add_argument("--masternode", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If a masternode (mn) should be included in the graphs")

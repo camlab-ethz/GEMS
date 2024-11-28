@@ -2,8 +2,10 @@ import os
 import glob
 import argparse
 import numpy as np
+from time import time
 
 from Bio.PDB.PDBParser import PDBParser
+from utils.f_parse_pdb_general import parse_pdb
 
 # RDKit
 from rdkit import Chem
@@ -11,22 +13,21 @@ from rdkit.Chem import AllChem
 from rdkit.Chem import rdPartialCharges
 from rdkit.Chem.MolStandardize import rdMolStandardize  
 
-from time import time
-# import jax.numpy as jnp
-# from jax import jit, vmap
-
-from utils.f_parse_pdb_general import parse_pdb
-
 # PyTorch and PyTorch Geometric
 import torch
 from torch_geometric.utils import to_undirected, add_self_loops
 from torch_geometric.data import Data, Batch
 
-
 '''
 This script takes protein-ligand complexes in PDB and SDF format and generates featurized interaction graphs.
-The data_dir should contain protein structures in PDB format and ligand structures in SDF format named with the same identifier (e.g. 1abc_protein.pdb and 1abc_ligand.sdf).
-The script generates interaction graphs for pair of SDF and PDB files and saves them as .pth files in the data_dir.
+The data_dir should contain protein-ligand complexes, each represented by a protein structures in PDB format and ligand structures in 
+SDF format with the same name (e.g. 1abc.pdb and 1abc.sdf). The SDF file may contain several ligands binding to the corresponding protein. 
+The script generates interaction graphs for these pairs of SDF and PDB files and saves them as .pth files in the data_dir. 
+Protein and ligand embeddings can be included to featurize the graph.
+
+Example Usage:
+    python graph_construction --data_dir inference_test --replace False --protein_embeddings ankh_base esm2_t6 --ligand_embeddings ChemBERTa_77M"
+
 '''
 
 def arg_parser():
@@ -51,8 +52,6 @@ def arg_parser():
     help='Provide names of embeddings that should be incorporated (--ligand_embeddings string1 string2 string3).\
           The string should be a substring of the file names of the saved embeddings \
           (e.g. "*_ChemBERTa_10M_MLM" -> "ChemBERTa_10M_MLM" or "ChemBERTa_10M")')
-
-
 
     return parser.parse_args()
 

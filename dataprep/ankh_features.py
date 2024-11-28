@@ -9,10 +9,29 @@ from Bio.PDB.PDBParser import PDBParser
 from utils.f_parse_pdb_general import parse_pdb
 import time
 
+"""
+This script generates ANKH embeddings for proteins from PDB files.
+
+Functions:
+    get_aa_embeddings_ankh(protein_sequence): Computes ANKH embeddings for a given protein sequence.
+
+Command-line Arguments:
+        --data_dir: Path to the data directory containing all proteins (PDB files).
+        --ankh_base: Boolean flag to indicate if the ankh_base model should be used. If False, the ankh_large model is used.
+
+Example:
+    python ankh_features.py --data_dir /path/to/data --ankh_base True
+
+Description:
+    The script initializes the ANKH model (either base or large) and processes each protein in the specified data directory.
+    It parses the PDB files, computes embeddings for each protein sequence, and saves the embeddings to disk.
+    A log file is maintained to track the progress and any errors encountered during the embedding generation process.
+"""
+
 
 def arg_parser():
-    parser = argparse.ArgumentParser(description='Preprocess PDBbind data for DTI5')
-    parser.add_argument('--data_dir', type=str, required=True, help='Path to the data directory containing all proteins(PDB) and ligands (SDF)')
+    parser = argparse.ArgumentParser(description='Generate ANKH Embeddings for Proteins')
+    parser.add_argument('--data_dir', type=str, required=True, help='Path to the data directory containing all proteins (PDB files)')
     parser.add_argument('--ankh_base', default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If the ankh_base model should be used")
     return parser.parse_args()
 

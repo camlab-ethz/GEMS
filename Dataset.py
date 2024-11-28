@@ -9,15 +9,14 @@ from torch_geometric.data import Dataset, Data
 class Dataset(Dataset): # RENAME THIS TO "DATASET" BEFORE PUBLIC RELEASE
 
     """
-    A class used to represent a Dataset for protein-ligand interaction graphs. Takes as input a folder containing the graph.pth file for each graph that has been preprocessed 
-    with the dataprep4_graph_construction.py script
+    A class used to represent a Dataset for protein-ligand interaction graphs. Takes as input a folder containing the graph.pth file for each complex in the dataset.
 
     - Loads all graphs from a folder
-    - If a data split dictionary is given, only the graphs that are included in the key that is provided in the dataset parameter are loaded.
+    - If a data split dictionary is given, only the graphs that are included in the key that is provided in the dataset parameter are loaded. If no dict is given, all graphs are processed
     - If inference is set to True, labels are set to 0
-    - If inference is set to False, a data dictionary containing the affinity labels for each complex has to be provided
+    - If inference is set to False, a data dictionary containing the affinity labels for each complex has to be provided data_dict[complex_id] = {'log_kd_ki': affinity}
 
-    - For ablation studies, there are options to delete all protein_nodes from the graphs
+    - For ablation studies, there is an option to delete all protein_nodes from the graphs
     - To measure the contribution of atomic features and edge features, these can be excluded from the graph
 
     - A masternode can be included in the graph, which is connected to all nodes in the graph. The masternode can be connected to all nodes, only to ligand nodes or only to protein nodes.
