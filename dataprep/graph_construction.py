@@ -37,8 +37,8 @@ def arg_parser():
                     help="If existing graphs in the data_dir should be overwritten. Defaults to False.")
     
     parser.add_argument('--masternode',
-                    default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], 
-                    help="If a masternode should be added to the graph. Defaults to False.")
+                    default=True, type=lambda x: x.lower() in ['true', '1', 'yes'], 
+                    help="If a masternode should be added to the graph. Defaults to True.")
     
     parser.add_argument('--protein_embeddings',
     nargs='+',
