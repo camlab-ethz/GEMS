@@ -1,6 +1,12 @@
 # Ignore all folders with data
 experiments/
 PDBbind/
+PDBbind_data/similarity/pairwise_similarity_matrix/*.sh
+PDBbind_data/similarity/pairwise_similarity_matrix/*.log
+PDBbind_data/similarity/pairwise_similarity_matrix/*.hdf5
+PDBbind_data/similarity/pairwise_similarity_matrix/matrix_inspect.ipynb
+PDBbind_data/similarity/pairwise_similarity_matrix/matrix_merge.py
+
 PDBbind_preprocessed/
 PDBbind_dataset_filtering/
 PDBbind_search_algorithms/
@@ -11,6 +17,7 @@ TMalign/
 PDBbind0/
 pafnucy_data/
 stuff/
+*old*/
 
 PDBbind_v2016/
 PDBbind_v2020/
@@ -27,10 +34,7 @@ find_clusters/
 find_clusters_lorenzo/
 find_most_similar*/
 
-*pairwise_similarity*
-*similarities*
-matrix_inspect.ipynb
-matrix_merge.py
+
 remove_data_leakage.py
 remove_redundancy.py
 logs/
