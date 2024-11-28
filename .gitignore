@@ -30,6 +30,9 @@ find_most_similar*/
 *pairwise_similarity*
 *similarities*
 matrix_inspect.ipynb
+matrix_merge.py
+remove_data_leakage.py
+remove_redundancy.py
 logs/
 
 

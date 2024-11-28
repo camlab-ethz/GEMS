@@ -6,7 +6,7 @@ import numpy as np
 import argparse
 from tqdm import tqdm
 from Bio.PDB.PDBParser import PDBParser
-from utils.f_parse_pdb_general import parse_pdb
+from dataprep.f_parse_pdb_general import parse_pdb
 import time
 
 
