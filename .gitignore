@@ -44,11 +44,11 @@ logs/
 .DS_Store
 __pycache__
 
-# Ignore bash scripts
-*.sh
-
 # Ignore log files
 *.log
+
+# Ignore PyTorch datasets
+dataset*.pt
 
 # Ignore Node.js modules
 node_modules/
@@ -63,6 +63,7 @@ db.sqlite
 .vscode/
 
 # Other
+*slurm*
 tmp/
 *.fasta
 *.csv
