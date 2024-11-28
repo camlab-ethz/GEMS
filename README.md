@@ -43,6 +43,11 @@ conda install wandb --channel conda-forge<br />
 **Installation from Dockerfile**<br />
 Alternatively, we provide a Dockerfile/Dockerimage ... 
 
+Please copy the data on which you want to train, test or predict inside this folder before running the following commands:
+
+sudo docker build -t my-gems-container .
+sudo docker run -it my-gems-container --gpus all
+
 ## Usage
 **CleanSplit**<br />
 Describe here how to apply CleanSplit on PDBBind dataset or own datasets
