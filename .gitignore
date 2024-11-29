@@ -11,6 +11,8 @@ PDBbind_preprocessed/
 PDBbind_dataset_filtering/
 PDBbind_search_algorithms/
 
+model/INITIAL/*
+
 attention_weights/
 PDBbind_splits/
 TMalign/
