@@ -47,7 +47,8 @@ Please copy the data on which you want to train, test or predict inside this fol
 
 sudo docker build -t my-gems-container .
 
-sudo docker run -it my-gems-container --gpus alle<br />
+sudo docker run --gpus all -it my-gems-container
+
 
 **Test of installation**<br />
 
