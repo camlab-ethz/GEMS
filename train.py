@@ -15,6 +15,68 @@ from torch.utils.data import Subset
 from GATE18 import *
 
 
+"""
+This script trains a machine learning model using PyTorch and PyTorch Geometric. It includes functionalities for 
+parsing command-line arguments, loading datasets, splitting datasets into training and validation sets, 
+initializing models, optimizers, and loss functions, and training the model with various configurations 
+such as early stopping and adaptive learning rate schemes. The script also supports logging and tracking 
+experiments using Weights and Biases (wandb).
+
+Description:
+    1. Splits the dataset into n stratified folds for n-fold cross-validation.
+    2. Trains the model on the training set and evaluates it on the validation set.
+    3. Logs the training and validation metrics for each epoch.
+    4. Saves the best model based on the validation metric.
+    5. Plots the predictions and residuals of the model at regular intervals. 
+
+    
+REQUIRED Command-line Arguments:
+    --dataset_path:         REQUIRED - Path to the .pt file containing the dataset.
+    --model:                REQUIRED - Name of the model architecture.
+    --log_path:             REQUIRED - Path for saving results and logs.
+    --run_name:             REQUIRED - Name of the run for saving results and logs.
+
+OPTIONAL Command-line Arguments (with default values):
+    TRAIN-VALIDATION SPLIT
+    --n_folds:              OPTIONAL - Number of stratified folds for n-fold cross-validation
+    --fold_to_train:        OPTIONAL - Fold to be used for training
+    --random_seed:          OPTIONAL - Random seed for dataset splitting.
+
+    MODEL PARAMETERS
+    --loss_func:            OPTIONAL - Loss function to be used ['MSE', 'RMSE', 'wMSE', 'L1', 'Huber'].
+    --optim:                OPTIONAL - Optimizer to be used ['Adam', 'Adagrad', 'SGD'].
+    --num_epochs:           OPTIONAL - Number of epochs for training.
+    --batch_size:           OPTIONAL - Batch size for training.
+    --learning_rate:        OPTIONAL - Learning rate for training.
+    --weight_decay:         OPTIONAL - Weight decay parameter for training.
+    --conv_dropout:         OPTIONAL - Dropout probability for convolutional layers.
+    --dropout:              OPTIONAL - Dropout probability for dropout layer in fully-connected NN.
+    --early_stopping:       OPTIONAL - Whether to use early stopping.
+    --early_stop_patience:  OPTIONAL - Patience for early stopping.
+    --early_stop_min_delta: OPTIONAL - Minimum delta for early stopping.
+
+    ADAPTIVE LEARNING RATE
+    --alr_lin:              OPTIONAL - Whether to use linear learning rate reduction scheme.
+    --start_factor:         OPTIONAL - Start factor for linear learning rate reduction.
+    --end_factor:           OPTIONAL - End factor for linear learning rate reduction.
+    --total_iters:          OPTIONAL - Total iterations for linear learning rate reduction.
+    --alr_mult:             OPTIONAL - Whether to use multiplicative learning rate reduction scheme.
+    --factor:               OPTIONAL - Factor for multiplicative learning rate reduction.
+    --alr_plateau:          OPTIONAL - Whether to use ReduceLROnPlateau learning rate reduction scheme.
+    --reduction:            OPTIONAL - Reduction factor for ReduceLROnPlateau.
+    --patience:             OPTIONAL - Patience for ReduceLROnPlateau.
+    --min_lr:               OPTIONAL - Minimum learning rate for ReduceLROnPlateau.
+
+    USING A PRETRAINED MODEL AS STARTING POINT
+    --pretrained:           OPTIONAL - Path of a state dict to be imported for pretrained model.
+    --start_epoch:          OPTIONAL - Starting epoch in case of importing pretrained model.
+
+    W&B TRACKING
+    --wandb:                OPTIONAL - Whether or not to stream the run to Weights and Biases.
+    --project_name:         OPTIONAL - Project name for saving run data to Weights and Biases.
+"""
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Training Parameters and Input Dataset Control")
 
@@ -27,7 +89,7 @@ def parse_args():
     parser.add_argument("--loss_func", default='RMSE', help="The loss function that will be used ['MSE', 'RMSE', 'wMSE', 'L1', 'Huber']")
     parser.add_argument("--optim", default='SGD', help="The optimizer that will be used ['Adam', 'Adagrad', 'SGD']")
     parser.add_argument("--wandb", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Wheter or not the run should be streamed to Weights and Biases")
-    parser.add_argument("--project_name", help="Project Name for the saving of run data to Weights and Biases")
+    parser.add_argument("--project_name", default=None, help="Project Name for the saving of run data to Weights and Biases")
     parser.add_argument("--run_name", required=True, help="Name of the Run to display in saved data and in Weights and Biases (string)")
     parser.add_argument("--n_folds", default=5, type=int, help="The number of stratified folds that should be generated (n-fold-CV)")
     parser.add_argument("--fold_to_train", default=0, type=int, help="Of the n_folds generated, on which fold should the model be trained")
