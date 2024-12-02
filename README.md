@@ -3,6 +3,7 @@
 #  GEMS: GNN Framework For Efficient Protein-Ligand Binding Affinity Prediction Through Robust Data Filtering and Language Model Integration
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10](https://img.shields.io/badge/Python-3.10-blue.svg)](https://www.python.org/downloads/release/python-310/)
+[![Conda](https://img.shields.io/badge/conda-supported-green.svg)](https://docs.conda.io/)
 [![Docker](https://img.shields.io/badge/docker-supported-blue.svg)](https://www.docker.com/)
 
 
