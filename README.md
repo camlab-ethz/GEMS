@@ -50,10 +50,20 @@ PLS ADD MORE CONTEXT DAVID
 We recomment using miniconda3 to setup a virtual environment with python 3.10.
 
 ## Installation Guide
+### Via Docker image
+**Installation from Dockerfile**<br />
+All dependencies can be installed using a Dockerfile/Dockerimage ... PLS ADD MORE CONTEXT PETER
 
-**Setup of environment for data preparation and inference**<br />
-<br />
-**Initialize the environment with python 3.10**<br />
+Please copy the data on which you want to train, test or predict inside this folder before running the following commands:
+
+sudo docker build -t my-gems-container .
+
+sudo docker run --gpus all -it my-gems-container
+
+### Via conda environment
+Alternatively, you can create your conda environment from scratch with the following commands:
+
+
 conda create --name GEMS python=3.10<br />
 conda activate GEMS<br />
 <br />
@@ -67,16 +77,6 @@ conda install pyg=*=*cu117 -c pyg <br />
 
 **Optional for training**<br />
 conda install wandb --channel conda-forge<br />
-
-**Installation from Dockerfile**<br />
-Alternatively, we provide a Dockerfile/Dockerimage ... PLS ADD MORE CONTEXT PETER
-
-Please copy the data on which you want to train, test or predict inside this folder before running the following commands:
-
-sudo docker build -t my-gems-container .
-
-sudo docker run --gpus all -it my-gems-container
-
 
 **Test of installation**<br />
 
