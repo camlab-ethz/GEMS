@@ -114,5 +114,6 @@ Please cite the following publication if you found this ressource helpful:
 add DOI here
 
 ## Additional Data Availability
-Please cite the following publication if you found this ressource helpful:
-add DOI here
+For fast reproduction of our results, we provide PyTorch datasets of precomputed interaction graphs for the entire PDBbind database on Zenodo (https://doi.org/10.5281/zenodo.12754709). To enable quick establishment of leakage-free evaluation setups with PDBbind, we also provide pairwise similarity matrices for the entire PDBbind dataset on Zenodo.
+
+ADAPT CORRECT ZENODO ID
