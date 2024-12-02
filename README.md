@@ -1,6 +1,8 @@
 ## This is the GitHub Repository for the publication: 
 
 #  GEMS: GNN Framework For Efficient Protein-Ligand Binding Affinity Prediction Through Robust Data Filtering and Language Model Integration
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 
 David Graber [1,2,3], Peter Stockinger[2], Fabian Meyer [2], Siddhartha Mishra [1]§ Claus Horn [3]§, and Rebecca Buller [2]§
 
