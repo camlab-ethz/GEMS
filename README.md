@@ -35,19 +35,30 @@ We provide multiple models.... PLS ADD MORE CONTEXT DAVID
 
 ## System Requirements
 ### Hardware Requirements
-We recommend to utilize a server with GPU support (at least XGB VRAM), sufficient memory (at least XGB RAM. At least 100GB of storage are needed, preferably SSD.
-Part of the code (PLS ADD MORE CONTEXT DAVID) profits from strong CPU (e.g. XXX).
+Recommended GPU: NVIDIA RTX3090 or higher with at least 24GB VRAM memory. <br />
+Storage: At least 100GB of storage are needed for preprocessing 20'000 protein-ligand complexes.<br />
+CPU: Part of the code (Graph Construction) profits from parallelization to several CPUs (about 12h for 20'000 protein-ligand complexes on a single CPU)<br />
+<br />
+We have tested the code using a NVIDIA RTX3090TI GPU<br />
 
-We have tested the code using the following GPU architecture: NVIDIA RTX3090TI
 
 ## Software Requirements
 ### OS Requirements
 The package has been tested on the following systems:
 Ubuntu 22.04 LTS
-PLS ADD MORE CONTEXT DAVID
 
 ### Python Dependencies
-We recomment using miniconda3 to setup a virtual environment with python 3.10.
+We recomment using miniconda3 to setup a virtual environment with python 3.10. This software has been tested using the following package version:
+
+python=3.10.8<br />
+numpy=1.26.4<br />
+rdkit=2024.03.3<br />
+transformers=4.33.3<br />
+ankh=1.10.0<br />
+biopython=1.83<br />
+pytorch=2.0.1<br />
+pytorch-cuda=11.7<br />
+pyg=2.5.2
 
 ## Installation Guide
 ### Via Docker image
