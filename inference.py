@@ -8,6 +8,7 @@ import numpy as np
 from torch_geometric.loader import DataLoader
 from model.GATE18 import *
 
+CUDA_LAUNCH_BLOCKING=1
 
 class RMSELoss(torch.nn.Module):
     def __init__(self):
@@ -43,7 +44,7 @@ def evaluate(models, loader, criterion, device, labels):
             graphbatch.to(device)
             targets = graphbatch.y
 
-            # Forward pass EMSEMBLE MODEL
+            # Forward pass ENSEMBLE MODEL
             outputs = []
             for model in models: 
                 outputs.append(model(graphbatch).view(-1))
@@ -120,25 +121,12 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Testing Parameters and Input Dataset Control")
 
     # Model Parameters
-    parser.add_argument("--model_arch", required=True, help="The name of the model architecture")
     parser.add_argument("--dataset_path", required=True, help="The path to the test dataset pt file")
-
     return parser.parse_args()
 
 args = parse_args()
 
-
-# Paths
 dataset_path = args.dataset_path
-stdict_paths = [
-                "model/GATE18d_B6AEc9PL_d0500_4_f0_best_stdict.pt",
-                "model/GATE18d_B6AEc9PL_d0500_4_f1_best_stdict.pt",
-                "model/GATE18d_B6AEc9PL_d0500_4_f2_best_stdict.pt",
-                "model/GATE18d_B6AEc9PL_d0500_4_f3_best_stdict.pt",
-                "model/GATE18d_B6AEc9PL_d0500_4_f4_best_stdict.pt"
-                ]
-
-print(f"Running Inference with dataset {dataset_path} using model {args.model_arch}")
 
 
 # Load the dataset
@@ -149,8 +137,85 @@ edge_feat_dim = dataset[0].edge_attr.shape[1]
 print(f"Dataset Loaded with {len(dataset)} samples")
 
 # Check if the dataset has labels
-labels = dataset[0].y > 0
+labels = dataset.labels
 print(f"Dataset has labels: {labels}")
+
+
+# SELECT THE MODEL ARCHITECTURE AND STATE DICT PATHS
+#------------------------------------------------------------------------------------------------------
+# Check if the dataset has protein and ligand embeddings and choose the correct model state dict paths
+protein_embeddings = dataset.protein_embeddings
+ligand_embeddings = dataset.ligand_embeddings
+
+# Currently providing stdicts for the following combinations of embeddings:
+# 1. No embeddings (00AEPL with GATE18e)
+# 2. ChemBERTa-77M only (00AEPL with GATE18d)
+# 3. ChemBERTa-77M and ankh_base (B0AEPL with GATE18d)
+# 4. ChemBERTa-77M and esm2_t6 (06AEPL with GATE18d)
+# 5. ChemBERTa-77M and esm2_t6 and ankh_base (B6AEPL with GATE18d)
+print(f"Protein Embeddings: {protein_embeddings}")
+print(f"Ligand Embeddings: {ligand_embeddings}")
+
+if len(ligand_embeddings) == 0: # 1. No embeddings
+    model_arch = "GATE18e"
+    stdict_paths = [
+                "model/GATE18e_00AEPL_d0100_4_f0_best_stdict.pt",
+                "model/GATE18e_00AEPL_d0100_4_f1_best_stdict.pt",
+                "model/GATE18e_00AEPL_d0100_4_f2_best_stdict.pt",
+                "model/GATE18e_00AEPL_d0100_4_f3_best_stdict.pt",
+                "model/GATE18e_00AEPL_d0100_4_f4_best_stdict.pt"
+                ]
+
+elif len(protein_embeddings) == 0: # 2. ChemBERTa-77M only
+    model_arch = "GATE18d"
+    stdict_paths = [
+                "model/GATE18d_00AEPL_d0100_f0_best_stdict.pt",
+                "model/GATE18d_00AEPL_d0100_f1_best_stdict.pt",
+                "model/GATE18d_00AEPL_d0100_f2_best_stdict.pt",
+                "model/GATE18d_00AEPL_d0100_f3_best_stdict.pt",
+                "model/GATE18d_00AEPL_d0100_f4_best_stdict.pt"
+                ]
+    
+elif 'ankh_base' in protein_embeddings and 'esm2_t6' not in protein_embeddings:
+    model_arch = "GATE18d"
+    stdict_paths = [
+                "model/GATE18d_B0AEPL_d0600_f0_best_stdict.pt",
+                "model/GATE18d_B0AEPL_d0600_f1_best_stdict.pt",
+                "model/GATE18d_B0AEPL_d0600_f2_best_stdict.pt",
+                "model/GATE18d_B0AEPL_d0600_f3_best_stdict.pt",
+                "model/GATE18d_B0AEPL_d0600_f4_best_stdict.pt"
+                ]
+        
+elif 'esm2_t6' in protein_embeddings and 'ankh_base' not in protein_embeddings:
+    model_arch = "GATE18d"
+    stdict_paths = [
+                "model/GATE18d_06AEPL_d0500_f0_best_stdict.pt",
+                "model/GATE18d_06AEPL_d0500_f1_best_stdict.pt",
+                "model/GATE18d_06AEPL_d0500_f2_best_stdict.pt",
+                "model/GATE18d_06AEPL_d0500_f3_best_stdict.pt",
+                "model/GATE18d_06AEPL_d0500_f4_best_stdict.pt"
+                ]
+
+elif 'ankh_base' in protein_embeddings and 'esm2_t6' in protein_embeddings:
+    model_arch = "GATE18d"
+    stdict_paths = [
+                "model/GATE18d_B6AEPL_d0500_f0_best_stdict.pt",
+                "model/GATE18d_B6AEPL_d0500_f1_best_stdict.pt",
+                "model/GATE18d_B6AEPL_d0500_f2_best_stdict.pt",
+                "model/GATE18d_B6AEPL_d0500_f3_best_stdict.pt",
+                "model/GATE18d_B6AEPL_d0500_f4_best_stdict.pt"
+                ]
+
+else:
+    raise ValueError("Invalid combination of protein and ligand embeddings found in dataset")
+#------------------------------------------------------------------------------------------------------
+
+
+
+
+print(f"Running Inference with {dataset_path} using model {model_arch}")
+print(f"Model State Dict Paths:")
+for path in stdict_paths: print(path)
 
 # Loaders
 test_loader = DataLoader(dataset = dataset, batch_size=128, shuffle=True, num_workers=4, persistent_workers=True)
@@ -160,8 +225,7 @@ print("Data Loader Created")
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 print(f"Device: {device}")
 
-# Emsemble Model
-model_arch = args.model_arch
+# Ensemble Model
 criterion = RMSELoss()
 model_class = getattr(sys.modules[__name__], model_arch)
 models = [model_class(
