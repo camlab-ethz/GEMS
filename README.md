@@ -51,22 +51,23 @@ Ubuntu 22.04 LTS
 ### Python Dependencies
 We recomment using miniconda3 to setup a virtual environment with python 3.10. This software has been tested using the following package version:
 ```
-python=3.10.8<br />
-numpy=1.26.4<br />
-rdkit=2024.03.3<br />
-transformers=4.33.3<br />
-ankh=1.10.0<br />
-biopython=1.83<br />
-pytorch=2.0.1<br />
-pytorch-cuda=11.7<br />
+python=3.10.8
+numpy=1.26.4
+rdkit=2024.03.3
+transformers=4.33.3
+ankh=1.10.0
+biopython=1.83
+pytorch=2.0.1
+pytorch-cuda=11.7
 pyg=2.5.2
 ```
 ## Installation Guide
 ### Via Docker image
-**Installation from Dockerfile**<br />
+
 All dependencies can be installed using the provided Dockerfile.
 
 Please copy the data on which you want to train, test or predict inside this folder before running the following commands:
+
 ```
 sudo docker build -t my-gems-container .
 
