@@ -41,6 +41,7 @@ CPU: Part of the code (Graph Construction) profits from parallelization to sever
 <br />
 We have tested the code using a NVIDIA RTX3090TI GPU<br />
 
+We do not recommend to run the code on CPU only systems or normal desktop PCs.
 
 ## Software Requirements
 ### OS Requirements
@@ -63,13 +64,14 @@ pyg=2.5.2
 ## Installation Guide
 ### Via Docker image
 **Installation from Dockerfile**<br />
-All dependencies can be installed using a Dockerfile/Dockerimage ... PLS ADD MORE CONTEXT PETER
+All dependencies can be installed using the provided Dockerfile.
 
 Please copy the data on which you want to train, test or predict inside this folder before running the following commands:
-
+```
 sudo docker build -t my-gems-container .
 
 sudo docker run --gpus all -it my-gems-container
+```
 
 ### Via conda environment
 Alternatively, you can create your conda environment from scratch with the following commands:
@@ -131,5 +133,3 @@ add DOI here
 
 ## Additional Data Availability
 For fast reproduction of our results, we provide PyTorch datasets of precomputed interaction graphs for the entire PDBbind database on Zenodo (https://doi.org/10.5281/zenodo.14260171). To enable quick establishment of leakage-free evaluation setups with PDBbind, we also provide pairwise similarity matrices for the entire PDBbind dataset on Zenodo.
-
-ADAPT CORRECT ZENODO ID
