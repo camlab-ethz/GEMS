@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from Dataset import *
 from torch_geometric.loader import DataLoader
-from GATE18 import *
+from model.GATE18 import *
 
 
 class RMSELoss(torch.nn.Module):

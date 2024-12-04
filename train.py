@@ -12,7 +12,7 @@ from Dataset import *
 from torch_geometric.loader import DataLoader
 from sklearn.model_selection import StratifiedKFold
 from torch.utils.data import Subset
-from GATE18 import *
+from model.GATE18 import *
 
 
 """
