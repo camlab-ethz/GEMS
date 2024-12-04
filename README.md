@@ -78,20 +78,16 @@ sudo docker run --gpus all -it my-gems-container
 Alternatively, you can create your conda environment from scratch with the following commands:
 
 ```
-conda create --name GEMS python=3.10<br />
-conda activate GEMS<br />
+conda create --name GEMS python=3.10
+conda activate GEMS
+conda install -c conda-forge numpy rdkit
+conda install -c huggingface transformers (ensure a version that supports ESM2)
+pip install ankh
+conda install biopython
+conda install pytorch=2.0.1 pytorch-cuda=11.7 -c pytorch -c nvidia
+conda install pyg=*=*cu117 -c pyg
 ```
-<br />
-**Install packages:**<br />
-```
-conda install -c conda-forge numpy rdkit <br />
-conda install -c huggingface transformers (ensure a version that supports ESM2)<br />
-pip install ankh <br />
-conda install biopython <br />
-conda install pytorch=2.0.1 pytorch-cuda=11.7 -c pytorch -c nvidia <br />
-conda install pyg=*=*cu117 -c pyg <br />
-```
-**Optional for training**<br />
+**Optional for training**
 ```
 conda install wandb --channel conda-forge<br />
 ```
