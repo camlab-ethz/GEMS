@@ -6,7 +6,7 @@ import glob
 from torch_geometric.data import Dataset, Data
 
 
-class Dataset(Dataset): # RENAME THIS TO "DATASET" BEFORE PUBLIC RELEASE
+class PDBbind_Dataset(Dataset):
 
     """
     A class used to represent a Dataset for protein-ligand interaction graphs. Takes as input a folder containing the graph.pth file for each complex in the dataset.
@@ -74,7 +74,7 @@ class Dataset(Dataset): # RENAME THIS TO "DATASET" BEFORE PUBLIC RELEASE
             self.dataset = dataset
             self.data_split = data_split
             with open(self.data_split, 'r', encoding='utf-8') as json_file:
-                self.split_dict = json.load(json_file) 
+                self.split_dict = json.load(json_file)
 
             # Generate the list of filepaths to the graphs that should be loaded, 
             # including only the complexes that are included in the split dict and 
@@ -83,15 +83,15 @@ class Dataset(Dataset): # RENAME THIS TO "DATASET" BEFORE PUBLIC RELEASE
             
             dataset_filepaths = []
             for id in included_complexes:
-                search_pattern = os.path.join(self.data_dir, f"{id}_L*_graph.pth") #
+                search_pattern = os.path.join(self.data_dir, f"{id}*_graph.pth")
                 matching_files = glob.glob(search_pattern)
                 dataset_filepaths.extend(matching_files)
+            self.filepaths = dataset_filepaths
 
         else: 
             self.filepaths = [file.path for file in os.scandir(self.data_dir) if file.name.endswith('graph.pth')]
 
-        
-        
+        print("-- Number of graphs loaded: ", len(self.filepaths))
 
         #------------------------------------------------------------------------------------------
         # Process all the graphs according to kwargs
@@ -99,7 +99,6 @@ class Dataset(Dataset): # RENAME THIS TO "DATASET" BEFORE PUBLIC RELEASE
         self.input_data = {}
         ind = 0
         for file in self.filepaths:
-            
             grph = torch.load(file)
             id = grph.id
             pos = grph.pos
@@ -110,7 +109,6 @@ class Dataset(Dataset): # RENAME THIS TO "DATASET" BEFORE PUBLIC RELEASE
                 pK = self.data_dict[id]['log_kd_ki']
                 pK_scaled = (pK - min) / (max - min)
             else: pK_scaled = 0
-
 
             # --- AMINO ACID EMBEDDINGS ---
             x = grph.x
