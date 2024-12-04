@@ -50,7 +50,7 @@ Ubuntu 22.04 LTS
 
 ### Python Dependencies
 We recomment using miniconda3 to setup a virtual environment with python 3.10. This software has been tested using the following package version:
-
+```
 python=3.10.8<br />
 numpy=1.26.4<br />
 rdkit=2024.03.3<br />
@@ -60,7 +60,7 @@ biopython=1.83<br />
 pytorch=2.0.1<br />
 pytorch-cuda=11.7<br />
 pyg=2.5.2
-
+```
 ## Installation Guide
 ### Via Docker image
 **Installation from Dockerfile**<br />
@@ -76,33 +76,38 @@ sudo docker run --gpus all -it my-gems-container
 ### Via conda environment
 Alternatively, you can create your conda environment from scratch with the following commands:
 
-
+```
 conda create --name GEMS python=3.10<br />
 conda activate GEMS<br />
+```
 <br />
 **Install packages:**<br />
+```
 conda install -c conda-forge numpy rdkit <br />
 conda install -c huggingface transformers (ensure a version that supports ESM2)<br />
 pip install ankh <br />
 conda install biopython <br />
 conda install pytorch=2.0.1 pytorch-cuda=11.7 -c pytorch -c nvidia <br />
 conda install pyg=*=*cu117 -c pyg <br />
-
+```
 **Optional for training**<br />
+```
 conda install wandb --channel conda-forge<br />
-
+```
 **Test of installation**<br />
 
 To test the installation we have added a folder with synthetic data. Please execute the following command:
 
 A) example_inference
 
-command: python GEMS_prediction_workflow.py --data_dir example_inference 
-
+```
+python GEMS_prediction_workflow.py --data_dir example_inference 
+```
 B) example_training
 
-command: python GEMS_training_workflow.py --data_dir example_training
-
+```
+python GEMS_training_workflow.py --data_dir example_training
+```
 
 
 ## How to use
@@ -114,9 +119,10 @@ Describe here how to apply CleanSplit on PDBBind dataset or own datasets
 <br />
 **Inference**<br />
 To run inference on a set of protein pdbs and ligands, run the following command:<br />
+```
 python inference.py folder_name<br />
-
-
+```
+PLS ADD MORE CONTEXT DAVID
 
 <br />
 **Training**<br />
