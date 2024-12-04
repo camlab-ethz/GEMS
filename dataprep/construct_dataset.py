@@ -6,7 +6,7 @@ import torch
 import json
 import warnings
 from torch_geometric.data import Dataset, Data
-from Dataset import Dataset
+from Dataset import PDBbind_Dataset
 
 
 """
@@ -54,7 +54,7 @@ def main():
 
     args = parser.parse_args()
 
-    dataset = Dataset(
+    dataset = PDBbind_Dataset(
                     args.data_dir,
 
                     # EMBEDDINGS TO BE INCLUDED
