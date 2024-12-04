@@ -11,21 +11,18 @@ module load eth_proxy
 source /cluster/project/math/dagraber/miniconda3/etc/profile.d/conda.sh
 conda activate BAP
 
-log_file="graphgen051124.txt"
-
-# command="python dataprep2_graph_construction.py \
-#                 --data_dir inference_test \
-#                 --replace False \
-#                 --masternode True \
-#                 --protein_embeddings ankh_base esm2_t6 \
-#                 --ligand_embeddings ChemBERTa_77M"
+log_file="graphgen_fill_up.txt"
 
 command="python -m dataprep.graph_construction \
-                --data_dir inference_test \
+                --data_dir PDBbind_preprocessed \
                 --replace False \
-                --protein_embeddings ankh_base esm2_t6 \
+                --protein_embeddings ankh_base ankh_large esm2_t6 esm2_t33 \
                 --ligand_embeddings ChemBERTa_77M"
+
+# command="python -m dataprep.graph_construction \
+#                 --data_dir inference_test \
+#                 --replace False \
+#                 --protein_embeddings ankh_base esm2_t6 \
+#                 --ligand_embeddings ChemBERTa_77M"
                 
 $command > $log_file 2>&1
-
-# --protein_embeddings ankh_large ankh_base esm2_t6 esm2_t33 \

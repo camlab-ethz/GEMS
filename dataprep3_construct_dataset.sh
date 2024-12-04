@@ -24,10 +24,19 @@ conda activate BAP
 #                 --ligand_embeddings ChemBERTa_77M \
 #                 --save_path dataset_inference_051124.pt"
 
+# command="python -m dataprep.construct_dataset \
+#                 --data_dir inference_test \
+#                 --protein_embeddings ankh_base esm2_t6 \
+#                 --ligand_embeddings ChemBERTa_77M \
+#                 --save_path dataset_inference_all.pt"
+
+# command="python -m dataprep.construct_dataset \
+#                 --data_dir inference_test \
+#                 --save_path dataset_inference_none.pt"
+
 command="python -m dataprep.construct_dataset \
                 --data_dir inference_test \
-                --protein_embeddings ankh_base esm2_t6 \
                 --ligand_embeddings ChemBERTa_77M \
-                --save_path dataset_inference_281124.pt"
+                --save_path dataset_inference_lig.pt"
 
 $command

@@ -12,6 +12,7 @@ PDBbind_dataset_filtering/
 PDBbind_search_algorithms/
 
 model/INITIAL/*
+pytorch_datasets*/
 
 attention_weights/
 PDBbind_splits/
@@ -21,6 +22,7 @@ pafnucy_data/
 train.sh
 stuff/
 *old*/
+*check*
 
 PDBbind_v2016/
 PDBbind_v2020/
