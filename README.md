@@ -98,11 +98,13 @@ To test the installation we have added a folder with synthetic data. Please exec
 A) example_inference
 
 ```
+python GEMS_dataprep_workflow.py --data_dir example_inference 
 python GEMS_prediction_workflow.py --data_dir example_inference 
 ```
 B) example_training
-
+For training, path to y_data also needs to be provided for dataset prepation. It can either be provided as csv or as json file. Please note that columns in y_data csv should be: 'key', 'log_kd_ki'
 ```
+python GEMS_dataprep_workflow.py --data_dir example_dataset/ --y_data example_dataset/example_training_data.csv
 python GEMS_training_workflow.py --data_dir example_training
 ```
 
