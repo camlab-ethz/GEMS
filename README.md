@@ -79,7 +79,7 @@ Please copy the data on which you want to train, test or predict inside this fol
 ```
 sudo docker build -t my-gems-container .
 
-sudo docker run --gpus all -it my-gems-container
+sudo docker run --shm-size=8g --gpus all -it my-gems-container
 ```
 
 ### Via conda environment
