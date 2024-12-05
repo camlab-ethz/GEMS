@@ -28,10 +28,12 @@ The field of computational drug design requires accurate scoring functions to pr
 
 In this repository we provide instructions to use the GEMS model for protein-ligand binding affinity prediction. Python scripts are provided for direct execution of dataset construction, training and inference workflows on your own data.
 
-* **Prepare your data:** Ensure that all complexes are stored in the same directory, with proteins saved as PDB files and their corresponding ligands saved as SDF files. Each protein-ligand pair should share the same unique identifier (_ID_) in their filenames to indicate they form a complex. For example, use filenames like _ID_.pdb and _ID_.sdf to represent the same complex.
-* **Dataset construction:** 
-* **Inference:**
-* **Training:**
+* **Prepare your data:** <br />Ensure that all complexes are stored in the same directory, with proteins saved as PDB files and their corresponding ligands saved as SDF files. Each protein-ligand pair should share the same unique identifier (_ID_) as filenames to indicate they form a complex. For example, use filenames like _ID_.pdb and _ID_.sdf to represent the same complex. If you have affinity labels for your complexes, save them `<PETER>` <br />
+* **Dataset construction:** <br /> Run GEMS_dataprep_workflow.py with the path to your data directory (containing all pairs of PDBs and SDFs) as argument. If you want to add labels (for training), add the path to your labels CSV or JSON file as another input (optional).  <br />
+  ``` python GEMS_dataprep_workflow.py --data_dir <path/to/your/data/dir> --y_data <path/to/labels/file>  ```  <br />
+  This creates a pytorch dataset of interaction graphs featurized with language model embeddings (in this case esm2_t6, ankh_base and ChemBERTa-77M). You can now run inference or training on this dataset. <br />
+* **Inference:** <br /> Run GEMS
+* **Training:** <br />
 
 Please note that PDBBind dataset needs to be licensed, which is free for academic users (http://www.pdbbind.org.cn/). 
 the code to generate "CleanSplit" dataset from PDBBind, as well as 
