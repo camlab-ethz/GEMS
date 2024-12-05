@@ -44,7 +44,7 @@ the code to generate "CleanSplit" dataset from PDBBind, as well as
 * Storage: At least 100GB of storage are needed for preprocessing 20'000 protein-ligand complexes.<br />
 * CPU: Part of the code (graph construction) profits from parallelization to several CPUs (about 12h for 20'000 protein-ligand complexes on a single CPU)<br />
 <br />
-We have tested the code using a NVIDIA RTX3090TI GPU<br />
+We have tested the code using a NVIDIA RTX3090TI and RTX2090TI GPU<br />
 
 We do not recommend to run the code on CPU only systems or normal desktop PCs.
 
@@ -52,6 +52,7 @@ We do not recommend to run the code on CPU only systems or normal desktop PCs.
 ### OS Requirements
 The package has been tested on the following systems:
 Ubuntu 22.04 LTS
+Ubuntu 24.04 LTS
 
 ### Python Dependencies
 We recomment using miniconda3 to setup a virtual environment with python 3.10. This software has been tested using the following package version:
@@ -103,14 +104,14 @@ To test the installation we have added a folder with synthetic data. Please exec
 A) example_inference
 
 ```
-python GEMS_dataprep_workflow.py --data_dir example_inference 
-python GEMS_prediction_workflow.py --data_dir example_inference 
+python GEMS_dataprep_workflow.py --data_dir example_dataset 
+python GEMS_inference_workflow.py --data_dir example_dataset 
 ```
 B) example_training
 For training, path to y_data also needs to be provided for dataset prepation. It can either be provided as csv or as json file. Please note that columns in y_data csv should be: 'key', 'log_kd_ki'
 ```
 python GEMS_dataprep_workflow.py --data_dir example_dataset/ --y_data example_dataset/example_training_data.csv
-python GEMS_training_workflow.py --data_dir example_training
+python GEMS_training_workflow.py --data_dir example_dataset
 ```
 
 
