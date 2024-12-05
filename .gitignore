@@ -28,6 +28,7 @@ benchmark_dataloaders*
 old_models/
 
 aggregate_results.py
+ranking_test*
 clustering/
 inference_test*/
 find_clusters/
@@ -59,6 +60,7 @@ db.sqlite
 .vscode/
 
 # Other
+*.sh
 *slurm*
 tmp/
 *.fasta
