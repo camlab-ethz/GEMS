@@ -70,7 +70,7 @@ class PDBbind_Dataset(Dataset):
 
         # Load the dictionary containing the data split for the dataset, if one is given
         # In no splitting dict is given, include all graphs in the folder in the dataset
-        if data_split is not None:
+        if data_split:
             self.dataset = dataset
             self.data_split = data_split
             with open(self.data_split, 'r', encoding='utf-8') as json_file:
@@ -106,7 +106,12 @@ class PDBbind_Dataset(Dataset):
             if self.labels:
                 min=0
                 max=16
-                pK = self.data_dict[id]['log_kd_ki']
+                try: # If the labels are saved with L00001 in the dictionary
+                    pK = self.data_dict[id]['log_kd_ki']
+                except KeyError: # If the labels are saved without L00001 in the dictionary
+                    id_short = id[:-17]
+                    pK = self.data_dict[id_short]['log_kd_ki']
+
                 pK_scaled = (pK - min) / (max - min)
             else: pK_scaled = 0
 
