@@ -441,7 +441,10 @@ for i, protein in enumerate(proteins):
         if len(ligands) < 1: 
             raise SkipComplexException('Ligand could not be parsed successfully')
         
-        if len(ligands) > 1: several_ligands = True
+        if len(ligands) > 1: 
+            several_ligands = True
+        else:
+            several_ligands = False
         
         for l, ligand_mol in enumerate(ligands):
 
