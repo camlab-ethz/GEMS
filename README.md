@@ -89,7 +89,7 @@ conda install pyg=*=*cu117 -c pyg
 ```
 **Optional for training**
 ```
-conda install wandb --channel conda-forge<br />
+conda install wandb --channel conda-forge
 ```
 **Test of installation**<br />
 
