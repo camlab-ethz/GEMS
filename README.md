@@ -26,18 +26,23 @@ The field of computational drug design requires accurate scoring functions to pr
 
 ## Overview
 
-In this repository we provide the code to generate "CleanSplit" dataset from PDBBind, as well as workflows for training and inference of the GEMS model.
+In this repository we provide instructions to use the GEMS model for protein-ligand binding affinity prediction. Python scripts are provided for direct execution of dataset construction, training and inference workflows on your own data.
+
+* **Prepare your data:** Ensure that all complexes are stored in the same directory, with proteins saved as PDB files and their corresponding ligands saved as SDF files. Each protein-ligand pair should share the same unique identifier (_ID_) in their filenames to indicate they form a complex. For example, use filenames like _ID_.pdb and _ID_.sdf to represent the same complex.
+* **Dataset construction:** 
+* **Inference:**
+* **Training:**
+
 Please note that PDBBind dataset needs to be licensed, which is free for academic users (http://www.pdbbind.org.cn/). 
+the code to generate "CleanSplit" dataset from PDBBind, as well as 
+ However, we recommend to consider parallel execution of the data preparation scripts if sufficient computing power is available (e.g. on HPC infrastructures for which the user needs to generate own slurm scripts).
 
-Two python scripts are provided for direct execution of full training and inference workflows. However, we recommend to consider parallel execution of the data preparation scripts if sufficient computing power is available (e.g. on HPC infrastructures for which the user needs to generate own slurm scripts).
-
-We provide multiple models.... PLS ADD MORE CONTEXT DAVID
 
 ## System Requirements
 ### Hardware Requirements
-Recommended GPU: NVIDIA RTX3090 or higher with at least 24GB VRAM memory. <br />
-Storage: At least 100GB of storage are needed for preprocessing 20'000 protein-ligand complexes.<br />
-CPU: Part of the code (Graph Construction) profits from parallelization to several CPUs (about 12h for 20'000 protein-ligand complexes on a single CPU)<br />
+* Recommended GPU: NVIDIA RTX3090 or higher with at least 24GB VRAM memory. <br />
+* Storage: At least 100GB of storage are needed for preprocessing 20'000 protein-ligand complexes.<br />
+* CPU: Part of the code (graph construction) profits from parallelization to several CPUs (about 12h for 20'000 protein-ligand complexes on a single CPU)<br />
 <br />
 We have tested the code using a NVIDIA RTX3090TI GPU<br />
 
@@ -112,7 +117,6 @@ python GEMS_training_workflow.py --data_dir example_training
 ## How to use
 **CleanSplit**<br />
 
-PLS ADD MORE CONTEXT DAVID
 Describe here how to apply CleanSplit on PDBBind dataset or own datasets
 
 <br />
@@ -121,7 +125,6 @@ To run inference on a set of protein pdbs and ligands, run the following command
 ```
 python inference.py folder_name<br />
 ```
-PLS ADD MORE CONTEXT DAVID
 
 <br />
 **Training**<br />
@@ -130,7 +133,6 @@ X
 Y
 Z
 <br />
-PLS ADD MORE CONTEXT DAVID
 
 ## Citation
 Please cite the following publication if you found this ressource helpful:
