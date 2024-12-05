@@ -7,25 +7,20 @@ PDBbind_data/similarity/pairwise_similarity_matrix/*.hdf5
 PDBbind_data/similarity/pairwise_similarity_matrix/matrix_inspect.ipynb
 PDBbind_data/similarity/pairwise_similarity_matrix/matrix_merge.py
 
-PDBbind_preprocessed/
-PDBbind_dataset_filtering/
+pytorch_datasets*/
+remove_redundancy.py
+PDBbind_dataset_filtering/logs/
 PDBbind_search_algorithms/
 
 model/INITIAL/*
-pytorch_datasets*/
 
-attention_weights/
+
+PDBbind_preprocessed/
 PDBbind_splits/
 TMalign/
-PDBbind0/
 pafnucy_data/
-train.sh
 stuff/
 *old*/
-*check*
-
-PDBbind_v2016/
-PDBbind_v2020/
 visualization/
 huggingface/
 bash_scripts/
@@ -36,12 +31,8 @@ aggregate_results.py
 clustering/
 inference_test*/
 find_clusters/
-find_clusters_lorenzo/
-find_most_similar*/
+*check*
 
-
-remove_data_leakage.py
-remove_redundancy.py
 logs/
 
 
