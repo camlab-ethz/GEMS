@@ -8,7 +8,6 @@ import numpy as np
 from torch_geometric.loader import DataLoader
 from model.GATE18 import *
 
-CUDA_LAUNCH_BLOCKING=1
 
 class RMSELoss(torch.nn.Module):
     def __init__(self):
@@ -137,7 +136,7 @@ edge_feat_dim = dataset[0].edge_attr.shape[1]
 print(f"Dataset Loaded with {len(dataset)} samples")
 
 # Check if the dataset has labels
-labels = dataset.labels
+labels = dataset[0].y > 0
 print(f"Dataset has labels: {labels}")
 
 
