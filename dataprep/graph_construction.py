@@ -441,12 +441,18 @@ for i, protein in enumerate(proteins):
         if len(ligands) < 1: 
             raise SkipComplexException('Ligand could not be parsed successfully')
         
+        if len(ligands) > 1: several_ligands = True
         
         for l, ligand_mol in enumerate(ligands):
-            print(f'--- Ligand {l+1:05}: ', end=': ', flush=True)
-            id_with_lig = f'{id}_L{l+1:05}'
-            save_path = os.path.join(data_dir, f"{id_with_lig}_graph.pth")
 
+            if several_ligands:
+                print(f'--- Ligand {l+1:05}: ', end=': ', flush=True)
+                id_with_lig = f'{id}_L{l+1:05}'
+                save_path = os.path.join(data_dir, f"{id_with_lig}_graph.pth")
+            else:
+                print(f'--- Ligand: ', end=': ', flush=True)
+                id_with_lig = id
+                save_path = os.path.join(data_dir, f"{id_with_lig}_graph.pth")
             # Check if the graph of this complex exists already
             if not replace_existing_graphs and os.path.exists(save_path):
                 raise SkipComplexException('Graph already exists')
@@ -523,13 +529,9 @@ for i, protein in enumerate(proteins):
                     matching_files = glob.glob(search_pattern)
                     if len(matching_files) == 1:
                         lig_embeddings[j] = torch.load(matching_files[0])
-                    elif len(matching_files) == 0:
+                    else:
                         found_all_emb = False
-                        break
-                    elif len(matching_files) > 1:
-                        found_all_emb = False
-                        break
-                        
+                        break                 
                 
                 # Skip the complex if not all/too many embeddings are found
                 if not found_all_emb:
