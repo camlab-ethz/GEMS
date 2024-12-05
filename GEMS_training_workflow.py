@@ -40,40 +40,12 @@ def main():
     
     # Workflow commands with dynamic data directory
     workflow_commands = [
-        # Ankh Features
-        ["python", "-m", "dataprep.ankh_features", 
-         "--data_dir", args.data_dir, 
-         "--ankh_base", "True"],
-        
-        # ESM Features
-        ["python", "-m", "dataprep.esm_features", 
-         "--data_dir", args.data_dir, 
-         "--esm_checkpoint", "t6"],
-
-        # ChemBerta Features
-        ["python", "-m", "dataprep.chemberta_features", 
-         "--data_dir", args.data_dir],
-        
-        # Graph Construction
-        ["python", "-m", "dataprep.graph_construction", 
-         "--data_dir", args.data_dir, 
-         "--replace", "False", 
-         "--protein_embeddings", "ankh_base", "esm2_t6", 
-         "--ligand_embeddings", "ChemBERTa_77M"],
-        
-        # Dataset Construction
-        ["python", "-m", "dataprep.construct_dataset", 
-         "--data_dir", args.data_dir, 
-         "--data_dict", f"{args.data_dir}/example_training_data_dict.json",
-         "--protein_embeddings", "ankh_base", "esm2_t6", 
-         "--ligand_embeddings", "ChemBERTa_77M", 
-         "--save_path", f"{args.data_dir}/dataset.pt"],
         
         # Inference
         ["python", "train.py", 
          "--model", "GATE18d", 
          "--run_name", "example_run", 
-         "--log_path", "example_run/Fold0", 
+         "--log_path", "example_run/test_0", 
          "--dataset_path", f"{args.data_dir}/dataset.pt"]
     ]
     
