@@ -857,7 +857,7 @@ for i, protein in enumerate(proteins):
 
     # If an error occurs somewhere within the script, continue with the next complex
     except SkipComplexException as e:
-        print('Error: ' + str(e), flush=True)
+        print('Skipped Complex: ' + str(e), flush=True)
         continue
 
     # If a fatal error occurs, break the loop to end the script
