@@ -35,9 +35,9 @@ def main():
                         The strings should correspond to the keys that are used to save the embeddings in the graph object of the complexes'),
     
     # WHICH GRAPHS AND LABELS TO INCLUDE
-    parser.add_argument("--data_dict", default=None,, help="Path to dictionary containing the affinity labels of the complexes as dict[complex_id] = {'log_kd_ki': affinity}")
-    parser.add_argument("--data_split", default=None,, help="Filepath to dictionary (json file) containing the data split for the graphs in the folder")
-    parser.add_argument("--dataset", default=None,, help="If a split dict is given, which subset should be loaded ['train', 'test'] as defined in the data_split file")
+    parser.add_argument("--data_dict", default=None, help="Path to dictionary containing the affinity labels of the complexes as dict[complex_id] = {'log_kd_ki': affinity}")
+    parser.add_argument("--data_split", default=None, help="Filepath to dictionary (json file) containing the data split for the graphs in the folder")
+    parser.add_argument("--dataset", default=None, help="If a split dict is given, which subset should be loaded ['train', 'test'] as defined in the data_split file")
     
     # ABLATION
     parser.add_argument("--atom_features", default=True, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Wheter or not Atom Features should be included")
