@@ -104,7 +104,7 @@ def parse_args():
     # Early stopping
     parser.add_argument("--early_stopping",  default=True, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If early stopping should be used to prevent overfitting")
     parser.add_argument("--early_stop_patience", default=100, type=int, help="For how many epochs the validation loss can cease to decrease without triggering early stop")
-    parser.add_argument("--early_stop_min_delta", default=0.5, type=float, help="How far train loss and val loss are allowed to diverge without triggering early stop")
+    parser.add_argument("--early_stop_min_delta", default=0.7, type=float, help="How far train loss and val loss are allowed to diverge without triggering early stop")
 
     # If the learning rate should be adaptive LINEAR
     parser.add_argument("--alr_lin",  default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Linear learning rate reduction scheme will be used")
