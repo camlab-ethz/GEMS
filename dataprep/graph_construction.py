@@ -449,11 +449,11 @@ for i, protein in enumerate(proteins):
         for l, ligand_mol in enumerate(ligands):
 
             if several_ligands:
-                print(f'--- Ligand {l+1:05}: ', end=': ', flush=True)
+                print(f'--- Ligand {l+1:05}', end=': ', flush=True)
                 id_with_lig = f'{id}_L{l+1:05}'
                 save_path = os.path.join(data_dir, f"{id_with_lig}_graph.pth")
             else:
-                print(f'--- Ligand: ', end=': ', flush=True)
+                print(f'--- Ligand 1', end=': ', flush=True)
                 id_with_lig = id
                 save_path = os.path.join(data_dir, f"{id_with_lig}_graph.pth")
             # Check if the graph of this complex exists already
