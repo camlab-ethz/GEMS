@@ -48,6 +48,8 @@ def convert_csv_to_json(input_file, output_file):
         print(f"Error converting CSV to JSON: {e}")
         sys.exit(1)
 
+
+
 def run_command(command):
     """
     Run a shell command and handle potential errors.
@@ -67,23 +69,21 @@ def run_command(command):
         print(f"Error output: {e.stderr}")
         sys.exit(1)
 
+
+
 def main():
-    # Set up argument parser
     parser = argparse.ArgumentParser(description="Machine Learning Workflow Execution")
     parser.add_argument('--data_dir', type=str, required=True, 
                         help='Directory for input and output data')
     parser.add_argument('--y_data', type=str, default=None, 
                         help='Optional path to CSV or JSON file containing y data')
-    
-    # Parse arguments
     args = parser.parse_args()
     
-    # Ensure data directory exists
     if not os.path.exists(args.data_dir):
         print(f"Error: Data directory {args.data_dir} does not exist.")
         sys.exit(1)
-    
-    # Workflow commands with dynamic data directory
+
+
     workflow_commands = [
         # Ankh Features
         ["python", "-m", "dataprep.ankh_features", 
@@ -107,13 +107,17 @@ def main():
          "--ligand_embeddings", "ChemBERTa_77M"]
     ]
     
+    data_dir_name = os.path.basename(os.path.normpath(args.data_dir))
+
     # Dataset Construction (conditionally add y_data)
     dataset_command = ["python", "-m", "dataprep.construct_dataset", 
                        "--data_dir", args.data_dir, 
                        "--protein_embeddings", "ankh_base", "esm2_t6", 
                        "--ligand_embeddings", "ChemBERTa_77M", 
-                       "--save_path", f"{args.data_dir}/dataset.pt"]
+                       "--save_path", f"{os.path.dirname(args.data_dir)}{data_dir_name}_dataset.pt"]
     
+    
+
     # Process y_data if provided
     if args.y_data:
         # Determine if input is CSV or JSON and convert if necessary
@@ -126,22 +130,21 @@ def main():
             print(f"Error: Unsupported file type. Please provide a CSV or JSON file.")
             sys.exit(1)
         
-        # Ensure y_data file exists
         if not os.path.exists(y_data_file):
             print(f"Error: Y data file {y_data_file} does not exist.")
             sys.exit(1)
         
-        # Add the y_data flag to the dataset construction command
         dataset_command.extend(["--data_dict", y_data_file])
     
+
+
     # Add dataset construction command to workflow
     workflow_commands.append(dataset_command)
-    
-    # Execute each command in sequence
+
     for command in workflow_commands:
         run_command(command)
     
-    print("Workflow completed successfully!")
+    print("Dataprep workflow completed successfully!")
 
 if __name__ == "__main__":
     main()
