@@ -111,7 +111,7 @@ python GEMS_training_workflow.py --dataset_path example_dataset_dataset.pt
 B) example_inference
 
 ```
-python GEMS_dataprep_workflow.py --data_dir example_dataset_2 
+python GEMS_dataprep_workflow.py --data_dir example_dataset_2 --y_data PDBbind_data/PDBbind_data_dict.json
 python GEMS_inference_workflow.py --dataset_path example_dataset_2_dataset.pt 
 ```
 
