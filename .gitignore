@@ -35,6 +35,7 @@ find_clusters/
 *check*
 
 logs/
+*.tar.gz
 
 
 # Ignore system files
