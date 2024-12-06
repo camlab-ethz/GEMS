@@ -45,7 +45,7 @@ the code to generate "CleanSplit" dataset from PDBBind, as well as
 * Storage: At least 100GB of storage are needed for preprocessing 20'000 protein-ligand complexes.<br />
 * CPU: Part of the code (graph construction) profits from parallelization to several CPUs (about 12h for 20'000 protein-ligand complexes on a single CPU)<br />
 <br />
-We have tested the code using a NVIDIA RTX3090TI GPU<br />
+We have tested the code using a NVIDIA RTX3090 GPU<br />
 
 We do not recommend to run the code on CPU only systems or normal desktop PCs.
 
