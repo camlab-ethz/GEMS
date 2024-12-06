@@ -100,19 +100,19 @@ conda install wandb --channel conda-forge
 ```
 **Test of installation**<br />
 
-To test the installation we have added a folder with synthetic data. Please execute the following command:
+To test the installation we have added two exemplary folders. The first ("example_dataset") can be used to test the training workflow and the second ("example_dataset_2") serves to test the inference workflow. Please execute the following commands:
 
-A) example_inference
-
-```
-python GEMS_dataprep_workflow.py --data_dir example_dataset 
-python GEMS_inference_workflow.py --data_dir example_dataset 
-```
-B) example_training
+A) example_training
 For training, path to y_data also needs to be provided for dataset prepation. It can either be provided as csv or as json file. Please note that columns in y_data csv should be: 'key', 'log_kd_ki'
 ```
 python GEMS_dataprep_workflow.py --data_dir example_dataset/ --y_data example_dataset/example_training_data.csv
-python GEMS_training_workflow.py --data_dir example_dataset
+python GEMS_training_workflow.py --dataset_path example_dataset_dataset.pt 
+```
+B) example_inference
+
+```
+python GEMS_dataprep_workflow.py --data_dir example_dataset_2 
+python GEMS_inference_workflow.py --dataset_path example_dataset_2_dataset.pt 
 ```
 
 
