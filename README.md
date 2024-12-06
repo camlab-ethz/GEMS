@@ -26,18 +26,25 @@ The field of computational drug design requires accurate scoring functions to pr
 
 ## Overview
 
-In this repository we provide the code to generate "CleanSplit" dataset from PDBBind, as well as workflows for training and inference of the GEMS model.
+In this repository we provide instructions to use the GEMS model for protein-ligand binding affinity prediction. Python scripts are provided for direct execution of dataset construction, training and inference workflows on your own data.
+
+* **Prepare your data:** <br />Ensure that all complexes are stored in the same directory, with proteins saved as PDB files and their corresponding ligands saved as SDF files. Each protein-ligand pair should share the same unique identifier (_ID_) as filenames to indicate they form a complex. For example, use filenames like _ID_.pdb and _ID_.sdf to represent the same complex. If you have affinity labels for your complexes, save them `<PETER>` <br />
+* **Dataset construction:** <br /> Run GEMS_dataprep_workflow.py with the path to your data directory (containing all pairs of PDBs and SDFs) as argument. If you want to add labels (for training), add the path to your labels CSV or JSON file as another input (optional).  <br />
+  ``` python GEMS_dataprep_workflow.py --data_dir <path/to/your/data/dir> --y_data <path/to/labels/file>  ```  <br />
+  This creates a pytorch dataset of interaction graphs featurized with language model embeddings (in this case esm2_t6, ankh_base and ChemBERTa-77M). You can now run inference or training on this dataset. <br />
+* **Inference:** <br /> Run GEMS
+* **Training:** <br />
+
 Please note that PDBBind dataset needs to be licensed, which is free for academic users (http://www.pdbbind.org.cn/). 
+the code to generate "CleanSplit" dataset from PDBBind, as well as 
+ However, we recommend to consider parallel execution of the data preparation scripts if sufficient computing power is available (e.g. on HPC infrastructures for which the user needs to generate own slurm scripts).
 
-Two python scripts are provided for direct execution of full training and inference workflows. However, we recommend to consider parallel execution of the data preparation scripts if sufficient computing power is available (e.g. on HPC infrastructures for which the user needs to generate own slurm scripts).
-
-We provide multiple models.... PLS ADD MORE CONTEXT DAVID
 
 ## System Requirements
 ### Hardware Requirements
-Recommended GPU: NVIDIA RTX3090 or higher with at least 24GB VRAM memory. <br />
-Storage: At least 100GB of storage are needed for preprocessing 20'000 protein-ligand complexes.<br />
-CPU: Part of the code (Graph Construction) profits from parallelization to several CPUs (about 12h for 20'000 protein-ligand complexes on a single CPU)<br />
+* Recommended GPU: NVIDIA RTX3090 or higher with at least 24GB VRAM memory. <br />
+* Storage: At least 100GB of storage are needed for preprocessing 20'000 protein-ligand complexes.<br />
+* CPU: Part of the code (graph construction) profits from parallelization to several CPUs (about 12h for 20'000 protein-ligand complexes on a single CPU)<br />
 <br />
 We have tested the code using a NVIDIA RTX3090TI GPU<br />
 
@@ -47,6 +54,7 @@ We do not recommend to run the code on CPU only systems or normal desktop PCs.
 ### OS Requirements
 The package has been tested on the following systems:
 Ubuntu 22.04 LTS
+Ubuntu 24.04 LTS
 
 ### Python Dependencies
 We recomment using miniconda3 to setup a virtual environment with python 3.10. This software has been tested using the following package version:
@@ -71,7 +79,7 @@ Please copy the data on which you want to train, test or predict inside this fol
 ```
 sudo docker build -t my-gems-container .
 
-sudo docker run --gpus all -it my-gems-container
+sudo docker run --shm-size=8g --gpus all -it my-gems-container
 ```
 
 ### Via conda environment
@@ -98,21 +106,20 @@ To test the installation we have added a folder with synthetic data. Please exec
 A) example_inference
 
 ```
-python GEMS_dataprep_workflow.py --data_dir example_inference 
-python GEMS_prediction_workflow.py --data_dir example_inference 
+python GEMS_dataprep_workflow.py --data_dir example_dataset 
+python GEMS_inference_workflow.py --data_dir example_dataset 
 ```
 B) example_training
 For training, path to y_data also needs to be provided for dataset prepation. It can either be provided as csv or as json file. Please note that columns in y_data csv should be: 'key', 'log_kd_ki'
 ```
 python GEMS_dataprep_workflow.py --data_dir example_dataset/ --y_data example_dataset/example_training_data.csv
-python GEMS_training_workflow.py --data_dir example_training
+python GEMS_training_workflow.py --data_dir example_dataset
 ```
 
 
 ## How to use
 **CleanSplit**<br />
 
-PLS ADD MORE CONTEXT DAVID
 Describe here how to apply CleanSplit on PDBBind dataset or own datasets
 
 <br />
@@ -121,7 +128,6 @@ To run inference on a set of protein pdbs and ligands, run the following command
 ```
 python inference.py folder_name<br />
 ```
-PLS ADD MORE CONTEXT DAVID
 
 <br />
 **Training**<br />
@@ -130,7 +136,6 @@ X
 Y
 Z
 <br />
-PLS ADD MORE CONTEXT DAVID
 
 ## Citation
 Please cite the following publication if you found this ressource helpful:
