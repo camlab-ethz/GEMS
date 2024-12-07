@@ -10,6 +10,7 @@ PDBbind_data/similarity/pairwise_similarity_matrix/matrix_merge.py
 pytorch_datasets*/
 remove_redundancy.py
 PDBbind_dataset_filtering/logs/
+PDBbind_dataset_filtering/*.json
 PDBbind_search_algorithms/
 
 model/INITIAL/*
