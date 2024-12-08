@@ -29,7 +29,8 @@ def run_command(command):
 def main():
     parser = argparse.ArgumentParser(description="Machine Learning Workflow Execution")
     parser.add_argument('--dataset_path', type=str, required=True, 
-                        help='Path to the dataset.pt file to be used for inference') 
+                        help='Path to the dataset.pt file to be used for inference')
+    parser.add_argument('--run_name', type=str, required=True)
     args = parser.parse_args()
     
     if not os.path.exists(args.dataset_path):
@@ -39,11 +40,10 @@ def main():
 
     workflow_commands = [
         
-        # Inference
         ["python", "train.py", 
          "--model", "GATE18d", 
-         "--run_name", "example_run", 
-         "--log_path", "example_run/test_0", 
+         "--run_name", args.run_name, 
+         "--log_path", f"{args.run_name}/logs", 
          "--dataset_path", args.dataset_path]
     ]
     
