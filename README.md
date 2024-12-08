@@ -112,8 +112,30 @@ python GEMS_training_workflow.py --dataset_path example_dataset_2_dataset.pt --r
 
 ## Run GEMS on PDBbind dataset
 
-### With precomputed interaction graphs
-We provide pytorch dataset of precomputed interactions graphs for the entire PDBbind v.2020 database on Zenodo (https://doi.org/10.5281/zenodo.14260171). 
+### With precomputed interaction graphs from Zenodo
+
+
+
+We provide PyTorch datasets of precomputed interaction graphs for the entire PDBbind v.2020 database on Zenodo ([URL]). These datasets include five different combinations of language model embeddings used to featurize the interaction graphs. For each combination, we provide PyTorch dataset files for the PDBbind training dataset, the PDBbind CleanSplit training dataset, and the CASF2013 and CASF2016 benchmark datasets.
+
+* `pytorch_datasets_00AEPL` -  ChemBERTa-77M included
+* `pytorch_datasets_B0AEPL` -  ChemBERTa-77M and ankh_base included
+* `pytorch_datasets_06AEPL` -  ChemBERTa-77M and ESM2-T6 included
+* `pytorch_datasets_B6AEPL` -  ChemBERTa-77M, ankh_base and ESM2-T6 included
+* `pytorch_datasets_B6AEPL` -  **Ablation:** ChemBERTa-2-77M, ankh_base and ESM2-T6 included, protein nodes deleted from graph
+
+After downloading the the pytorch datasets (.pt files), you can easily run inference on the datasets.
+```
+python GEMS_inference_workflow.py --dataset_path <path/to/downloaded/dataset_file>
+```
+
+To retrain GEMS on a downloaded pytorch dataset, run the following command:
+```
+python GEMS_training_workflow.py --dataset_path <path/to/downloaded/dataset_file>
+```
+
+
+
 
 ### Without precomputed interaction graphs 
 Please note that PDBBind dataset needs to be licensed, which is free for academic users (http://www.pdbbind.org.cn/). After downloading the dataset, save the PDB files and the SDF files in the same directory. Each protein-ligand pair should share the same unique identifier (_ID_) as filenames to indicate they form a complex. For example, use filenames like _ID_.pdb and _ID_.sdf to represent the same complex.
