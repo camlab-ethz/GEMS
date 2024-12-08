@@ -24,9 +24,71 @@ David Graber [1,2,3], Peter Stockinger[2], Fabian Meyer [2], Siddhartha Mishra [
 ## Background
 The field of computational drug design requires accurate scoring functions to predict binding affinities for protein-ligand interactions. However, train-test data leakage between the PDBbind database and the CASF benchmark datasets has significantly inflated the performance metrics of currently available deep learning based binding affinity prediction models, leading to overestimation of their generalization capabilities. We address this issue by proposing PDBbind CleanSplit, a training dataset curated by a novel structure-based filtering algorithm that eliminates train-test data leakage as well as redundancies within the training set. Retraining the current best-performing model on CleanSplit caused its benchmark performance to drop to uncompetitive levels, indicating that the performance of existing models is largely driven by data leakage. In contrast, our graph neural network model, GEMS, maintains high benchmark performance when trained on CleanSplit. Leveraging a sparse graph modeling of protein-ligand interactions and transfer learning from language models, GEMS is able to generalize to strictly independent test datasets.
 
-## Example Usage of GEMS
+## Overview 
+This repository provides all the necessary resources to use GEMS, a graph-based deep learning model for protein-ligand binding affinity prediction. Here we provide instructions for installing dependencies, and detailed guide for preparing datasets, training the model, and running inference. Below we also explains how to use the PDBbind CleanSplit dataset, a refined training dataset based on PDBbind introduced to eliminate data leakage and improve model generalization. Step-by-step examples are provided to help apply GEMS to their own data or benchmark datasets.
 
-In this repository we provide instructions to use the GEMS model for protein-ligand binding affinity prediction. Follow the steps below to run GEMS on the provided example dataset:
+
+## System Requirements
+### Hardware Requirements
+* Recommended GPU: NVIDIA RTX3090 or higher with at least 24GB VRAM memory. <br />
+* Storage: At least 100GB of storage are needed for preprocessing 20'000 protein-ligand complexes.<br />
+* CPU: Part of the code (graph construction) profits from parallelization to several CPUs (about 12h for 20'000 protein-ligand complexes on a single CPU)<br />
+<br />
+We have tested the code using a NVIDIA RTX3090 GPU<br />
+
+We do not recommend to run the code on CPU only systems or normal desktop PCs.
+
+### Software Requirements
+The package has been tested on the following systems:
+Ubuntu 22.04 LTS
+Ubuntu 24.04 LTS
+
+**Python Dependencies** <br />
+We recomment using miniconda3 to setup a virtual environment with python 3.10. This software has been tested using the following package version:
+```
+python=3.10.8
+numpy=1.26.4
+rdkit=2024.03.3
+transformers=4.33.3
+ankh=1.10.0
+biopython=1.83
+pytorch=2.0.1
+pytorch-cuda=11.7
+pyg=2.5.2
+```
+
+## Installation Guide
+### Via Docker image
+
+All dependencies can be installed using the provided Dockerfile.
+
+Please copy the data on which you want to train, test or predict inside this folder before running the following commands:
+
+```
+docker build -t my-gems-container .
+docker run --shm-size=8g --gpus all -it my-gems-container
+```
+
+### Via conda environment
+Alternatively, you can create your conda environment from scratch with the following commands:
+
+```
+conda create --name GEMS python=3.10
+conda activate GEMS
+conda install -c conda-forge numpy rdkit
+conda install -c huggingface transformers (ensure a version that supports ESM2)
+pip install ankh
+conda install biopython
+conda install pytorch=2.0.1 pytorch-cuda=11.7 -c pytorch -c nvidia
+conda install pyg=*=*cu117 -c pyg
+```
+Optional for training
+```
+conda install wandb --channel conda-forge
+```
+
+## How to use GEMS
+### Example Usage with example dataset
 
 * **Dataset construction:** <br />Run GEMS_dataprep_workflow.py with the path to your data directory (containing all pairs of PDBs and SDFs) as argument. If you want to include labels (for training), add the path to your labels CSV or JSON file as another input. This creates a pytorch dataset of interaction graphs featurized with language model embeddings (in this case esm2_t6, ankh_base and ChemBERTa-77M). You can now run inference or training on this dataset. <br /> ``` python GEMS_dataprep_workflow.py --data_dir example_dataset_2 --y_data PDBbind_data/PDBbind_data_dict.json  ```  <br /> <br />
   
@@ -45,64 +107,7 @@ the code to generate "CleanSplit" dataset from PDBBind, as well as
 
 
 
-## System Requirements
-### Hardware Requirements
-* Recommended GPU: NVIDIA RTX3090 or higher with at least 24GB VRAM memory. <br />
-* Storage: At least 100GB of storage are needed for preprocessing 20'000 protein-ligand complexes.<br />
-* CPU: Part of the code (graph construction) profits from parallelization to several CPUs (about 12h for 20'000 protein-ligand complexes on a single CPU)<br />
-<br />
-We have tested the code using a NVIDIA RTX3090 GPU<br />
 
-We do not recommend to run the code on CPU only systems or normal desktop PCs.
-
-## Software Requirements
-### OS Requirements
-The package has been tested on the following systems:
-Ubuntu 22.04 LTS
-Ubuntu 24.04 LTS
-
-### Python Dependencies
-We recomment using miniconda3 to setup a virtual environment with python 3.10. This software has been tested using the following package version:
-```
-python=3.10.8
-numpy=1.26.4
-rdkit=2024.03.3
-transformers=4.33.3
-ankh=1.10.0
-biopython=1.83
-pytorch=2.0.1
-pytorch-cuda=11.7
-pyg=2.5.2
-```
-## Installation Guide
-### Via Docker image
-
-All dependencies can be installed using the provided Dockerfile.
-
-Please copy the data on which you want to train, test or predict inside this folder before running the following commands:
-
-```
-sudo docker build -t my-gems-container .
-
-sudo docker run --shm-size=8g --gpus all -it my-gems-container
-```
-
-### Via conda environment
-Alternatively, you can create your conda environment from scratch with the following commands:
-
-```
-conda create --name GEMS python=3.10
-conda activate GEMS
-conda install -c conda-forge numpy rdkit
-conda install -c huggingface transformers (ensure a version that supports ESM2)
-pip install ankh
-conda install biopython
-conda install pytorch=2.0.1 pytorch-cuda=11.7 -c pytorch -c nvidia
-conda install pyg=*=*cu117 -c pyg
-```
-**Optional for training**
-```
-conda install wandb --channel conda-forge
 ```
 **Test of installation**<br />
 
