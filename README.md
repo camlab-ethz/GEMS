@@ -92,20 +92,23 @@ conda install wandb --channel conda-forge
 ### Run GEMS on example dataset <br />
 This repository includes two example datasets of protein-ligand complexes, where each complex comprises a protein stored as a PDB file and a ligand stored as an SDF file. Below are the steps to run inference or training using these provided datasets.
 
-1. **Dataset Construction:**  Use the `GEMS_dataprep_workflow.py` script to preprocess the data and construct the PyTorch dataset. This script generates interaction graphs enriched with language model embeddings (e.g., esm2_t6, ankh_base, and ChemBERTa-77M). Specify the path to your data directory (containing PDB and SDF files) as an argument. If you wish to include affinity labels for training, provide the path to your labels file (CSV or JSON) as an additional input.
-  ```
-  python GEMS_dataprep_workflow.py --data_dir example_dataset_2 --y_data PDBbind_data/PDBbind_data_dict.json
-  ```
+#### Dataset Construction:  
+Use the `GEMS_dataprep_workflow.py` script to preprocess the data and construct the PyTorch dataset. This script generates interaction graphs enriched with language model embeddings (e.g., esm2_t6, ankh_base, and ChemBERTa-77M). Specify the path to your data directory (containing PDB and SDF files) as an argument. If you wish to include affinity labels for training, provide the path to your labels file (CSV or JSON) as an additional input.
+```
+python GEMS_dataprep_workflow.py --data_dir example_dataset_2 --y_data PDBbind_data/PDBbind_data_dict.json
+```
 
-2. **Inference:** Run `GEMS_inference workflow.py` with the newly generated dataset file as input
-  ```
-  python GEMS_inference_workflow.py --dataset_path example_dataset_2_dataset.pt
-  ```
+#### Inference:
+Run `GEMS_inference workflow.py` with the newly generated dataset file as input. This file will load the appropriate model and the dataset and create a CSV file containing pK predictions. If the dataset contains labels, it will produce a prediction scatterplot.
+```
+python GEMS_inference_workflow.py --dataset_path example_dataset_2_dataset.pt
+```
 
-3. **Training:** Run GEMS_training_workflow with the newly generated dataset.pt file as input
-  ```
-  python GEMS_training_workflow.py --dataset_path example_dataset_2_dataset.pt
-  ```
+#### Training:
+Run GEMS_training_workflow with the newly generated dataset.pt file as input
+```
+python GEMS_training_workflow.py --dataset_path example_dataset_2_dataset.pt
+```
 
 ## Run GEMS on PDBbind dataset
 Please note that PDBBind dataset needs to be licensed, which is free for academic users (http://www.pdbbind.org.cn/). 
