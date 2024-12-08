@@ -111,7 +111,12 @@ python GEMS_training_workflow.py --dataset_path example_dataset_2_dataset.pt --r
 ```
 
 ## Run GEMS on PDBbind dataset
-Please note that PDBBind dataset needs to be licensed, which is free for academic users (http://www.pdbbind.org.cn/). 
+
+### With precomputed interaction graphs
+We provide pytorch dataset of precomputed interactions graphs for the entire PDBbind v.2020 database on Zenodo (https://doi.org/10.5281/zenodo.14260171). 
+
+### Without precomputed interaction graphs 
+Please note that PDBBind dataset needs to be licensed, which is free for academic users (http://www.pdbbind.org.cn/). After downloading the dataset, save the PDB files and the SDF files in the same directory. Each protein-ligand pair should share the same unique identifier (_ID_) as filenames to indicate they form a complex. For example, use filenames like _ID_.pdb and _ID_.sdf to represent the same complex.
 the code to generate "CleanSplit" dataset from PDBBind, as well as 
  However, we recommend to consider parallel execution of the data preparation scripts if sufficient computing power is available (e.g. on HPC infrastructures for which the user needs to generate own slurm scripts).
 
