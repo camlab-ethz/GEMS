@@ -105,9 +105,9 @@ python GEMS_inference_workflow.py --dataset_path example_dataset_2_dataset.pt
 ```
 
 #### Training:
-Run GEMS_training_workflow with the newly generated dataset.pt file as input
+Run `GEMS_training_workflow.py` with the newly generated dataset file and a chosen run name as inputs. The script will split the data into training and validation datasets, train GEMS on the training dataset, and validate it on the validation set. A new folder named after the run name will be created to save the training outputs. 
 ```
-python GEMS_training_workflow.py --dataset_path example_dataset_2_dataset.pt
+python GEMS_training_workflow.py --dataset_path example_dataset_2_dataset.pt --run_name example_dataset_2_train_run
 ```
 
 ## Run GEMS on PDBbind dataset
