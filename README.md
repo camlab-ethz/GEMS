@@ -87,24 +87,36 @@ Optional for training
 conda install wandb --channel conda-forge
 ```
 
+
 ## How to use GEMS
-### Example Usage with example dataset
+### Run GEMS on example dataset <br />
+This repository includes two example datasets of protein-ligand complexes, where each complex comprises a protein stored as a PDB file and a ligand stored as an SDF file. Below are the steps to run inference or training using these provided datasets.
 
-* **Dataset construction:** <br />Run GEMS_dataprep_workflow.py with the path to your data directory (containing all pairs of PDBs and SDFs) as argument. If you want to include labels (for training), add the path to your labels CSV or JSON file as another input. This creates a pytorch dataset of interaction graphs featurized with language model embeddings (in this case esm2_t6, ankh_base and ChemBERTa-77M). You can now run inference or training on this dataset. <br /> ``` python GEMS_dataprep_workflow.py --data_dir example_dataset_2 --y_data PDBbind_data/PDBbind_data_dict.json  ```  <br /> <br />
-  
-* **Inference:** <br /> Run GEMS_inference workflow with the newly generated dataset.pt file as input <br />   ``` python GEMS_inference_workflow.py --dataset_path example_dataset_2_dataset.pt ```  <br /> <br />
+1. **Dataset Construction:**  Use the `GEMS_dataprep_workflow.py` script to preprocess the data and construct the PyTorch dataset. This script generates interaction graphs enriched with language model embeddings (e.g., esm2_t6, ankh_base, and ChemBERTa-77M). Specify the path to your data directory (containing PDB and SDF files) as an argument. If you wish to include affinity labels for training, provide the path to your labels file (CSV or JSON) as an additional input.
+  ```
+  python GEMS_dataprep_workflow.py --data_dir example_dataset_2 --y_data PDBbind_data/PDBbind_data_dict.json
+  ```
 
-* **Training:** <br /> Run GEMS_training_workflow with the newly generated dataset.pt file as input <br /> ``` python GEMS_training_workflow.py --dataset_path example_dataset_2_dataset.pt ```  <br /> <br />
+2. **Inference:** Run `GEMS_inference workflow.py` with the newly generated dataset file as input
+  ```
+  python GEMS_inference_workflow.py --dataset_path example_dataset_2_dataset.pt
+  ```
 
-## Run GEMS on your own data
-
-* **Prepare your data:** <br />Ensure that all complexes are stored in the same directory, with proteins saved as PDB files and their corresponding ligands saved as SDF files. Each protein-ligand pair should share the same unique identifier (_ID_) as filenames to indicate they form a complex. For example, use filenames like _ID_.pdb and _ID_.sdf to represent the same complex. If you have affinity labels for your complexes, save them as CSV with two columns. Column 1 header should be "key" and column 2 header should be "log_kd_ki". You can also create a dictionary mapping _ID_ to pK values and save it as a json file <br /> <br />
+3. **Training:** Run GEMS_training_workflow with the newly generated dataset.pt file as input
+  ```
+  python GEMS_training_workflow.py --dataset_path example_dataset_2_dataset.pt
+  ```
 
 ## Run GEMS on PDBbind dataset
 Please note that PDBBind dataset needs to be licensed, which is free for academic users (http://www.pdbbind.org.cn/). 
 the code to generate "CleanSplit" dataset from PDBBind, as well as 
  However, we recommend to consider parallel execution of the data preparation scripts if sufficient computing power is available (e.g. on HPC infrastructures for which the user needs to generate own slurm scripts).
 
+
+
+## Run GEMS on your own data
+
+* **Prepare your data:** <br />Ensure that all complexes are stored in the same directory, with proteins saved as PDB files and their corresponding ligands saved as SDF files. Each protein-ligand pair should share the same unique identifier (_ID_) as filenames to indicate they form a complex. For example, use filenames like _ID_.pdb and _ID_.sdf to represent the same complex. If you have affinity labels for your complexes, save them as CSV with two columns. Column 1 header should be "key" and column 2 header should be "log_kd_ki". You can also create a dictionary mapping _ID_ to pK values and save it as a json file <br /> <br />
 
 
 
