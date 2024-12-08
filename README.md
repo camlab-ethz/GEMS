@@ -98,7 +98,7 @@ We provide GEMS models that have been trained on PDBbind CleanSplit using differ
 
 For each model, we provide five stdicts corresponding to the model's originating from 5-fold cross-validation. Depending on the language model embeddings incorporated, these model showed different performance on benchmark datasets:
 
-![Description](model_performances.png)
+![Description](model_stdicts.png)
 
 
 
