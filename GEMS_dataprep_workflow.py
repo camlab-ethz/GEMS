@@ -114,6 +114,7 @@ def main():
                        "--data_dir", args.data_dir, 
                        "--protein_embeddings", "ankh_base", "esm2_t6", 
                        "--ligand_embeddings", "ChemBERTa_77M", 
+                       #"--delete_protein", "True",
                        "--save_path", f"{os.path.dirname(args.data_dir)}{data_dir_name}_dataset.pt"]
     
     
