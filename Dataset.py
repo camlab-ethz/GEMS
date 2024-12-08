@@ -58,6 +58,10 @@ class PDBbind_Dataset(Dataset):
         self.data_dir = root
         self.protein_embeddings = protein_embeddings
         self.ligand_embeddings = ligand_embeddings
+        
+        # Ablation Studies
+        self.delete_protein = delete_protein
+        self.delete_ligand = delete_ligand
 
         
         if data_dict is not None:
