@@ -90,7 +90,7 @@ conda install wandb --channel conda-forge
 ## PDBbind CleanSplit and GEMS
 PDBbind CleanSplit is a refined training dataset for binding affinity prediction models that is based on PDBbind and has been filtered to reduce redundancy and train-test data leakage into the CASF benchmark datasets. The composition of PDBbind CleanSplit can be found in `PDBbind_data/data_splits/PDBbind_CleanSplit_data_split.json`. 
 
-We provide PyTorch datasets of precomputed interaction graphs for PDBbind CleanSplit, for the complete PDBbind database (v.2020) and for the CASF benchmarks on Zenodo (https://doi.org/10.5281/zenodo.14260171). Each pytorch dataset is provided in five versions containing different combinations of language model embeddings in the graph features.
+We provide PyTorch datasets of precomputed interaction graphs for **PDBbind CleanSplit**, for the complete **PDBbind** database (v.2020) and for the **CASF benchmarks** on Zenodo (https://doi.org/10.5281/zenodo.14260171). Each PyTorch dataset is available in five versions containing different combinations of language model embeddings in the graph features.
 
 * `pytorch_datasets_00AEPL` -  ChemBERTa-77M included
 * `pytorch_datasets_B0AEPL` -  ChemBERTa-77M and ankh_base included
