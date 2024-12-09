@@ -80,17 +80,19 @@ OPTIONAL Command-line Arguments (with default values):
 def parse_args():
     parser = argparse.ArgumentParser(description="Training Parameters and Input Dataset Control")
 
-    # Training Dataset
+    # REQUIRED: Training Dataset and Run Name
     parser.add_argument("--dataset_path", required=True, help="The path to the .pt file containing the dataset")
+    parser.add_argument("--run_name", required=True, help="Name of the Run")
     
-    # Model type and training parameters
-    parser.add_argument("--model", required=True, help="The name of the model architecture")
-    parser.add_argument("--log_path", required=True, help="The path for saving results and logs.")
+    # Model type and save path
+    parser.add_argument("--model", default="GATE18d", help="The name of the model architecture")
+    parser.add_argument("--save_dir", default=None, help="The path for saving results and logs. Default: ./run_name/logs")
+
+    # Training Parameters
     parser.add_argument("--loss_func", default='RMSE', help="The loss function that will be used ['MSE', 'RMSE', 'wMSE', 'L1', 'Huber']")
     parser.add_argument("--optim", default='SGD', help="The optimizer that will be used ['Adam', 'Adagrad', 'SGD']")
     parser.add_argument("--wandb", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Wheter or not the run should be streamed to Weights and Biases")
     parser.add_argument("--project_name", default=None, help="Project Name for the saving of run data to Weights and Biases")
-    parser.add_argument("--run_name", required=True, help="Name of the Run to display in saved data and in Weights and Biases (string)")
     parser.add_argument("--n_folds", default=5, type=int, help="The number of stratified folds that should be generated (n-fold-CV)")
     parser.add_argument("--fold_to_train", default=0, type=int, help="Of the n_folds generated, on which fold should the model be trained")
     parser.add_argument("--num_epochs", default=2000, type=int, help="Number of Epochs the model should be trained (int)")
@@ -139,12 +141,15 @@ args = parse_args()
 # Architecture and run settings
 model_arch = args.model
 dataset_path = args.dataset_path
-log_path = args.log_path
+save_dir = args.save_dir
 project_name = args.project_name
 run_name = args.run_name
 wandb_tracking = args.wandb
 torch.manual_seed(0)
 random_seed = args.random_seed
+
+# If no save directory is provided, save in the run_name directory
+if args.save_dir == None: save_dir = f'{run_name}/'
 
 if wandb_tracking: print(f'Saving into Project Folder {project_name}')
 
@@ -161,9 +166,7 @@ conv_dropout_prob = args.conv_dropout
 n_folds = args.n_folds
 fold_to_train = args.fold_to_train
 
-save_dir = log_path
-wandb_dir = log_path
-
+wandb_dir = save_dir
 run_name = f'{run_name}_f{fold_to_train}' 
 
 
@@ -238,9 +241,12 @@ if wandb_tracking:
 pretrained = args.pretrained
 start_epoch = args.start_epoch
 
-if not os.path.exists(save_dir): 
-        os.makedirs(save_dir)
-        print(f'Saving Directory generated')
+if os.path.exists(save_dir):
+    print(f'Aborted: Saving Directory  {save_dir} exists already')
+    sys.exit()
+else:
+    os.makedirs(save_dir)
+    print(f'Saving Directory generated')
 #----------------------------------------------------------------------------------------------------
 
 
