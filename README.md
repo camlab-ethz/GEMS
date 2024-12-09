@@ -1,4 +1,4 @@
-## This is the GitHub Repository for the publication: 
+## This is the GitHub repository for the publication: 
 
 #  GEMS: A Generalizable GNN Framework For Protein-Ligand Binding Affinity Prediction Through Robust Data Filtering and Language Model Integration
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -88,7 +88,7 @@ conda install wandb --channel conda-forge
 ```
 
 ## Provided Versions of GEMS
-We provide GEMS models that have been trained on PDBbind CleanSplit using different levels incorporating language model embeddings: The models are provided:
+We provide GEMS models that have been trained on PDBbind CleanSplit using different levels of incorporating language model embeddings:
 
 * **No embeddings included** - `model/GATE18e_00AEPL_d0100`
 * **ChemBERTa-77M only** - `model/GATE18d_00AEPL_d0100`
@@ -96,7 +96,7 @@ We provide GEMS models that have been trained on PDBbind CleanSplit using differ
 * **ChemBERTa-77M and ESM2-T6** - `model/GATE18d_06AEPL_d0500`
 * **ChemBERTa-77M, ankh_base and ESM2-T6** - `model/GATE18d_B6AEPL_d0500`
 
-For each model, we provide five stdicts corresponding to the model's originating from 5-fold cross-validation. Depending on the language model embeddings incorporated, these model showed different performance on benchmark datasets:
+For each model, we provide five stdicts corresponding to the models originating from 5-fold cross-validation. Depending on the language model embeddings incorporated, these model showed different performance on benchmark datasets:
 
 ![Description](model_stdicts.png)
 
@@ -148,19 +148,29 @@ python GEMS_training_workflow.py --dataset_path <path/to/downloaded/dataset_file
 ```
 
 
-
-
 ### Without precomputed interaction graphs 
-Please note that PDBBind dataset needs to be licensed, which is free for academic users (http://www.pdbbind.org.cn/). After downloading the dataset, save the PDB files and the SDF files in the same directory. Each protein-ligand pair should share the same unique identifier (_ID_) as filenames to indicate they form a complex. For example, use filenames like _ID_.pdb and _ID_.sdf to represent the same complex.
-the code to generate "CleanSplit" dataset from PDBBind, as well as 
- However, we recommend to consider parallel execution of the data preparation scripts if sufficient computing power is available (e.g. on HPC infrastructures for which the user needs to generate own slurm scripts).
+Please note that PDBBind dataset needs to be licensed, which is free for academic users (http://www.pdbbind.org.cn/). After downloading the dataset, save the PDB files and the SDF files in the same directory. Each protein-ligand pair should share the same unique identifier (_ID_) as filenames to indicate they form a complex. For example, use filenames like _ID_.pdb and _ID_.sdf to represent the same complex. For the dataset labels, parse the index file provided with the PDBbind database into a json dictionary (use `PDBbind_data/read_index_into_dict.py` or use the data dict provided in this repository under `PDBbind_data/PDBbind_data_dict.json`). Then you can run the data preparation, which will generate a pytorch dataset of affinity-labelled interactions graphs featurized with ChemBERTa-77M, Ankh-base and ESM2-T6 embeddings.
 
+```
+python GEMS_dataprep_workflow.py --data_dir <your/data/directory> --y_data PDBbind_data_dict.json
+```
+
+Inference:
+```
+python GEMS_inference_workflow.py --dataset_path <path/to/downloaded/dataset_file>
+```
+Training:
+```
+python GEMS_training_workflow.py --dataset_path <path/to/downloaded/dataset_file>
+```
 
 
 ## Run GEMS on your own data
 
 * **Prepare your data:** <br />Ensure that all complexes are stored in the same directory, with proteins saved as PDB files and their corresponding ligands saved as SDF files. Each protein-ligand pair should share the same unique identifier (_ID_) as filenames to indicate they form a complex. For example, use filenames like _ID_.pdb and _ID_.sdf to represent the same complex. If you have affinity labels for your complexes, save them as CSV with two columns. Column 1 header should be "key" and column 2 header should be "log_kd_ki". You can also create a dictionary mapping _ID_ to pK values and save it as a json file <br /> <br />
-
+```
+python GEMS_dataprep_workflow.py --data_dir example_dataset_2 --y_data PDBbind_data/PDBbind_data_dict.json
+```
 
 
 ```
