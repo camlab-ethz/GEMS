@@ -102,34 +102,31 @@ For each model, we provide five stdicts corresponding to the models originating 
 
 
 
-## How to use GEMS
-### Run GEMS on example dataset <br />
+
+## Run GEMS on example dataset <br />
 This repository includes two example datasets of protein-ligand complexes, where each complex comprises a protein stored as a PDB file and a ligand stored as an SDF file. Below are the steps to run inference or training using these provided datasets.
 
-#### Dataset Construction:  
-Use the `GEMS_dataprep_workflow.py` script to preprocess the data and construct the PyTorch dataset. This script generates interaction graphs enriched with language model embeddings (e.g., esm2_t6, ankh_base, and ChemBERTa-77M). Specify the path to your data directory (containing PDB and SDF files) as an argument. If you wish to include affinity labels for training, provide the path to your labels file (CSV or JSON) as an additional input.
-```
-python GEMS_dataprep_workflow.py --data_dir example_dataset_2 --y_data PDBbind_data/PDBbind_data_dict.json
-```
+* **Dataset Construction:** Use the `GEMS_dataprep_workflow.py` script to preprocess the data and construct the PyTorch dataset. This script generates interaction graphs enriched with language model embeddings (e.g., esm2_t6, ankh_base, and ChemBERTa-77M). Specify the path to your data directory (containing PDB and SDF files) as an argument. If you wish to include affinity labels for training, provide the path to your labels file (CSV or JSON) as an additional input.
+    ```
+    python GEMS_dataprep_workflow.py --data_dir example_dataset_2 --y_data PDBbind_data/PDBbind_data_dict.json
+    ```
 
-#### Inference:
-Run `GEMS_inference workflow.py` with the newly generated dataset file as input. This file will load the appropriate model and the dataset and create a CSV file containing pK predictions. If the dataset contains labels, it will produce a prediction scatterplot.
-```
-python GEMS_inference_workflow.py --dataset_path example_dataset_2_dataset.pt
-```
+* **Inference:** Run `GEMS_inference workflow.py` with the newly generated dataset file as input. This file will load the appropriate model and the dataset and create a CSV file containing pK predictions. If the dataset contains labels, it will produce a prediction scatterplot.
+    ```
+    python GEMS_inference_workflow.py --dataset_path example_dataset_2_dataset.pt
+    ```
+    
+* **Training:** Run `GEMS_training_workflow.py` with the newly generated dataset file and a chosen run name as inputs. The script will split the data into training and validation datasets, train GEMS on the training dataset, and validate it on the validation set. A new folder named after the run name will be created to save the training outputs.
+    ```
+    python GEMS_training_workflow.py --dataset_path example_dataset_2_dataset.pt --run_name example_dataset_2_train_run
+    ```
 
-#### Training:
-Run `GEMS_training_workflow.py` with the newly generated dataset file and a chosen run name as inputs. The script will split the data into training and validation datasets, train GEMS on the training dataset, and validate it on the validation set. A new folder named after the run name will be created to save the training outputs. 
-```
-python GEMS_training_workflow.py --dataset_path example_dataset_2_dataset.pt --run_name example_dataset_2_train_run
-```
 
 ## Run GEMS on PDBbind dataset
 
 ### With precomputed interaction graphs from Zenodo
 
 We provide PyTorch datasets of precomputed interaction graphs for the entire PDBbind v.2020 database on Zenodo (https://doi.org/10.5281/zenodo.14260171). These datasets include five different combinations of language model embeddings used to featurize the interaction graphs. For each combination, we provide PyTorch dataset files for the PDBbind training dataset, the PDBbind CleanSplit training dataset, and the CASF2013 and CASF2016 benchmark datasets.
-
 
 * `pytorch_datasets_00AEPL` -  ChemBERTa-77M included
 * `pytorch_datasets_B0AEPL` -  ChemBERTa-77M and ankh_base included
@@ -151,16 +148,22 @@ python GEMS_training_workflow.py --dataset_path <path/to/downloaded/dataset_file
 ### Without precomputed interaction graphs 
 Download the PDBbind database from http://www.pdbbind.org.cn/. Then follow the steps below to construct a dataset of affinity-labelled interactions graphs and run trainining/inference. 
 
-1. **Prepare your data:** Save the PDB files and the SDF files in the same directory. Each protein-ligand pair should share the same unique identifier (_ID_) as filenames to indicate they form a complex. For example, use filenames like _ID_.pdb and _ID_.sdf to represent the same complex.
-2. **Prepare the labels:** Use the provided PDBbind data dictionary in this repository (`PDBbind_data/PDBbind_data_dict.json`) or parse the index file of the PDBbind database into a json dictionary (you can use `PDBbind_data/read_index_into_dict.py`, but you might have to adjust some paths)
-3. **Run the data preparation** using the path to the directory containing your data (PDBs and SDFs) and the path to your labels (CSV or JSON dict) as input. This will generate a pytorch dataset of affinity-labelled interactions graphs featurized with ChemBERTa-77M, Ankh-base and ESM2-T6 embeddings. <br />  <br />
-```python GEMS_dataprep_workflow.py --data_dir <your/data/directory> --y_data PDBbind_data_dict.json```
+* **Prepare your data:** Save the PDB files and the SDF files in the same directory. Each protein-ligand pair should share the same unique identifier (_ID_) as filenames to indicate they form a complex. For example, use filenames like _ID_.pdb and _ID_.sdf to represent the same complex.
+* **Prepare the labels:** Use the provided PDBbind data dictionary in this repository (`PDBbind_data/PDBbind_data_dict.json`) or parse the index file of the PDBbind database into a json dictionary (you can use `PDBbind_data/read_index_into_dict.py`, but you might have to adjust some paths)
+* **Run the data preparation** using the path to the directory containing your data (PDBs and SDFs) and the path to your labels (CSV or JSON dict) as input. This will generate a pytorch dataset of affinity-labelled interactions graphs featurized with ChemBERTa-77M, Ankh-base and ESM2-T6 embeddings.
+    ```
+    python GEMS_dataprep_workflow.py --data_dir <your/data/directory> --y_data PDBbind_data_dict.json
+    ```
 
-4. **Inference:** Run the inference workflow using the generated pytorch dataset as input:<br />  <br />
-```python GEMS_inference_workflow.py --dataset_path <path/to/dataset_file>```
+* **Inference:** Run the inference workflow using the generated pytorch dataset as input:
+    ```
+    python GEMS_inference_workflow.py --dataset_path <path/to/dataset_file>
+    ```
 
-5. **Training:** Run the training workflow using the generated pytorch dataset as input:<br />  <br />
-```python GEMS_training_workflow.py --dataset_path <path/to/dataset_file>```
+* **Training:** Run the training workflow using the generated pytorch dataset as input:
+    ```
+    python GEMS_training_workflow.py --dataset_path <path/to/dataset_file>
+    ```
 
 
 ## Run GEMS on your own data
