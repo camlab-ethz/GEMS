@@ -87,7 +87,7 @@ Optional for training
 conda install wandb --channel conda-forge
 ```
 
-## Provided Versions of GEMS
+## GEMS Variants
 We provide GEMS models that have been trained on PDBbind CleanSplit using different levels of incorporating language model embeddings:
 
 * **No embeddings included** - `model/GATE18e_00AEPL_d0100`
@@ -128,7 +128,7 @@ python GEMS_training_workflow.py --dataset_path example_dataset_2_dataset.pt --r
 
 ### With precomputed interaction graphs from Zenodo
 
-We provide PyTorch datasets of precomputed interaction graphs for the entire PDBbind v.2020 database on Zenodo ([URL]). These datasets include five different combinations of language model embeddings used to featurize the interaction graphs. For each combination, we provide PyTorch dataset files for the PDBbind training dataset, the PDBbind CleanSplit training dataset, and the CASF2013 and CASF2016 benchmark datasets.
+We provide PyTorch datasets of precomputed interaction graphs for the entire PDBbind v.2020 database on Zenodo (https://doi.org/10.5281/zenodo.14260171). These datasets include five different combinations of language model embeddings used to featurize the interaction graphs. For each combination, we provide PyTorch dataset files for the PDBbind training dataset, the PDBbind CleanSplit training dataset, and the CASF2013 and CASF2016 benchmark datasets.
 
 
 * `pytorch_datasets_00AEPL` -  ChemBERTa-77M included
