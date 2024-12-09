@@ -33,10 +33,8 @@ This repository provides all the necessary resources to use GEMS, a graph-based 
 * Recommended GPU: NVIDIA RTX3090 or higher with at least 24GB VRAM memory. <br />
 * Storage: At least 100GB of storage are needed for preprocessing 20'000 protein-ligand complexes.<br />
 * CPU: Part of the code (graph construction) profits from parallelization to several CPUs (about 12h for 20'000 protein-ligand complexes on a single CPU)<br />
-<br />
-We have tested the code using a NVIDIA RTX3090 GPU<br />
 
-We do not recommend to run the code on CPU only systems or normal desktop PCs.
+We have tested the code using a NVIDIA RTX3090 GPU and do not recommend to run training on CPU only or normal desktop PCs.
 
 ### Software Requirements
 The package has been tested on the following systems:
@@ -123,12 +121,12 @@ This repository includes two example datasets of protein-ligand complexes, where
 
 * **Inference:** Run `GEMS_inference workflow.py` with the newly generated dataset file as input. This file will load the appropriate model and the dataset and create a CSV file containing pK predictions. If the dataset contains labels, it will produce a prediction scatterplot.
     ```
-    python GEMS_inference_workflow.py --dataset_path example_dataset_2_dataset.pt
+    python inference.py --dataset_path example_dataset_2_dataset.pt
     ```
     
 * **Training:** Run `GEMS_training_workflow.py` with the newly generated dataset file and a chosen run name as inputs. The script will split the data into training and validation datasets, train GEMS on the training dataset, and validate it on the validation set. A new folder named after the run name will be created to save the training outputs.
     ```
-    python GEMS_training_workflow.py --dataset_path example_dataset_2_dataset.pt --run_name example_dataset_2_train_run
+    python train.py --dataset_path example_dataset_2_dataset.pt --run_name example_dataset_2_train_run
     ```
 
 
@@ -136,12 +134,12 @@ This repository includes two example datasets of protein-ligand complexes, where
 
 We provide PyTorch datasets of precomputed interaction graphs for PDBbind CleanSplit, for the complete PDBbind database (v.2020) and for the CASF benchmarks on Zenodo (https://doi.org/10.5281/zenodo.14260171). Each PyTorch dataset is available in five versions containing different combinations of language model embeddings in the graph features. After downloading the the pytorch datasets (.pt files), you can easily run inference on the datasets.
 ```
-python GEMS_inference_workflow.py --dataset_path <path/to/downloaded/dataset_file>
+python inference.py --dataset_path <path/to/downloaded/dataset_file>
 ```
 
-To retrain GEMS on a downloaded pytorch dataset, run the following command:
+To retrain GEMS on a downloaded pytorch dataset, run the following command with the desired run name:
 ```
-python GEMS_training_workflow.py --dataset_path <path/to/downloaded/dataset_file>
+python train.py --dataset_path <path/to/downloaded/dataset_file>  --run_name downloaded_dataset_train_run
 ```
 
 
