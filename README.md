@@ -152,69 +152,24 @@ python GEMS_training_workflow.py --dataset_path <path/to/downloaded/dataset_file
 Download the PDBbind database from http://www.pdbbind.org.cn/. Then follow the steps below to construct a dataset of affinity-labelled interactions graphs and run trainining/inference. 
 
 1. **Prepare your data:** Save the PDB files and the SDF files in the same directory. Each protein-ligand pair should share the same unique identifier (_ID_) as filenames to indicate they form a complex. For example, use filenames like _ID_.pdb and _ID_.sdf to represent the same complex.
-2. **Prepare the labels** Use the provided PDBbind data dictionary in this repository (`PDBbind_data/PDBbind_data_dict.json`) or parse the index file of the PDBbind database into a json dictionary (you can use `PDBbind_data/read_index_into_dict.py`, but you might have to adjust some paths)
-3. **Run the data preparation** using the path to the directory containing your data (PDBs and SDFs) and the path to your labels (CSV or JSON dict) as input. This will generate a pytorch dataset of affinity-labelled interactions graphs featurized with ChemBERTa-77M, Ankh-base and ESM2-T6 embeddings.
+2. **Prepare the labels:** Use the provided PDBbind data dictionary in this repository (`PDBbind_data/PDBbind_data_dict.json`) or parse the index file of the PDBbind database into a json dictionary (you can use `PDBbind_data/read_index_into_dict.py`, but you might have to adjust some paths)
+3. **Run the data preparation** using the path to the directory containing your data (PDBs and SDFs) and the path to your labels (CSV or JSON dict) as input. This will generate a pytorch dataset of affinity-labelled interactions graphs featurized with ChemBERTa-77M, Ankh-base and ESM2-T6 embeddings. <br />  <br />
+```python GEMS_dataprep_workflow.py --data_dir <your/data/directory> --y_data PDBbind_data_dict.json```
 
-```
-python GEMS_dataprep_workflow.py --data_dir <your/data/directory> --y_data PDBbind_data_dict.json
-```
+4. **Inference:** Run the inference workflow using the generated pytorch dataset as input:<br />  <br />
+```python GEMS_inference_workflow.py --dataset_path <path/to/dataset_file>```
 
-Inference:
-```
-python GEMS_inference_workflow.py --dataset_path <path/to/downloaded/dataset_file>
-```
-Training:
-```
-python GEMS_training_workflow.py --dataset_path <path/to/downloaded/dataset_file>
-```
+5. **Training:** Run the training workflow using the generated pytorch dataset as input:<br />  <br />
+```python GEMS_training_workflow.py --dataset_path <path/to/dataset_file>```
 
 
 ## Run GEMS on your own data
 
-* **Prepare your data:** <br />Ensure that all complexes are stored in the same directory, with proteins saved as PDB files and their corresponding ligands saved as SDF files. Each protein-ligand pair should share the same unique identifier (_ID_) as filenames to indicate they form a complex. For example, use filenames like _ID_.pdb and _ID_.sdf to represent the same complex. If you have affinity labels for your complexes, save them as CSV with two columns. Column 1 header should be "key" and column 2 header should be "log_kd_ki". You can also create a dictionary mapping _ID_ to pK values and save it as a json file <br /> <br />
+**Prepare your data:** <br />Ensure that all complexes are stored in the same directory, with proteins saved as PDB files and their corresponding ligands saved as SDF files. Each protein-ligand pair should share the same unique identifier (_ID_) as filenames to indicate they form a complex. For example, use filenames like _ID_.pdb and _ID_.sdf to represent the same complex. If you have affinity labels for your complexes, save them as CSV with two columns. Column 1 header should be "key" and column 2 header should be "log_kd_ki". You can also create a dictionary mapping _ID_ to pK values and save it as a json file <br /> <br />
 ```
 python GEMS_dataprep_workflow.py --data_dir example_dataset_2 --y_data PDBbind_data/PDBbind_data_dict.json
 ```
 
-
-```
-**Test of installation**<br />
-
-To test the installation we have added two exemplary folders. The first ("example_dataset") can be used to test the training workflow and the second ("example_dataset_2") serves to test the inference workflow. Please execute the following commands:
-
-A) example_training
-For training, path to y_data also needs to be provided for dataset prepation. It can either be provided as csv or as json file. Please note that columns in y_data csv should be: 'key', 'log_kd_ki'
-```
-python GEMS_dataprep_workflow.py --data_dir example_dataset/ --y_data example_dataset/example_training_data.csv
-python GEMS_training_workflow.py --dataset_path example_dataset_dataset.pt 
-```
-B) example_inference
-
-```
-python GEMS_dataprep_workflow.py --data_dir example_dataset_2 --y_data PDBbind_data/PDBbind_data_dict.json
-python GEMS_inference_workflow.py --dataset_path example_dataset_2_dataset.pt 
-```
-
-
-## How to use
-**CleanSplit**<br />
-
-Describe here how to apply CleanSplit on PDBBind dataset or own datasets
-
-<br />
-**Inference**<br />
-To run inference on a set of protein pdbs and ligands, run the following command:<br />
-```
-python inference.py folder_name<br />
-```
-
-<br />
-**Training**<br />
-To retrain the model on your own data, please execute the following steps:<br />
-X
-Y
-Z
-<br />
 
 ## Citation
 Please cite the following publication if you found this ressource helpful:
