@@ -1,4 +1,4 @@
-## This is the GitHub Repository for the publication: 
+## This is the GitHub repository for the publication: 
 
 #  GEMS: A Generalizable GNN Framework For Protein-Ligand Binding Affinity Prediction Through Robust Data Filtering and Language Model Integration
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -87,84 +87,83 @@ Optional for training
 conda install wandb --channel conda-forge
 ```
 
+## PDBbind CleanSplit and GEMS
+PDBbind CleanSplit is a refined training dataset for binding affinity prediction models that is based on PDBbind and has been filtered to reduce redundancy and train-test data leakage into the CASF benchmark datasets. The composition of PDBbind CleanSplit can be found in `PDBbind_data/data_splits/PDBbind_CleanSplit_data_split.json`. 
 
-## How to use GEMS
-### Run GEMS on example dataset <br />
+We provide PyTorch datasets of precomputed interaction graphs for **PDBbind CleanSplit**, for the complete **PDBbind** database (v.2020) and for the **CASF benchmarks** on Zenodo (https://doi.org/10.5281/zenodo.14260171). Each PyTorch dataset is available in five versions containing different combinations of language model embeddings in the graph features.
+
+* `pytorch_datasets_00AEPL` -  ChemBERTa-77M included
+* `pytorch_datasets_B0AEPL` -  ChemBERTa-77M and ankh_base included
+* `pytorch_datasets_06AEPL` -  ChemBERTa-77M and ESM2-T6 included
+* `pytorch_datasets_B6AEPL` -  ChemBERTa-77M, ankh_base and ESM2-T6 included
+* `pytorch_datasets_B6AEPL` -  **Ablation:** ChemBERTa-77M, ankh_base and ESM2-T6 included, protein nodes deleted from graph
+
+In addition, we provide GEMS models that have been trained on each of these datasets: 
+
+* `model/GATE18e_00AEPL_d0100` - No embedding included (trained with GATE18e architecture, neglects ChemBERTa)
+* `model/GATE18d_00AEPL_d0100` - ChemBERTa-77M included
+* `model/GATE18d_B0AEPL_d0600` - ChemBERTa-77M and ankh_base included
+* `model/GATE18d_06AEPL_d0500` - ChemBERTa-77M and ESM2-T6 included
+* `model/GATE18d_B6AEPL_d0500` - ChemBERTa-77M, ankh_base and ESM2-T6 included
+* `model/GATE18d_B6AE0L_d0100` - **Ablation:** ChemBERTa-77M, ankh_base and ESM2-T6 included, protein nodes deleted from graph
+
+For each model, we provide five stdicts corresponding to the models originating from 5-fold cross-validation. Depending on the language model embeddings incorporated, these model showed different performance on benchmark datasets:
+
+![Description](model_stdicts.png)
+
+
+
+## Run GEMS on example dataset <br />
 This repository includes two example datasets of protein-ligand complexes, where each complex comprises a protein stored as a PDB file and a ligand stored as an SDF file. Below are the steps to run inference or training using these provided datasets.
 
-#### Dataset Construction:  
-Use the `GEMS_dataprep_workflow.py` script to preprocess the data and construct the PyTorch dataset. This script generates interaction graphs enriched with language model embeddings (e.g., esm2_t6, ankh_base, and ChemBERTa-77M). Specify the path to your data directory (containing PDB and SDF files) as an argument. If you wish to include affinity labels for training, provide the path to your labels file (CSV or JSON) as an additional input.
+* **Dataset Construction:** Use the `GEMS_dataprep_workflow.py` script to preprocess the data and construct the PyTorch dataset. This script generates interaction graphs enriched with language model embeddings (e.g., esm2_t6, ankh_base, and ChemBERTa-77M). Specify the path to your data directory (containing PDB and SDF files) as an argument. If you wish to include affinity labels for training, provide the path to your labels file (CSV or JSON) as an additional input.
+    ```
+    python GEMS_dataprep_workflow.py --data_dir example_dataset_2 --y_data PDBbind_data/PDBbind_data_dict.json
+    ```
+
+* **Inference:** Run `GEMS_inference workflow.py` with the newly generated dataset file as input. This file will load the appropriate model and the dataset and create a CSV file containing pK predictions. If the dataset contains labels, it will produce a prediction scatterplot.
+    ```
+    python GEMS_inference_workflow.py --dataset_path example_dataset_2_dataset.pt
+    ```
+    
+* **Training:** Run `GEMS_training_workflow.py` with the newly generated dataset file and a chosen run name as inputs. The script will split the data into training and validation datasets, train GEMS on the training dataset, and validate it on the validation set. A new folder named after the run name will be created to save the training outputs.
+    ```
+    python GEMS_training_workflow.py --dataset_path example_dataset_2_dataset.pt --run_name example_dataset_2_train_run
+    ```
+
+
+## Run GEMS on precomputed PDBbind dataset (Zenodo)
+
+We provide PyTorch datasets of precomputed interaction graphs for PDBbind CleanSplit, for the complete PDBbind database (v.2020) and for the CASF benchmarks on Zenodo (https://doi.org/10.5281/zenodo.14260171). Each PyTorch dataset is available in five versions containing different combinations of language model embeddings in the graph features. After downloading the the pytorch datasets (.pt files), you can easily run inference on the datasets.
 ```
-python GEMS_dataprep_workflow.py --data_dir example_dataset_2 --y_data PDBbind_data/PDBbind_data_dict.json
+python GEMS_inference_workflow.py --dataset_path <path/to/downloaded/dataset_file>
 ```
 
-#### Inference:
-Run `GEMS_inference workflow.py` with the newly generated dataset file as input. This file will load the appropriate model and the dataset and create a CSV file containing pK predictions. If the dataset contains labels, it will produce a prediction scatterplot.
+To retrain GEMS on a downloaded pytorch dataset, run the following command:
 ```
-python GEMS_inference_workflow.py --dataset_path example_dataset_2_dataset.pt
-```
-
-#### Training:
-Run `GEMS_training_workflow.py` with the newly generated dataset file and a chosen run name as inputs. The script will split the data into training and validation datasets, train GEMS on the training dataset, and validate it on the validation set. A new folder named after the run name will be created to save the training outputs. 
-```
-python GEMS_training_workflow.py --dataset_path example_dataset_2_dataset.pt --run_name example_dataset_2_train_run
+python GEMS_training_workflow.py --dataset_path <path/to/downloaded/dataset_file>
 ```
 
-## Run GEMS on PDBbind dataset
-Please note that PDBBind dataset needs to be licensed, which is free for academic users (http://www.pdbbind.org.cn/). 
-the code to generate "CleanSplit" dataset from PDBBind, as well as 
- However, we recommend to consider parallel execution of the data preparation scripts if sufficient computing power is available (e.g. on HPC infrastructures for which the user needs to generate own slurm scripts).
+
+## Run GEMS on PDBbind (without precomputed datasets) 
+
+If you're interested in creating interaction graph datasets from the PDBbind source data, see our [training instructions](docs/training.md).
 
 
 
 ## Run GEMS on your own data
+You can easily run inference or train GEMS on your own protein-ligand complex structures by following the steps below:
 
-* **Prepare your data:** <br />Ensure that all complexes are stored in the same directory, with proteins saved as PDB files and their corresponding ligands saved as SDF files. Each protein-ligand pair should share the same unique identifier (_ID_) as filenames to indicate they form a complex. For example, use filenames like _ID_.pdb and _ID_.sdf to represent the same complex. If you have affinity labels for your complexes, save them as CSV with two columns. Column 1 header should be "key" and column 2 header should be "log_kd_ki". You can also create a dictionary mapping _ID_ to pK values and save it as a json file <br /> <br />
+**Prepare your data:** Ensure that all complexes are stored in the same directory, with proteins saved as PDB files and their corresponding ligands saved as SDF files. Each protein-ligand pair should share the same unique identifier (_ID_) as filenames to indicate they form a complex. For example, use filenames like _ID_.pdb and _ID_.sdf to represent the same complex. 
+**Prepare your labels:** If you have affinity labels for your complexes, save them as CSV with two columns. Column 1 header should be "key" and column 2 header should be "log_kd_ki". You can also create a dictionary mapping _ID_ to pK values and save it as a json file following the structure of `PDBbind_data/PDBbind_data_dict.json` 
+**Run the data preparation** using  
+    ```
+    python GEMS_dataprep_workflow.py --data_dir example_dataset_2 --y_data PDBbind_data/PDBbind_data_dict.json
+    ```
 
-
-
-```
-**Test of installation**<br />
-
-To test the installation we have added two exemplary folders. The first ("example_dataset") can be used to test the training workflow and the second ("example_dataset_2") serves to test the inference workflow. Please execute the following commands:
-
-A) example_training
-For training, path to y_data also needs to be provided for dataset prepation. It can either be provided as csv or as json file. Please note that columns in y_data csv should be: 'key', 'log_kd_ki'
-```
-python GEMS_dataprep_workflow.py --data_dir example_dataset/ --y_data example_dataset/example_training_data.csv
-python GEMS_training_workflow.py --dataset_path example_dataset_dataset.pt 
-```
-B) example_inference
-
-```
-python GEMS_dataprep_workflow.py --data_dir example_dataset_2 --y_data PDBbind_data/PDBbind_data_dict.json
-python GEMS_inference_workflow.py --dataset_path example_dataset_2_dataset.pt 
-```
-
-
-## How to use
-**CleanSplit**<br />
-
-Describe here how to apply CleanSplit on PDBBind dataset or own datasets
-
-<br />
-**Inference**<br />
-To run inference on a set of protein pdbs and ligands, run the following command:<br />
-```
-python inference.py folder_name<br />
-```
-
-<br />
-**Training**<br />
-To retrain the model on your own data, please execute the following steps:<br />
-X
-Y
-Z
-<br />
+## License
+Our model and code are released under MIT License, and can be freely used for both academic and commercial purposes.
 
 ## Citation
 Please cite the following publication if you found this ressource helpful:
-add DOI here
 
-## Additional Data Availability
-For fast reproduction of our results, we provide PyTorch datasets of precomputed interaction graphs for the entire PDBbind database on Zenodo (https://doi.org/10.5281/zenodo.14260171). To enable quick establishment of leakage-free evaluation setups with PDBbind, we also provide pairwise similarity matrices for the entire PDBbind dataset on Zenodo.

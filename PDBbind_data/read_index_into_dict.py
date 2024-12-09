@@ -148,5 +148,5 @@ print(f'Number of Datapoints with IC50 = {IC50_complexes}')
 # with open('PDBbind_data_dict2.json', 'wb') as fp:
 #     json.dump(results_general, fp)
 
-with open('PDBbind_data_dict2.json', 'w', encoding='utf-8') as json_file:
+with open('PDBbind_data_dict.json', 'w', encoding='utf-8') as json_file:
     json.dump(results_general, json_file, ensure_ascii=False, indent=4)
