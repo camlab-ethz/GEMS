@@ -119,12 +119,12 @@ This repository includes two example datasets of protein-ligand complexes, where
     python GEMS_dataprep_workflow.py --data_dir example_dataset_2 --y_data PDBbind_data/PDBbind_data_dict.json
     ```
 
-* **Inference:** Run `GEMS_inference workflow.py` with the newly generated dataset file as input. This file will load the appropriate model and the dataset and create a CSV file containing pK predictions. If the dataset contains labels, it will produce a prediction scatterplot.
+* **Inference:** Run `inference.py` with the newly generated dataset file as input. This file will load the appropriate model and the dataset and create a CSV file containing pK predictions. If the dataset contains labels, it will produce a prediction scatterplot.
     ```
     python inference.py --dataset_path example_dataset_2_dataset.pt
     ```
     
-* **Training:** Run `GEMS_training_workflow.py` with the newly generated dataset file and a chosen run name as inputs. The script will split the data into training and validation datasets, train GEMS on the training dataset, and validate it on the validation set. A new folder named after the run name will be created to save the training outputs.
+* **Training:** Run `training.py` with the newly generated dataset file and a chosen run name as inputs. The script will split the data into training and validation datasets, train GEMS on the training dataset, and validate it on the validation set. A new folder named after the run name will be created to save the training outputs.
     ```
     python train.py --dataset_path example_dataset_2_dataset.pt --run_name example_dataset_2_train_run
     ```
