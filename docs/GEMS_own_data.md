@@ -25,7 +25,7 @@ Follow the steps below to construct a dataset of affinity-labelled interactions 
     python -m dataprep.construct_dataset
     --data_dir <data/dir> 
     --save_path <save/output/path/.pt>
-    --data_dict PDBbind_data/PDBbind_data_dict.json 
+    --data_dict <path/to/dict/with/log_kd_ki>
     --protein_embeddings ankh_base esm2_t6
     --ligand_embeddings ChemBERTa_77M
     ```
