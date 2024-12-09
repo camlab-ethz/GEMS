@@ -147,19 +147,12 @@ python GEMS_training_workflow.py --dataset_path <path/to/downloaded/dataset_file
 
 ## Run GEMS on PDBbind (without precomputed datasets) 
 
-If you're interested in creating interaction graph datasets from the PDBbind source data, see our [training instructions](docs/training.md).
-
+If you're interested in creating interaction graph datasets from the PDBbind source data, see our [PDBbind from scratch instructions](docs/GEMS_pdbbind.md).
 
 
 ## Run GEMS on your own data
-You can easily run inference or train GEMS on your own protein-ligand complex structures by following the steps below:
+If you would run GEMS on your own protein-ligand complexes, see our [Run On Your Data Instructions](docs/GEMS_own_data.md)
 
-**Prepare your data:** Ensure that all complexes are stored in the same directory, with proteins saved as PDB files and their corresponding ligands saved as SDF files. Each protein-ligand pair should share the same unique identifier (_ID_) as filenames to indicate they form a complex. For example, use filenames like _ID_.pdb and _ID_.sdf to represent the same complex. 
-**Prepare your labels:** If you have affinity labels for your complexes, save them as CSV with two columns. Column 1 header should be "key" and column 2 header should be "log_kd_ki". You can also create a dictionary mapping _ID_ to pK values and save it as a json file following the structure of `PDBbind_data/PDBbind_data_dict.json` 
-**Run the data preparation** using  
-    ```
-    python GEMS_dataprep_workflow.py --data_dir example_dataset_2 --y_data PDBbind_data/PDBbind_data_dict.json
-    ```
 
 ## License
 Our model and code are released under MIT License, and can be freely used for both academic and commercial purposes.
