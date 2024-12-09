@@ -107,7 +107,7 @@ In addition, we provide GEMS models that have been trained on each of these data
 
 For each model, we provide five stdicts corresponding to the models originating from 5-fold cross-validation. Depending on the language model embeddings incorporated, these model showed different performance on benchmark datasets:
 
-![Description](model_stdicts.png)
+![Description](docs/model_stdicts.png)
 
 
 
