@@ -149,7 +149,11 @@ python GEMS_training_workflow.py --dataset_path <path/to/downloaded/dataset_file
 
 
 ### Without precomputed interaction graphs 
-Please note that PDBBind dataset needs to be licensed, which is free for academic users (http://www.pdbbind.org.cn/). After downloading the dataset, save the PDB files and the SDF files in the same directory. Each protein-ligand pair should share the same unique identifier (_ID_) as filenames to indicate they form a complex. For example, use filenames like _ID_.pdb and _ID_.sdf to represent the same complex. For the dataset labels, parse the index file provided with the PDBbind database into a json dictionary (use `PDBbind_data/read_index_into_dict.py` or use the data dict provided in this repository under `PDBbind_data/PDBbind_data_dict.json`). Then you can run the data preparation, which will generate a pytorch dataset of affinity-labelled interactions graphs featurized with ChemBERTa-77M, Ankh-base and ESM2-T6 embeddings.
+Download the PDBbind database from http://www.pdbbind.org.cn/. Then follow the steps below to construct a dataset of affinity-labelled interactions graphs and run trainining/inference. 
+
+1. **Prepare your data:** Save the PDB files and the SDF files in the same directory. Each protein-ligand pair should share the same unique identifier (_ID_) as filenames to indicate they form a complex. For example, use filenames like _ID_.pdb and _ID_.sdf to represent the same complex.
+2. **Prepare the labels** Use the provided PDBbind data dictionary in this repository (`PDBbind_data/PDBbind_data_dict.json`) or parse the index file of the PDBbind database into a json dictionary (you can use `PDBbind_data/read_index_into_dict.py`, but you might have to adjust some paths)
+3. **Run the data preparation** using the path to the directory containing your data (PDBs and SDFs) and the path to your labels (CSV or JSON dict) as input. This will generate a pytorch dataset of affinity-labelled interactions graphs featurized with ChemBERTa-77M, Ankh-base and ESM2-T6 embeddings.
 
 ```
 python GEMS_dataprep_workflow.py --data_dir <your/data/directory> --y_data PDBbind_data_dict.json
