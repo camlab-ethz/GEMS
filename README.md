@@ -87,7 +87,7 @@ PDBbind CleanSplit is a refined training dataset for binding affinity prediction
 
 We provide PyTorch datasets of precomputed interaction graphs for **PDBbind CleanSplit**, for the complete **PDBbind** database (v.2020) and for the **CASF benchmarks** on Zenodo (https://doi.org/10.5281/zenodo.14260171). 
 
-For more information on the available GEMS variants and published datasets, see [GEMS variants and datasets](docs/GEMS_variants_and_datasets)
+For more information on the available GEMS variants and published datasets, see [GEMS variants and datasets](docs/GEMS_variants_and_datasets.md)
 
 
 
