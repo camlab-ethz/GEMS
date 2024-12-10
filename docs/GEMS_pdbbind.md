@@ -15,36 +15,19 @@ Download the PDBbind database from http://www.pdbbind.org.cn/. Then follow the s
 * **Run the graph construction:** To construct interaction graphs for all protein-ligand complexes in your data directory (incorporating language model embeddings), run the following command with the desired combination of protein and ligand embeddings:
 
     ```
-    python -m dataprep.graph_construction
-    --data_dir <data/dir>
-    --protein_embeddings ankh_base esm2_t6
-    --ligand_embeddings ChemBERTa_77M
+    python -m dataprep.graph_construction --data_dir <data/dir> --protein_embeddings ankh_base esm2_t6 --ligand_embeddings ChemBERTa_77M
     ```
   
 * **Run the dataset construction:** You need to provide the path to the directory containing your data (--data_dir) and the path to save the dataset (--save_path). To include the labels, provide also the path to the JSON file containing the log_kd_ki values. In addition, provide the split dictionary and the dataset (corresponding to a key in the dictionary) for which the PyTorch dataset should be contstructed. Finally, add the protein embeddings and the ligand embeddings that should be used to featurize the graphs (any combination of the embeddings included in the graph construction process is possible). This will generate a pytorch dataset of affinity-labelled interactions graphs featurized with the desired language model embeddings.
 
     **PDBbind training dataset:** Replace "train" with "casf2013" or "casf2016" to build datasets for CASF
     ```
-    python -m dataprep.construct_dataset
-    --data_dir <data/dir> 
-    --save_path <save/output/path/.pt>
-    --data_split PDBbind_data/data_splits/PDBbind_data_split.json
-    --dataset train
-    --data_dict PDBbind_data/PDBbind_data_dict.json 
-    --protein_embeddings ankh_base esm2_t6
-    --ligand_embeddings ChemBERTa_77M
+    python -m dataprep.construct_dataset --data_dir <data/dir> --save_path <output/path.pt> --data_split PDBbind_data/data_splits/PDBbind_data_split.json --dataset train --data_dict PDBbind_data/PDBbind_data_dict.json --protein_embeddings ankh_base esm2_t6 --ligand_embeddings ChemBERTa_77M
     ```
     
     **PDBbind CleanSplit training dataset:** Replace "train" with "casf2013" or "casf2016" to build datasets for CASF
     ```
-    python -m dataprep.construct_dataset
-    --data_dir <data/dir> 
-    --save_path <save/output/path/.pt>
-    --data_split PDBbind_data/data_splits/PDBbind_CleanSplit_data_split.json
-    --dataset train
-    --data_dict PDBbind_data/PDBbind_data_dict.json 
-    --protein_embeddings ankh_base esm2_t6
-    --ligand_embeddings ChemBERTa_77M
+    python -m dataprep.construct_dataset --data_dir <data/dir> --save_path <output/path.pt> --data_split PDBbind_data/data_splits/PDBbind_CleanSplit_data_split.json --dataset train --data_dict PDBbind_data/PDBbind_data_dict.json --protein_embeddings ankh_base esm2_t6 --ligand_embeddings ChemBERTa_77M
     ```
 
   

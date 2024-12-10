@@ -37,9 +37,9 @@ def calculate_cbeta_position(ca_coords, c_coords, n_coords):
 # Example usage:
 # Rediscover the C-beta position of the first Alanine in the Protein 1a1e
 
-ca_coords = [56.186, 28.522, 20.346]
-c_coords = [54.837, 28.636, 19.657]
-n_coords = [56.845, 27.237, 20.207]
+# ca_coords = [56.186, 28.522, 20.346]
+# c_coords = [54.837, 28.636, 19.657]
+# n_coords = [56.845, 27.237, 20.207]
 
-cb_coords = calculate_cbeta_position(ca_coords, c_coords, n_coords)
-print("Cβ coordinates:", cb_coords)
+# cb_coords = calculate_cbeta_position(ca_coords, c_coords, n_coords)
+# print("Cβ coordinates:", cb_coords)
