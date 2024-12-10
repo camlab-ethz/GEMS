@@ -32,17 +32,19 @@ Description:
     
 REQUIRED Command-line Arguments:
     --dataset_path:         REQUIRED - Path to the .pt file containing the dataset.
-    --model:                REQUIRED - Name of the model architecture.
-    --log_path:             REQUIRED - Path for saving results and logs.
     --run_name:             REQUIRED - Name of the run for saving results and logs.
 
 OPTIONAL Command-line Arguments (with default values):
+
+    --save_dir:             OPTIONAL - The path for saving results and logs. Default: run_name/
+
     TRAIN-VALIDATION SPLIT
     --n_folds:              OPTIONAL - Number of stratified folds for n-fold cross-validation
     --fold_to_train:        OPTIONAL - Fold to be used for training
     --random_seed:          OPTIONAL - Random seed for dataset splitting.
 
     MODEL PARAMETERS
+    --model:                OPTIONAL - Name of the model architecture to be used [GATE18d, GATE18e]
     --loss_func:            OPTIONAL - Loss function to be used ['MSE', 'RMSE', 'wMSE', 'L1', 'Huber'].
     --optim:                OPTIONAL - Optimizer to be used ['Adam', 'Adagrad', 'SGD'].
     --num_epochs:           OPTIONAL - Number of epochs for training.
@@ -86,7 +88,7 @@ def parse_args():
     
     # Model type and save path
     parser.add_argument("--model", default="GATE18d", help="The name of the model architecture")
-    parser.add_argument("--save_dir", default=None, help="The path for saving results and logs. Default: ./run_name/logs")
+    parser.add_argument("--save_dir", default=None, help="The path for saving results and logs. Default: run_name/")
 
     # Training Parameters
     parser.add_argument("--loss_func", default='RMSE', help="The loss function that will be used ['MSE', 'RMSE', 'wMSE', 'L1', 'Huber']")
