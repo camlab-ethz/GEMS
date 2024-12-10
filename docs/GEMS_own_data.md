@@ -4,7 +4,10 @@ Follow the steps below to construct a dataset of affinity-labelled interactions 
 
 * **Prepare your data:** Save PDB and the SDF files of your dataset in a directory. Each protein-ligand pair should share the same unique identifier (_ID_) as filenames to indicate they form a complex. For example, use filenames like _ID_.pdb and _ID_.sdf to represent the same complex.
 
-* **Prepare the labels:** Prepare your labels by writing a CSV file mapping _ID_ to pK values (columns "key" and "log_kd_ki"). 
+* **Prepare the labels:** Prepare your labels by writing a creating a JSON file containing a dictionary mapping _ID_ to log_kd_ki values (as in `PDBbind_data/PDBbind_data_dict.json`). Alternatively, you can create a CSV file mapping _ID_ to pK values (columns "key" and "log_kd_ki") and convert it into a JSON dictionary with the following command. 
+    ```
+    python -m utils.convert_csv_to_json --input_file <path/to/CSV> --output_file <path/to/output/JSON>
+    ```
 
 * **Compute Language Model Embeddings:** To compute ChemBERTa-77M, ANKH-Base and ESM2-T6 embeddings and save them in your data directory, you can run the following commands. 
 

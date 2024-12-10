@@ -22,12 +22,12 @@ Download the PDBbind database from http://www.pdbbind.org.cn/. Then follow the s
 
     **PDBbind training dataset:** Replace "train" with "casf2013" or "casf2016" to build datasets for CASF
     ```
-    python -m dataprep.construct_dataset --data_dir <data/dir> --save_path <output/path.pt> --data_split PDBbind_data/data_splits/PDBbind_data_split.json --dataset train --data_dict PDBbind_data/PDBbind_data_dict.json --protein_embeddings ankh_base esm2_t6 --ligand_embeddings ChemBERTa_77M
+    python -m dataprep.construct_dataset --data_dir <data/dir> --save_path <output/path.pt> --data_split PDBbind_data/PDBbind_data_split_pdbbind.json --dataset train --data_dict PDBbind_data/PDBbind_data_dict.json --protein_embeddings ankh_base esm2_t6 --ligand_embeddings ChemBERTa_77M
     ```
     
     **PDBbind CleanSplit training dataset:** Replace "train" with "casf2013" or "casf2016" to build datasets for CASF
     ```
-    python -m dataprep.construct_dataset --data_dir <data/dir> --save_path <output/path.pt> --data_split PDBbind_data/data_splits/PDBbind_CleanSplit_data_split.json --dataset train --data_dict PDBbind_data/PDBbind_data_dict.json --protein_embeddings ankh_base esm2_t6 --ligand_embeddings ChemBERTa_77M
+    python -m dataprep.construct_dataset --data_dir <data/dir> --save_path <output/path.pt> --data_split PDBbind_data/PDBbind_data_split_cleansplit.json --dataset train --data_dict PDBbind_data/PDBbind_data_dict.json --protein_embeddings ankh_base esm2_t6 --ligand_embeddings ChemBERTa_77M
     ```
 
   
