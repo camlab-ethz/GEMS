@@ -14,10 +14,10 @@ PDBbind_dataset_filtering/*.json
 PDBbind_search_algorithms/
 
 model/INITIAL/*
-example_dataset_2/*pt
-example_dataset_2/*csv
-example_dataset_2/*pth
-example_dataset_2/.logs/
+example_dataset/*pt
+example_dataset/*csv
+example_dataset/*pth
+example_dataset/.logs/
 
 PDBbind_preprocessed/
 PDBbind_splits/
