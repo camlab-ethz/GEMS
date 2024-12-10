@@ -4,51 +4,7 @@ import argparse
 import subprocess
 import sys
 import os
-import csv
-import json
-
-def convert_csv_to_json(input_file, output_file):
-    """
-    Convert a CSV file to a JSON file with a specific structure.
-    
-    Args:
-        input_file (str): Path to the input CSV file
-        output_file (str): Path to the output JSON file
-    
-    Returns:
-        str: Path to the generated JSON file
-    """
-    # Read CSV data and convert to the desired JSON structure
-    data_dict = {}
-    try:
-        with open(input_file, "r") as csv_file:
-            csv_reader = csv.reader(csv_file, delimiter=";")
-            for row in csv_reader:
-                if len(row) == 2:  # Ensure there are exactly two items: key and value
-                    key = row[0].strip()  # The outer key
-                    value = row[1].strip().lstrip("_")  # Remove leading underscores
-                    try:
-                        # Build the required nested structure
-                        data_dict[key] = {
-                            "log_kd_ki": float(value),
-                            "dataset": ["general"],  # Default dataset list
-                        }
-                    except ValueError:
-                        # Skip non-numeric rows
-                        print(f"Skipping row: {row}")
-        
-        # Write dictionary to JSON file
-        with open(output_file, "w") as json_file:
-            json.dump(data_dict, json_file, indent=4)
-        
-        print(f"Data successfully written to {output_file}")
-        return output_file
-    
-    except Exception as e:
-        print(f"Error converting CSV to JSON: {e}")
-        sys.exit(1)
-
-
+from utils.convert_csv_to_json import convert_csv_to_json  # Ensure proper import
 
 def run_command(command):
     """
@@ -69,10 +25,8 @@ def run_command(command):
         print(f"Error output: {e.stderr}")
         sys.exit(1)
 
-
-
 def main():
-    parser = argparse.ArgumentParser(description="Machine Learning Workflow Execution")
+    parser = argparse.ArgumentParser(description="GEMS Data Preparation Workflow Execution")
     parser.add_argument('--data_dir', type=str, required=True, 
                         help='Directory for input and output data')
     parser.add_argument('--y_data', type=str, default=None, 
@@ -83,7 +37,7 @@ def main():
         print(f"Error: Data directory {args.data_dir} does not exist.")
         sys.exit(1)
 
-
+    # Define the workflow commands
     workflow_commands = [
         # Ankh Features
         ["python", "-m", "dataprep.ankh_features", 
@@ -107,41 +61,36 @@ def main():
          "--ligand_embeddings", "ChemBERTa_77M"]
     ]
     
+    # Build the dataset construction command
     data_dir_name = os.path.basename(os.path.normpath(args.data_dir))
-
-    # Dataset Construction (conditionally add y_data)
     dataset_command = ["python", "-m", "dataprep.construct_dataset", 
                        "--data_dir", args.data_dir, 
                        "--protein_embeddings", "ankh_base", "esm2_t6", 
                        "--ligand_embeddings", "ChemBERTa_77M", 
-                       #"--delete_protein", "True",
-                       "--save_path", f"{os.path.dirname(args.data_dir)}{data_dir_name}_dataset.pt"]
-    
-    
+                       "--save_path", f"{os.path.dirname(args.data_dir)}/{data_dir_name}_dataset.pt"]
 
     # Process y_data if provided
     if args.y_data:
-        # Determine if input is CSV or JSON and convert if necessary
         y_data_file = args.y_data
         if args.y_data.lower().endswith('.csv'):
-            # Convert CSV to JSON
+            # Convert CSV to JSON if it's in CSV format
             y_data_file = os.path.join(args.data_dir, 'y_data_converted.json')
-            y_data_file = convert_csv_to_json(args.y_data, y_data_file)
+            y_data_file = convert_csv_to_json(args.y_data, y_data_file)  # Call the conversion function
         elif not args.y_data.lower().endswith('.json'):
-            print(f"Error: Unsupported file type. Please provide a CSV or JSON file.")
+            print(f"Error: Unsupported file type. Please provide a CSV or JSON file as defined in our GitHub documentation.")
             sys.exit(1)
-        
+
         if not os.path.exists(y_data_file):
             print(f"Error: Y data file {y_data_file} does not exist.")
             sys.exit(1)
         
+        # Add the y_data file to the dataset command
         dataset_command.extend(["--data_dict", y_data_file])
-    
 
-
-    # Add dataset construction command to workflow
+    # Append the dataset command to the workflow
     workflow_commands.append(dataset_command)
 
+    # Run all workflow commands
     for command in workflow_commands:
         run_command(command)
     
