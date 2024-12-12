@@ -21,6 +21,12 @@ The script performs the following steps:
 
 """
 
+# INPUTS ------------------------------------------------------------------------------------------------
+
+tanimoto_threshold = 0.9
+TM_threshold = 0.8
+S_threshold = 0.8
+label_threshold = 1.0
 
 # Define the test dataset complexes
 with open('PDBbind_data/data_splits/PDBbind_data_split.json') as f:
@@ -29,9 +35,6 @@ with open('PDBbind_data/data_splits/PDBbind_data_split.json') as f:
     casf2016 = original_split_dict['casf2016']
 test_dataset = casf2013 + casf2016
 
-
-# Initialize the split of the filtered dataset
-split_dict = {'casf2016': casf2016, 'casf2013': casf2013}
 
 # Get the dict with the complexes' affinities from the json file
 with open('PDBbind_data/PDBbind_data_dict.json', 'r') as f:
@@ -42,6 +45,10 @@ PSM_tanimoto_file = 'PDBbind_data/similarity/pairwise_similarity_matrix/pairwise
 PSM_tm_scores_file = 'PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tm_scores.hdf5'
 PSM_rmsd_file = 'PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_rmsd_ligand.hdf5'
 
+# Get the indexes and names from json file
+with open('PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_complexes.json', 'r') as f:
+    complexes = json.load(f)
+# -------------------------------------------------------------------------------------------------------
 
 
 # -------------------------------------------------------------------------------
@@ -53,10 +60,8 @@ PSM_rmsd_file = 'PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_sim
 # Keep a log file with the reasons for the training set removals
 log_file = open('remove_train_test_sims.log', 'w')
 
-# Get the indexes and names from json file
-with open('PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_complexes.json', 'r') as f:
-    complexes = json.load(f)
-
+# Initialize the split of the filtered dataset
+split_dict = {'casf2016': casf2016, 'casf2013': casf2013}
 
 # Create list of test complexes and a list of training complexes
 train_or_test = np.array([0 if complex in test_dataset else 1 for complex in complexes])
@@ -115,7 +120,7 @@ for test_idx, test_complex in test_set:
 
 
     # Filter the training complexes that fulfill the conditions
-    mask1 = (tanimoto > 0.9) | ((tm_scores > 0.8) & (tanimoto + (1 - rmsds) > 0.8))
+    mask1 = (tanimoto > tanimoto_threshold) | ((tm_scores > TM_threshold) & (tanimoto + (1 - rmsds) > S_threshold))
     mask2 = (train_or_test == 1)
     mask = mask1 & mask2
     
@@ -130,7 +135,7 @@ for test_idx, test_complex in test_set:
         # Check the difference between the affinity_values
         # If the absolute difference is lower than 1, remove the training complex
         dpK = np.abs(affinity_data[complex]['log_kd_ki'] - test_complex_affinity)
-        if dpK < 1:
+        if dpK < label_threshold:
 
             if (tm_scores[idx] > 0.8) & (tanimoto[idx] + (1 - rmsds[idx]) > 0.8):
                 reason = "COMPL SIMILARITY"

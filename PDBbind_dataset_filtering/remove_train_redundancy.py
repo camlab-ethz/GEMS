@@ -2,18 +2,17 @@ import h5py
 import json
 import numpy as np
 
-input_data_split = 'PDBbind_dataset_filtering/PDBbind_split_leakage_removed.json'
-output_data_split = 'PDBbind_dataset_filtering/PDBbind_split_leakage_redund_removed.json'
 
+# INPUTS
+# -----------------------------------------------------------------------------------------------
 
 # Thresholds for filtering based on TM-scores, S = tanimoto+(1-RMSE) and label differences
 TM_threshold = 0.8
 S_threshold = 1.3
 label_threshold = 0.5
 
-
-# INPUT DATA
-# -----------------------------------------------------------------------------------------------
+input_data_split = 'PDBbind_dataset_filtering/PDBbind_split_leakage_removed.json'
+output_data_split = 'PDBbind_dataset_filtering/PDBbind_split_leakage_redund_removed.json'
 
 # Define the path to the pairwise similarity matrices (PSM)
 PSM_tanimoto_file = 'PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tanimoto.hdf5'
