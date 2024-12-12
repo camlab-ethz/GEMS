@@ -133,7 +133,7 @@ If you would run GEMS on your own protein-ligand complexes, see our [Run On Your
 
 
 ## Dataset Filtering
-This repository includes code of a filtering algorithm that has been used to generate PDBbind CleanSplit. If you are interested in filtering the PDBbind database yourself or filter your own dataset of protein-ligand complexes, see our [Dataset Filtering Instructions](docs/dataset_filtering.md
+This repository includes code of a filtering algorithm that has been used to generate PDBbind CleanSplit. If you are interested in filtering the PDBbind database yourself or filter your own dataset of protein-ligand complexes, see our [Dataset Filtering Instructions](docs/dataset_filtering.md)
 
 
 ## License
