@@ -18,7 +18,7 @@ David Graber [1,2,3], Peter Stockinger[2], Fabian Meyer [2], Siddhartha Mishra [
 <br />
 § corresponding authors
 <br /> <br />
-**Preprint:** https://doi.org/10.1101/2024.12.09.627482
+**Preprint:** https://www.biorxiv.org/content/10.1101/2024.12.09.627482v1
 
 ## Overview 
 This repository provides all the necessary resources to use GEMS, a graph-based deep learning model for protein-ligand binding affinity prediction. Here we provide instructions for installing dependencies, and detailed guide for preparing datasets, training the model, and running inference. Below we also explain how to use the PDBbind CleanSplit dataset, a refined training dataset based on PDBbind introduced to eliminate data leakage and improve model generalization. Step-by-step examples are provided to help apply GEMS to your own data or benchmark datasets.
