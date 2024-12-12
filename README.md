@@ -133,7 +133,7 @@ If you would run GEMS on your own protein-ligand complexes, see our [Run On Your
 
 
 ## Dataset Filtering
-This repository includes code of a filtering algorithm that has been used to generate PDBbind CleanSplit. If you are interested in filtering the PDBbind database yourself or filter your own dataset of protein-ligand complexes, see our [Dataset Filtering Instructions](docs/dataset_filtering.md)
+This repository includes code of a filtering algorithm that has been used to remove data leakage and training dataset redundancy from PDBbind, resulting int PDBbind CleanSplit. If you are interested in filtering the PDBbind database yourself, see our [Dataset Filtering Instructions](docs/dataset_filtering.md)
 
 
 ## License
@@ -142,3 +142,12 @@ Our model and code are released under MIT License, and can be freely used for bo
 ## Citation
 Please cite the following publication if you found this ressource helpful:
 
+```bibtex
+@article {Graber2024.12.09.627482,
+	author = {Graber, David and Stockinger, Peter and Meyer, Fabian and Mishra, Siddhartha and Horn, Claus and Buller, Rebecca M. U.},
+	title = {GEMS: A Generalizable GNN Framework For Protein-Ligand Binding Affinity Prediction Through Robust Data Filtering and Language Model Integration},
+	elocation-id = {2024.12.09.627482},
+	year = {2024},
+	doi = {10.1101/2024.12.09.627482},
+}
+```
