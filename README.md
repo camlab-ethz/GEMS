@@ -132,6 +132,10 @@ If you're interested in creating interaction graph datasets from the PDBbind sou
 If you would run GEMS on your own protein-ligand complexes, see our [Run On Your Data Instructions](docs/GEMS_own_data.md)
 
 
+## Dataset Filtering
+This repository includes code of a filtering algorithm that has been used to generate PDBbind CleanSplit. If you are interested in filtering the PDBbind database yourself or filter your own dataset of protein-ligand complexes, see our [Dataset Filtering Instructions](docs/dataset_filtering.md
+
+
 ## License
 Our model and code are released under MIT License, and can be freely used for both academic and commercial purposes.
 
