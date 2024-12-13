@@ -9,37 +9,32 @@
 
 David Graber [1,2,3], Peter Stockinger[2], Fabian Meyer [2], Siddhartha Mishra [1]§ Claus Horn [4]§, and Rebecca Buller [2]§
 
-<br />
-1 Seminar for Applied Mathematics, Department of Mathematics, and ETH AI Center, ETH Zurich, 8092 Zurich, Switzerland
-<br />
-2 Competence Center for Biocatalysis, Zurich University of Applied Sciences, 8820 Waedenswil, Switzerland
-<br />
-3 Institute for Computational Life Sciences, Zurich University of Applied Sciences, 8820 Waedenswil, Switzerland
-<br />
-4 School of Medicine, Yale University, New Haven, CT 06510, USA
-<br />
-§ corresponding authors
-<br /> <br />
-**Preprint:** https://www.biorxiv.org/content/10.1101/2024.12.09.627482v1
-**Dataset:** https://doi.org/10.5281/zenodo.14260171 
+<sub>1 Seminar for Applied Mathematics, Department of Mathematics, and ETH AI Center, ETH Zurich, 8092 Zurich, Switzerland</sub><br />
+<sub>2 Competence Center for Biocatalysis, Zurich University of Applied Sciences, 8820 Waedenswil, Switzerland</sub><br />
+<sub>3 Institute for Computational Life Sciences, Zurich University of Applied Sciences, 8820 Waedenswil, Switzerland</sub><br />
+<sub>4 School of Medicine, Yale University, New Haven, CT 06510, USA</sub><br />
+<sub>§ corresponding authors</sub>
+<br /> <br /> 
+Preprint: https://www.biorxiv.org/content/10.1101/2024.12.09.627482v1 <br />
+Dataset: https://doi.org/10.5281/zenodo.14260171 
 
 ## Overview 
 This repository provides all resources required to use **GEMS**, a graph-based deep learning model designed for protein-ligand binding affinity prediction. It includes instructions for installing dependencies, preparing datasets, training the model, and running inference. The repository also features **PDBbind CleanSplit**, a refined training dataset based on PDBbind that minimizes data leakage and enhances model generalization. Detailed examples demonstrate how to apply GEMS to your data.
 
 
 ## Hardware Requirements
-### Training and Inference
-- **GPU:** NVIDIA RTX3090 or higher, with at least 24GB VRAM. We have tested the code using a NVIDIA RTX3090 GPU and do not recommend to run training on CPU only or normal desktop PCs.
-- **Storage:** About 5GB of storage are needed for storing a fully-featurized training dataset of 20'000 interaction graphs.
+* **Training and Inference**
+	- **GPU:** NVIDIA RTX3090 or higher, with at least 24GB VRAM. We have tested the code using a NVIDIA RTX3090 GPU and do not recommend to run training on CPU only or normal desktop PCs.
+	- **Storage:** About 5GB of storage are needed for storing a fully-featurized training dataset of 20'000 interaction graphs.
 
-#### Graph and Dataset Construction (not needed if precomputed datasets from Zenodo are used)
-- **CPU:** Multi-core processors are recommended; graph construction takes ~12 hours for 20,000 complexes on a single CPU
-- **Storage:** At least 100GB of storage are needed for preprocessing 20'000 protein-ligand complexes.
+* **Graph and Dataset Construction** (not needed if precomputed datasets from Zenodo are used)
+	- **CPU:** Multi-core processors are recommended; graph construction takes ~12 hours for 20,000 complexes on a single CPU
+	- **Storage:** At least 100GB of storage are needed for preprocessing 20'000 protein-ligand complexes.
 
-### Software Requirements
+## Software Requirements
 The code has been tested on the following systems:
-Ubuntu 22.04 LTS
-Ubuntu 24.04 LTS
+- Ubuntu 22.04 LTS
+- Ubuntu 24.04 LTS
 
 **Python Dependencies** <br />
 We recommend using `miniconda3` to set up a Python 3.10 virtual environment. This software has been tested with the following package versions:
@@ -110,27 +105,26 @@ This repository includes an example dataset of protein-ligand complexes, where e
     ```
 
 
-## On precomputed PDBbind dataset (Zenodo)
+### On precomputed PDBbind dataset (Zenodo)
 
 Download PyTorch datasets of precomputed interaction graphs from [Zenodo](https://doi.org/10.5281/zenodo.14260171) and run:
 
-**Inference:**  
-```
-python inference.py --dataset_path <path/to/downloaded/dataset_file>
-```
+* **Inference:**  
+    ```
+    python inference.py --dataset_path <path/to/downloaded/dataset_file>
+    ```
 
-**Training:**  
-```
-python train.py --dataset_path <path/to/downloaded/dataset_file>  --run_name downloaded_dataset_train_run
-```
+* **Training:**  
+    ```
+    python train.py --dataset_path <path/to/downloaded/dataset_file>  --run_name downloaded_dataset_train_run
+    ```
 
 
-## Run GEMS on PDBbind (without precomputed datasets) 
-
+### On PDBbind (without precomputed datasets) 
 If you're interested in creating interaction graph datasets from the PDBbind source data, see our [PDBbind from scratch instructions](docs/GEMS_pdbbind.md).
 
 
-## Run GEMS on your own data
+### On your own data
 For running GEMS on your own protein-ligand complexes, refer to [Run on Your Data](docs/GEMS_own_data.md).
 
 
