@@ -116,8 +116,14 @@ Download PyTorch datasets of precomputed interaction graphs from [Zenodo](https:
 
 * **Training:**  
     ```
-    python train.py --dataset_path <path/to/downloaded/dataset_file>  --run_name downloaded_dataset_train_run
+    python train.py --dataset_path <path/to/downloaded/train/set>  --run_name downloaded_dataset_train_run
     ```
+
+* **Test:** Test the newly trained model with `test.py`, using the saved stdict and the path to a test dataset as input. If you want to test an ensemble of several models, provide all stdicts in a comma-separated string.
+    ```
+    python test.py --dataset_path <path/to/downloaded/test/set> --stdicts cleansplit_run/cleansplit_run_f0_best_stdict.pt
+    ```
+    
 
 
 ### On PDBbind (without precomputed datasets) 
