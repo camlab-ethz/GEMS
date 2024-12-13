@@ -6,10 +6,8 @@
 [![Conda](https://img.shields.io/badge/conda-supported-green.svg)](https://docs.conda.io/)
 [![Docker](https://img.shields.io/badge/docker-supported-blue.svg)](https://www.docker.com/)
 
-
 David Graber [1,2,3], Peter Stockinger[2], Fabian Meyer [2], Siddhartha Mishra [1]§ Claus Horn [4]§, and Rebecca Buller [2]§
 
-<br />
 1 Seminar for Applied Mathematics, Department of Mathematics, and ETH AI Center, ETH Zurich, 8092 Zurich, Switzerland
 <br />
 2 Competence Center for Biocatalysis, Zurich University of Applied Sciences, 8820 Waedenswil, Switzerland
@@ -19,7 +17,8 @@ David Graber [1,2,3], Peter Stockinger[2], Fabian Meyer [2], Siddhartha Mishra [
 4 School of Medicine, Yale University, New Haven, CT 06510, USA
 <br />
 § corresponding authors
-
+<br /> <br />
+**Preprint:** https://www.biorxiv.org/content/10.1101/2024.12.09.627482v1
 
 ## Overview 
 This repository provides all resources required to use **GEMS**, a graph-based deep learning model designed for protein-ligand binding affinity prediction. It includes instructions for installing dependencies, preparing datasets, training the model, and running inference. The repository also features **PDBbind CleanSplit**, a refined training dataset based on PDBbind that minimizes data leakage and enhances model generalization. Detailed examples demonstrate how to apply GEMS to your data.
@@ -132,7 +131,7 @@ If you would run GEMS on your own protein-ligand complexes, see our [Run On Your
 
 
 ## Dataset Filtering
-This repository includes code of a filtering algorithm that has been used to generate PDBbind CleanSplit. If you are interested in filtering the PDBbind database yourself or filter your own dataset of protein-ligand complexes, see our [Dataset Filtering Instructions](docs/dataset_filtering.md)
+This repository includes code of a filtering algorithm that has been used to remove data leakage and training dataset redundancy from PDBbind, resulting int PDBbind CleanSplit. If you are interested in filtering the PDBbind database yourself, see our [Dataset Filtering Instructions](docs/dataset_filtering.md)
 
 
 ## License
@@ -141,3 +140,12 @@ Our model and code are released under MIT License, and can be freely used for bo
 ## Citation
 Please cite the following publication if you found this ressource helpful:
 
+```bibtex
+@article {Graber2024.12.09.627482,
+	author = {Graber, David and Stockinger, Peter and Meyer, Fabian and Mishra, Siddhartha and Horn, Claus and Buller, Rebecca M. U.},
+	title = {GEMS: A Generalizable GNN Framework For Protein-Ligand Binding Affinity Prediction Through Robust Data Filtering and Language Model Integration},
+	elocation-id = {2024.12.09.627482},
+	year = {2024},
+	doi = {10.1101/2024.12.09.627482},
+}
+```
