@@ -7,9 +7,9 @@ PDBbind_data/similarity/pairwise_similarity_matrix/*.hdf5
 PDBbind_data/similarity/pairwise_similarity_matrix/matrix_inspect.ipynb
 PDBbind_data/similarity/pairwise_similarity_matrix/matrix_merge.py
 
-PDBbind_search_algorithm/
+PDBbind_search_algorithm/*.png
+PDBbind_search_algorithm/*.json
 PDBbind_search_algorithm_0/
-search_algorithm*
 
 pytorch_datasets*/
 remove_redundancy.py
@@ -36,7 +36,6 @@ benchmark_dataloaders*
 old_models/
 
 aggregate_results.py
-ranking_test*
 clustering/
 inference_test*/
 find_clusters/
