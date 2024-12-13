@@ -7,6 +7,10 @@ PDBbind_data/similarity/pairwise_similarity_matrix/*.hdf5
 PDBbind_data/similarity/pairwise_similarity_matrix/matrix_inspect.ipynb
 PDBbind_data/similarity/pairwise_similarity_matrix/matrix_merge.py
 
+PDBbind_search_algorithm/
+PDBbind_search_algorithm_0/
+search_algorithm*
+
 pytorch_datasets*/
 remove_redundancy.py
 PDBbind_dataset_filtering/logs/
@@ -40,6 +44,7 @@ find_clusters/
 
 logs/
 *.tar.gz
+*copy*
 
 
 # Ignore system files
