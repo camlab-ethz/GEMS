@@ -6,8 +6,10 @@
 [![Conda](https://img.shields.io/badge/conda-supported-green.svg)](https://docs.conda.io/)
 [![Docker](https://img.shields.io/badge/docker-supported-blue.svg)](https://www.docker.com/)
 
+
 David Graber [1,2,3], Peter Stockinger[2], Fabian Meyer [2], Siddhartha Mishra [1]§ Claus Horn [4]§, and Rebecca Buller [2]§
 
+<br />
 1 Seminar for Applied Mathematics, Department of Mathematics, and ETH AI Center, ETH Zurich, 8092 Zurich, Switzerland
 <br />
 2 Competence Center for Biocatalysis, Zurich University of Applied Sciences, 8820 Waedenswil, Switzerland
@@ -19,25 +21,28 @@ David Graber [1,2,3], Peter Stockinger[2], Fabian Meyer [2], Siddhartha Mishra [
 § corresponding authors
 <br /> <br />
 **Preprint:** https://www.biorxiv.org/content/10.1101/2024.12.09.627482v1
+**Dataset:** https://doi.org/10.5281/zenodo.14260171 
 
 ## Overview 
 This repository provides all resources required to use **GEMS**, a graph-based deep learning model designed for protein-ligand binding affinity prediction. It includes instructions for installing dependencies, preparing datasets, training the model, and running inference. The repository also features **PDBbind CleanSplit**, a refined training dataset based on PDBbind that minimizes data leakage and enhances model generalization. Detailed examples demonstrate how to apply GEMS to your data.
 
 
-## System Requirements
-### Hardware Requirements
-* Recommended GPU: NVIDIA RTX3090 or higher with at least 24GB VRAM memory. <br />
-* CPU: Part of the code (graph construction) profits from parallelization to several CPUs (about 12h for 20'000 protein-ligand complexes on a single CPU)<br />
+## Hardware Requirements
+### Training and Inference
+- **GPU:** NVIDIA RTX3090 or higher, with at least 24GB VRAM. We have tested the code using a NVIDIA RTX3090 GPU and do not recommend to run training on CPU only or normal desktop PCs.
+- **Storage:** About 5GB of storage are needed for storing a fully-featurized training dataset of 20'000 interaction graphs.
 
-We have tested the code using a NVIDIA RTX3090 GPU and do not recommend to run training on CPU only or normal desktop PCs.
+#### Graph and Dataset Construction (not needed if precomputed datasets from Zenodo are used)
+- **CPU:** Multi-core processors are recommended; graph construction takes ~12 hours for 20,000 complexes on a single CPU
+- **Storage:** At least 100GB of storage are needed for preprocessing 20'000 protein-ligand complexes.
 
 ### Software Requirements
-The package has been tested on the following systems:
+The code has been tested on the following systems:
 Ubuntu 22.04 LTS
 Ubuntu 24.04 LTS
 
 **Python Dependencies** <br />
-We recomment using miniconda3 to setup a virtual environment with python 3.10. This software has been tested using the following package version:
+We recommend using `miniconda3` to set up a Python 3.10 virtual environment. This software has been tested with the following package versions:
 ```
 python=3.10.8
 numpy=1.26.4
@@ -51,20 +56,15 @@ pyg=2.5.2
 ```
 
 ## Installation Guide
-### Via Docker image
-
-All dependencies can be installed using the provided Dockerfile.
-
-Please copy the data on which you want to train, test or predict inside this folder before running the following commands:
-
+### Using Docker
+You can install all dependencies using the provided Dockerfile. Ensure your data to train, test or predict is copied into this directory before executing the following commands:
 ```
 docker build -t my-gems-container .
 docker run --shm-size=8g --gpus all -it my-gems-container
 ```
 
 ### Via conda environment
-Alternatively, you can create your conda environment from scratch with the following commands:
-
+Alternatively, create a Conda environment from scratch with the following commands:
 ```
 conda create --name GEMS python=3.10
 conda activate GEMS
@@ -75,47 +75,51 @@ conda install biopython
 conda install pytorch=2.0.1 pytorch-cuda=11.7 -c pytorch -c nvidia
 conda install pyg=*=*cu117 -c pyg
 ```
-Optional for training
+Optional for tracking:
 ```
 conda install wandb --channel conda-forge
 ```
 
 ## PDBbind CleanSplit and GEMS
-PDBbind CleanSplit is a refined training dataset for binding affinity prediction models that is based on PDBbind and has been filtered to reduce redundancy and train-test data leakage into the CASF benchmark datasets. The composition of PDBbind CleanSplit can be found in `PDBbind_data/PDBbind_data_split_cleansplit.json`. 
 
-We provide PyTorch datasets of precomputed interaction graphs for **PDBbind CleanSplit**, for the complete **PDBbind** database (v.2020) and for the **CASF benchmarks** on Zenodo (https://doi.org/10.5281/zenodo.14260171). 
+PDBbind CleanSplit is a refined training dataset for binding affinity prediction models that is based on PDBbind and has been filtered to reduce redundancy and train-test data leakage into the CASF benchmark datasets. The dataset split is available in `PDBbind_data/PDBbind_data_split_cleansplit.json`. 
 
-For more information on the available GEMS variants and published datasets, see [GEMS variants and datasets](docs/GEMS_variants_and_datasets.md)
+Precomputed PyTorch datasets for **PDBbind CleanSplit**, the full **PDBbind database (v.2020)**, and **CASF benchmarks** can be downloaded from [Zenodo](https://doi.org/10.5281/zenodo.14260171).
+
+For details on GEMS variants and datasets, see [GEMS Variants and Datasets](docs/GEMS_variants_and_datasets.md).
 
 
 
-## Run GEMS on example dataset <br />
-This repository includes two example datasets of protein-ligand complexes, where each complex comprises a protein stored as a PDB file and a ligand stored as an SDF file. Below are the steps to run inference or training using these provided datasets.
+## Run GEMS
+### On example dataset <br />
+This repository includes an example dataset of protein-ligand complexes, where each complex comprises a protein (PDB file) and a ligand (SDF file). Follow these steps to run inference or training using the example dataset.
 
-* **Dataset Construction:** Use the `GEMS_dataprep_workflow.py` script to preprocess the data and construct the PyTorch dataset. This script generates interaction graphs enriched with language model embeddings (e.g., esm2_t6, ankh_base, and ChemBERTa-77M). Specify the path to your data directory (containing PDB and SDF files) as an argument. If you wish to include affinity labels for training, provide the path to your labels file (CSV or JSON) as an additional input.
+* **Dataset Construction:** Preprocess data and create a PyTorch dataset using `GEMS_dataprep_workflow.py`: This script generates interaction graphs enriched with language model embeddings (e.g., esm2_t6, ankh_base, and ChemBERTa-77M). Specify the path to your data directory (containing PDB and SDF files) as an argument. If you wish to include affinity labels for training, provide the path to your labels file (CSV or JSON) as an additional input.
     ```
     python GEMS_dataprep_workflow.py --data_dir example_dataset --y_data PDBbind_data/PDBbind_data_dict.json
     ```
 
-* **Inference:** Run `inference.py` with the newly generated dataset file as input. This file will load the appropriate model and the dataset and create a CSV file containing pK predictions. If the dataset contains labels, it will produce a prediction scatterplot.
+* **Inference:** Generate predictions for the newly generated dataset with `inference.py`. This script will load the appropriate model and the dataset and create a CSV file containing pK predictions. If the dataset contains labels, it will produce a prediction scatterplot.
     ```
     python inference.py --dataset_path example_dataset_dataset.pt
     ```
     
-* **Training:** Run `training.py` with the newly generated dataset file and a chosen run name as inputs. The script will split the data into training and validation datasets, train GEMS on the training dataset, and validate it on the validation set. A new folder named after the run name will be created to save the training outputs.
+* **Training:** Train the model on the newly generated dataset with `training.py`. The script will split the data into training and validation datasets, train GEMS on the training dataset, and validate it on the validation set. A new folder named after the run name will be created to save the outputs.
     ```
     python train.py --dataset_path example_dataset_dataset.pt --run_name example_dataset_train_run
     ```
 
 
-## Run GEMS on precomputed PDBbind dataset (Zenodo)
+## On precomputed PDBbind dataset (Zenodo)
 
-We provide PyTorch datasets of precomputed interaction graphs for PDBbind CleanSplit, for the complete PDBbind database (v.2020) and for the CASF benchmarks on Zenodo (https://doi.org/10.5281/zenodo.14260171). Each PyTorch dataset is available in five versions containing different combinations of language model embeddings in the graph features. After downloading the the pytorch datasets (.pt files), you can easily run inference on the datasets.
+Download PyTorch datasets of precomputed interaction graphs from [Zenodo](https://doi.org/10.5281/zenodo.14260171) and run:
+
+**Inference:**  
 ```
 python inference.py --dataset_path <path/to/downloaded/dataset_file>
 ```
 
-To retrain GEMS on a downloaded pytorch dataset, run the following command with the desired run name:
+**Training:**  
 ```
 python train.py --dataset_path <path/to/downloaded/dataset_file>  --run_name downloaded_dataset_train_run
 ```
@@ -127,18 +131,18 @@ If you're interested in creating interaction graph datasets from the PDBbind sou
 
 
 ## Run GEMS on your own data
-If you would run GEMS on your own protein-ligand complexes, see our [Run On Your Data Instructions](docs/GEMS_own_data.md)
+For running GEMS on your own protein-ligand complexes, refer to [Run on Your Data](docs/GEMS_own_data.md).
 
 
 ## Dataset Filtering
-This repository includes code of a filtering algorithm that has been used to remove data leakage and training dataset redundancy from PDBbind, resulting int PDBbind CleanSplit. If you are interested in filtering the PDBbind database yourself, see our [Dataset Filtering Instructions](docs/dataset_filtering.md)
+This repository also includes code for the filtering algorithm used to create PDBbind CleanSplit. To filter PDBbind yourself, refer to [Dataset Filtering Instructions](docs/dataset_filtering.md).
 
 
 ## License
-Our model and code are released under MIT License, and can be freely used for both academic and commercial purposes.
+This project is licensed under the MIT License. It is freely available for academic and commercial use.
 
 ## Citation
-Please cite the following publication if you found this ressource helpful:
+If you find this resource helpful, please cite the following publication:
 
 ```bibtex
 @article {Graber2024.12.09.627482,
