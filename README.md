@@ -13,7 +13,7 @@ David Graber [1,2,3], Peter Stockinger[2], Fabian Meyer [2], Siddhartha Mishra [
 <sub>2 Competence Center for Biocatalysis, Zurich University of Applied Sciences, 8820 Waedenswil, Switzerland</sub><br />
 <sub>3 Institute for Computational Life Sciences, Zurich University of Applied Sciences, 8820 Waedenswil, Switzerland</sub><br />
 <sub>4 School of Medicine, Yale University, New Haven, CT 06510, USA</sub><br />
-<sub>§ corresponding authors</sub>
+<sub>§ corresponding authors, shared senior authorship</sub>
 <br /> <br /> 
 Preprint: https://www.biorxiv.org/content/10.1101/2024.12.09.627482v1 <br />
 Dataset: https://doi.org/10.5281/zenodo.14260171 
@@ -58,7 +58,7 @@ docker build -t my-gems-container .
 docker run --shm-size=8g --gpus all -it my-gems-container
 ```
 
-### Via conda environment
+### Using conda environment
 Alternatively, create a Conda environment from scratch with the following commands:
 ```
 conda create --name GEMS python=3.10
