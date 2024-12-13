@@ -114,15 +114,13 @@ def plot_predictions(y_true, y_pred, title, metrics='', filepath=None, axislim=1
 def parse_args():
     parser = argparse.ArgumentParser(description="Testing Parameters and Input Dataset Control")
 
-    # Model Parameters
-    parser.add_argument("--model_arch", required=True, help="The name of the model architecture")
-    parser.add_argument("--model_name", required=True, help="The name of the run")
+    # REQUIRED Arguments
+    parser.add_argument("--stdicts", type=str, required=True, help="String of comma-separated paths to stdicts that should be tested as an ensemble")
+    parser.add_argument("--dataset_path", required=True, help="The path to the test dataset pt file")
 
-    # Location of the test data 
-    parser.add_argument("--test_dataset_path", required=True, help="The path to the test dataset pt file")
-
-    parser.add_argument("--stdict_paths", type=str, required=True, help="String of comma-separated paths to stdicts that should be tested as an ensemble")
-    parser.add_argument("--save_path", required=True, help="The path where the results should be exported to")
+    # OPTIONAL Arguments 
+    parser.add_argument("--model_arch", default="GATE18d", help="The name of the model architecture")
+    parser.add_argument("--save_path", default=None, help="The path where the results should be exported to")
 
     return parser.parse_args()
 
@@ -130,13 +128,14 @@ args = parse_args()
 
 
 # Paths
-test_dataset_path = args.test_dataset_path
-stdict_paths = args.stdict_paths.split(',')
+dataset_path = args.dataset_path
+stdicts = args.stdicts.split(',')
 save_path = args.save_path
 
+if save_path == None: save_path = os.path.dirname(dataset_path)
 
 # Load the datasets
-test_dataset = torch.load(test_dataset_path)
+test_dataset = torch.load(dataset_path)
 test_loader = DataLoader(dataset = test_dataset, batch_size=128, shuffle=True, num_workers=4, persistent_workers=True)
 
 
@@ -156,12 +155,11 @@ models = [model_class(
             in_channels=node_feat_dim,
             edge_dim=edge_feat_dim,
             conv_dropout_prob=conv_dropout_prob).float().to(device)
-            for _ in range(len(stdict_paths))]
+            for _ in range(len(stdicts))]
 
 
 ## MODEL NAME ##
-model_name = args.model_name
-model_paths = list(stdict_paths)
+model_paths = list(stdicts)
 #for m in model_paths: print(m)
 models = [load_model_state(model, path) for model, path in zip(models, model_paths)]
 
@@ -172,35 +170,13 @@ loss, r, rmse, r2_score, y_true, y_pred, id_to_pred = evaluate(models, test_load
 
 # Plotting
 #-------------------------------------------------------------------------------------------------------------------------
-test_dataset_name = os.path.basename(test_dataset_path).split('.')[0]
+test_dataset_name = os.path.basename(dataset_path).split('.')[0]
 
 # Save the predictions to a json file
-with open(os.path.join(save_path, f'predictions_{test_dataset_name}.json'), 'w', encoding='utf-8') as json_file:
+with open(os.path.join(save_path, f'{test_dataset_name}_predictions.json'), 'w', encoding='utf-8') as json_file:
     json.dump(id_to_pred, json_file, ensure_ascii=False, indent=4)
 
-# Training Set
-if test_dataset_name.startswith('dataset_train'):
-    test_dataset_name = "Training Set"
-    filepath = os.path.join(save_path, f'predictions_dataset_train.png')
-
-# Test Set CASF2013
-elif test_dataset_name.startswith('dataset_casf2013'):
-    if test_dataset_name.endswith('c5'):
-        test_dataset_name = "CASF2013 Independent Subset"
-        filepath = os.path.join(save_path, f'predictions_dataset_casf2013_c5.png')
-    else:
-        test_dataset_name = "CASF2013 Benchmark Set"
-        filepath = os.path.join(save_path, f'predictions_dataset_casf2013.png')
-
-# Test Set CASF2016
-else:
-    if test_dataset_name.endswith('c5'):
-        test_dataset_name = "CASF2016 Independent Subset"
-        filepath = os.path.join(save_path, f'predictions_dataset_casf2016_c5.png')
-    else:
-        test_dataset_name = "CASF2016 Benchmark Set"
-        filepath = os.path.join(save_path, f'predictions_dataset_casf2016.png')
-
-# Apply the function to save individual plots
+# Save Predictions Scatterplot
+filepath = os.path.join(save_path, f'{test_dataset_name}_predictions.png')
 plot_predictions(y_true, y_pred, test_dataset_name, metrics=f"R = {r:.3f}\nRMSE = {rmse:.3f}", filepath=filepath, axislim=14)
 #-------------------------------------------------------------------------------------------------------------------------
