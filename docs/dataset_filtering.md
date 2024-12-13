@@ -6,6 +6,12 @@ In a second optional step, the algorithm removes training dataset redundancy bas
 The scripts for removing train-test similarities and training redundancy can be found at `PDBbind_dataset_filtering/remove_train_test_sims.py`
 and `PDBbind_dataset_filtering/remove_train_redundancy.py`
 
+#### Download Pairwise Similarity Matrices from Zenodo
+The scripts for dataset filtering rely on precomputed similarity matrices that you can download from Zenodo (https://doi.org/10.5281/zenodo.14260171). Save the downloaded similarity matrices at the following location:
+- `PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tanimoto.hdf5`
+- `PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tm_scores.hdf5`
+- `PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_rmsd_ligand.hdf5`
+
 ## Removing Train-Test Similarities
 
 This script iterates over all test complexes and identifies highly similar training complexes based on the affinity difference and pairwise similarity matrices generated for Tanimoto similarity, TM-scores, and ligand RMSDs.
