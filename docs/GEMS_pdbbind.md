@@ -1,4 +1,5 @@
-Download the PDBbind database from http://www.pdbbind.org.cn/. Then follow the steps below to construct a dataset of affinity-labelled interactions graphs and run trainining/inference. 
+Download the PDBbind database from http://www.pdbbind.org.cn/. Then follow the steps below to construct a dataset of affinity-labelled interactions graphs and run trainining/inference. At least 100GB of storage are needed for preprocessing 20'000 protein-ligand complexes.
+
 
 * **Prepare your data:** Save all PDB and the SDF files (including CASF complexes) in the same directory. Each protein-ligand pair should share the same unique identifier (_ID_) as filenames to indicate they form a complex. For example, use filenames like _ID_.pdb and _ID_.sdf to represent the same complex.
 * **Prepare the labels:** Use the provided PDBbind data dictionary (`PDBbind_data/PDBbind_data_dict.json`) or parse the index file of PDBbind into a json dictionary (you can use `PDBbind_data/read_index_into_dict.py`, but you might have to adjust some paths)
