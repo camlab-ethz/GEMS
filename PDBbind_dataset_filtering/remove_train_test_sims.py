@@ -10,14 +10,14 @@ and the filtered CASF2013 and CASF2016 test datasets (containing only the comple
 
 The script performs the following steps:
 1. Load the names of all complexes in the training dataset and the test dataset (original split).
-2. Initialize the split of the filtered dataset.
-3. Load the precomputed pairwise similarity matrices (PSM).
-4. Load the affinities of all complexes from a provided JSON file.
+2. Load the precomputed pairwise similarity matrices (PSM).
+3. Load the affinities of all complexes from a provided JSON file.
+4. Initialize the split of the filtered dataset.
 5. Iterate over the test complexes and find similar training complexes based on TM-score, Tanimoto similarity, 
     ligand positioning RMSD and affinity difference.
-7. Remove training complexes that are highly similar to test complexes and log the reasons for removal.
-8. Update the filtered datasets and save them in a new split dictionary.
-9. Save the similarities found between test and training complexes in JSON files.
+6. Remove training complexes that are highly similar to test complexes and log the reasons for removal.
+7. Update the filtered datasets and save them in a new split dictionary.
+8. Save the similarities found between test and training complexes in JSON files.
 
 """
 
@@ -28,25 +28,26 @@ TM_threshold = 0.8
 S_threshold = 0.8
 label_threshold = 1.0
 
+input_data_split = '../PDBbind_data/PDBbind_data_split_pdbbind.json'
+
 # Define the test dataset complexes
-with open('PDBbind_data/data_splits/PDBbind_data_split.json') as f:
+with open(input_data_split) as f:
     original_split_dict = json.load(f)
     casf2013 = original_split_dict['casf2013']
     casf2016 = original_split_dict['casf2016']
 test_dataset = casf2013 + casf2016
 
-
 # Get the dict with the complexes' affinities from the json file
-with open('PDBbind_data/PDBbind_data_dict.json', 'r') as f:
+with open('../PDBbind_data/PDBbind_data_dict.json', 'r') as f:
     affinity_data = json.load(f)
 
 # Define the path to the pairwise similarity matrices (PSM)
-PSM_tanimoto_file = 'PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tanimoto.hdf5'
-PSM_tm_scores_file = 'PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tm_scores.hdf5'
-PSM_rmsd_file = 'PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_rmsd_ligand.hdf5'
+PSM_tanimoto_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tanimoto.hdf5'
+PSM_tm_scores_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tm_scores.hdf5'
+PSM_rmsd_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_rmsd_ligand.hdf5'
 
 # Get the indexes and names from json file
-with open('PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_complexes.json', 'r') as f:
+with open('../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_complexes.json', 'r') as f:
     complexes = json.load(f)
 # -------------------------------------------------------------------------------------------------------
 
@@ -56,9 +57,6 @@ with open('PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarit
 # For each test complex, find highly similar training complexes and remove them
 # Save the filtered datasets in a new split dict (json file)
 # -------------------------------------------------------------------------------
-
-# Keep a log file with the reasons for the training set removals
-log_file = open('remove_train_test_sims.log', 'w')
 
 # Initialize the split of the filtered dataset
 split_dict = {'casf2016': casf2016, 'casf2013': casf2013}
@@ -85,8 +83,13 @@ training_set_filtered = [complex for _, complex in train_set]
 casf2013_filtered = [complex for _, complex in test_set if complex in casf2013]
 casf2016_filtered = [complex for _, complex in test_set if complex in casf2016]
 
-print(len(training_set_filtered), len(casf2013_filtered), len(casf2016_filtered))
 
+print("Removing train-test similarites from")
+print(input_data_split)
+print(f"Input Training Dataset: N={len(training_set_filtered)}")
+print(f"Input CASF2013: N={len(casf2013_filtered)}")
+print(f"Input CASF2016: N={len(casf2016_filtered)}")
+print()
 
 # Iterate over the test complexes and look for similar training complexes
 for test_idx, test_complex in test_set:
@@ -101,7 +104,6 @@ for test_idx, test_complex in test_set:
     test_complex_affinity = affinity_data[test_complex]['log_kd_ki']
     
     print(f"Processing {test_complex} with pK {test_complex_affinity} belonging to {membership}")
-    log_file.write(f"---Processing {test_complex} with pK {test_complex_affinity}---\n")
 
     # Find training complexes that fulfill the following conditions:
     # - have TM-score higher than 0.8 to the test complex
@@ -146,16 +148,16 @@ for test_idx, test_complex in test_set:
             if complex in training_set_filtered:
                 training_set_filtered.remove(complex)
 
-                log_string = (
+                log_string = ('--- '
                     f'Complex {complex} removed due to {reason}- '
                     f'Tanimoto {tanimoto[idx]:.2f} '
                     f'TMscore {tm_scores[idx]:.2f} '
                     f'Ligand RMSD {rmsds[idx]:.2f} '
                     f'dpK {dpK:.2f} '
                     f'S = {tanimoto[idx] + (1 - rmsds[idx]) + tm_scores[idx] - dpK:.2f} '
-                    f'to complex {test_complex} ({membership})\n'
+                    f'to complex {test_complex} ({membership})'
                 )
-                log_file.write(log_string)
+                print(log_string)
 
 
     # If similarites were found, remove the test complex from casf_filtered
@@ -173,12 +175,15 @@ for test_idx, test_complex in test_set:
         train_test_sims_casf2016_n[test_complex] = len(similarities)
 
 
-print(len(training_set_filtered), len(casf2013_filtered), len(casf2016_filtered))
-
+print()
+print(f"Output Training Dataset: N={len(training_set_filtered)}")
+print(f"Output casf2013_indep: N={len(casf2013_filtered)}")
+print(f"Output casf2016_indep: N={len(casf2016_filtered)}")
 
 split_dict['train'] = training_set_filtered
-split_dict['casf2016_c7'] = casf2016_filtered
-split_dict['casf2013_c7'] = casf2013_filtered
+split_dict['casf2016_indep'] = casf2016_filtered
+split_dict['casf2013_indep'] = casf2013_filtered
+
 
 with open('PDBbind_split_leakage_removed.json', 'w', encoding='utf-8') as json_file:
     json.dump(split_dict, json_file, ensure_ascii=False, indent=4)
