@@ -80,7 +80,7 @@ conda install wandb --channel conda-forge
 PDBbind CleanSplit is a refined training dataset for binding affinity prediction models that is based on PDBbind and has been filtered to reduce redundancy and train-test data leakage into the CASF benchmark datasets. The dataset split is available in `PDBbind_data/PDBbind_data_split_cleansplit.json`. 
 
 * **Precomputed Datasets:**  <br />
-Precomputed datasets for **PDBbind CleanSplit**, the full **PDBbind database** (v.2020), and the **CASF benchmarks** are available on [Zenodo](https://doi.org/10.5281/zenodo.14260171). For details on the provided datasets, refer to [GEMS Variants and Datasets](docs/GEMS_variants_and_datasets.md).
+Precomputed datasets for **PDBbind CleanSplit**, the full **PDBbind database** (v.2020), and the **CASF benchmarks** are available on [Zenodo](https://doi.org/10.5281/zenodo.14260171). For details on the available datasets, refer to [GEMS Variants and Datasets](docs/GEMS_variants_and_datasets.md).
 
 * **Filtering Algorithm:**  <br />
 The filtering algorithm that created PDBbind CleanSplit is included in this repository. To run the algorithm, refer to [Filtering Instructions](docs/dataset_filtering.md).  <br />   <br />
@@ -106,8 +106,8 @@ GEMS (GNN for Efficient Molecular Scoring) is a graph neural network designed fo
 This repository includes an example dataset of protein-ligand complexes, where each complex comprises a protein (PDB file) and a ligand (SDF file). Follow these steps to run inference or training using the example dataset.
 
 * **Dataset Construction:**  <br />
-    Preprocess data and create a PyTorch dataset using `GEMS_dataprep_workflow.py`: This script generates interaction graphs enriched with language model embeddings (e.g., esm2_t6, ankh_base, and ChemBERTa-77M). Specify the path to your data directory (containing PDB and 
-    SDF files) as an argument. If you wish to include affinity labels for training, provide the path to your labels file (CSV or JSON) as an additional input.
+    Preprocess data and create a PyTorch dataset using `GEMS_dataprep_workflow.py`: This script generates a dataset of interaction graphs enriched with language model embeddings (e.g., esm2_t6, ankh_base, and ChemBERTa-77M) from an input diretory (containing PDB and 
+    SDF files). To include affinity labels for training, specify the path to your labels file (CSV or JSON).
     ```
     python GEMS_dataprep_workflow.py --data_dir example_dataset --y_data PDBbind_data/PDBbind_data_dict.json
     ```
