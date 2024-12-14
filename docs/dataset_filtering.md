@@ -29,12 +29,16 @@ The most similar complexes are removed from the training dataset based on predef
 * **PDBbind Affinity Data:** A dictionary containing log_kd_ki values for all complexes in PDBbind.
     * see `PDBbind_data/PDBbind_data_dict.json`
  
-#### Outputs of the filtering algorithm `remove_train_test_sims.py`:
+### Outputs of the filtering algorithm `remove_train_test_sims.py`:
 * **Output Split:** The updated split of the dataset, with a potentially smaller 'train' dataset.
     * see `PDBbind_data/PDBbind_data_split_cleansplit.json`
 * **Log Files:** A log file and some additional dictionaries containing information on the similarities to the training set for each test complex.
 
-To run this code, change the paths in the "INPUTS" section of the code to your needs.
+### Run the filtering algorithm `remove_train_test_sims.py`:
+Change the paths in the "INPUTS" section of the code to your needs, navigate to the `PDBbind_dataset_filtering/` directory and exectute:
+```
+python remove_train_test_sims.py
+```
 
 
 

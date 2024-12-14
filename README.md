@@ -37,7 +37,7 @@ The code has been tested on the following systems:
 - Ubuntu 24.04 LTS
 
 **Python Dependencies** <br />
-We recommend using `miniconda3` to set up a Python 3.10 virtual environment. This software has been tested with the following package versions:
+We recommend using `miniconda3` to set up a Python 3.10 virtual environment. This software has been tested with:
 ```
 python=3.10.8
 numpy=1.26.4
@@ -75,67 +75,87 @@ Optional for tracking:
 conda install wandb --channel conda-forge
 ```
 
-## PDBbind CleanSplit and GEMS
+## Dataset Filtering and PDBbind CleanSplit
 
 PDBbind CleanSplit is a refined training dataset for binding affinity prediction models that is based on PDBbind and has been filtered to reduce redundancy and train-test data leakage into the CASF benchmark datasets. The dataset split is available in `PDBbind_data/PDBbind_data_split_cleansplit.json`. 
 
-Precomputed PyTorch datasets for **PDBbind CleanSplit**, the full **PDBbind database (v.2020)**, and **CASF benchmarks** can be downloaded from [Zenodo](https://doi.org/10.5281/zenodo.14260171).
+* **Precomputed Datasets:**  <br />
+Precomputed datasets for **PDBbind CleanSplit**, the full **PDBbind database** (v.2020), and the **CASF benchmarks** are available on [Zenodo](https://doi.org/10.5281/zenodo.14260171). For details on the provided datasets, refer to [GEMS Variants and Datasets](docs/GEMS_variants_and_datasets.md).
 
-For details on GEMS variants and datasets, see [GEMS Variants and Datasets](docs/GEMS_variants_and_datasets.md).
+* **Filtering Algorithm:**  <br />
+The filtering algorithm that created PDBbind CleanSplit is included in this repository. To run the algorithm, refer to [Filtering Instructions](docs/dataset_filtering.md).  <br />   <br />
 
 
+## Search Algorithm for Detecting Data Leakage
+Some deep-learning-based binding affinity prediction models are outperformed on the CASF benchmarks by a simple search algorithm. This algorithm identifies the most structurally similar training complexes in PDBbind and averages their affinities, exposing data leakage between PDBbind and the CASF2016 benchmark. In contrast, the performance of this algorithm is significantly reduced when tested on PDBbind CleanSplit, a refined dataset specifically designed to eliminate data leakage into the CASF benchmark datasets. To test the performance of the search algorithm, navigate to the `PDBbind_search_algorithm/` directory and execute the following commands:
 
-## Run GEMS
-### On example dataset <br />
+* **On original PDBbind:**
+    ```
+    python search_algorithm_compl.py --data_split ../PDBbind_data/PDBbind_data_split_pdbbind.json --test_dataset casf2016
+    ```
+* **On PDBbind CleanSplit**
+    ```
+    python search_algorithm_compl.py --data_split ../PDBbind_data/PDBbind_data_split_cleansplit.json --test_dataset casf2016
+    ```
+
+
+## GEMS
+GEMS (GNN for Efficient Molecular Scoring) is a graph neural network designed for accurate structure-based protein-ligand binding affinity prediction. Trained on PDBbind CleanSplit, a refined dataset free of train-test leakage and redundancy, GEMS leverages transfer learning from protein language models to achieve robust generalization to independent test datasets. Several trained GEMS models are included in this repository. For details on the GEMS variants, see [GEMS Variants and Datasets](docs/GEMS_variants_and_datasets.md).
+
+### Run GEMS on example dataset
 This repository includes an example dataset of protein-ligand complexes, where each complex comprises a protein (PDB file) and a ligand (SDF file). Follow these steps to run inference or training using the example dataset.
 
-* **Dataset Construction:** Preprocess data and create a PyTorch dataset using `GEMS_dataprep_workflow.py`: This script generates interaction graphs enriched with language model embeddings (e.g., esm2_t6, ankh_base, and ChemBERTa-77M). Specify the path to your data directory (containing PDB and SDF files) as an argument. If you wish to include affinity labels for training, provide the path to your labels file (CSV or JSON) as an additional input.
+* **Dataset Construction:**  <br />
+    Preprocess data and create a PyTorch dataset using `GEMS_dataprep_workflow.py`: This script generates interaction graphs enriched with language model embeddings (e.g., esm2_t6, ankh_base, and ChemBERTa-77M). Specify the path to your data directory (containing PDB and 
+    SDF files) as an argument. If you wish to include affinity labels for training, provide the path to your labels file (CSV or JSON) as an additional input.
     ```
     python GEMS_dataprep_workflow.py --data_dir example_dataset --y_data PDBbind_data/PDBbind_data_dict.json
     ```
-
-* **Inference:** Generate predictions for the newly generated dataset with `inference.py`. This script will load the appropriate model and the dataset and create a CSV file containing pK predictions. If the dataset contains labels, it will produce a prediction scatterplot.
+    
+* **Inference:**  <br />
+    Generate predictions for the newly generated dataset with `inference.py`. This script will load the appropriate model and the dataset and create a CSV file containing pK predictions. If the dataset contains labels, it will produce a prediction scatterplot.
     ```
     python inference.py --dataset_path example_dataset_dataset.pt
     ```
     
-* **Training:** Train the model on the newly generated dataset with `training.py`. The script will split the data into training and validation datasets, train GEMS on the training dataset, and validate it on the validation set. A new folder named after the run name will be created to save the outputs.
+* **Training:**  <br />
+    Train the model on the newly generated dataset with `training.py`. This script splits the data into a training set (80%) and validation set (20%), trains GEMS on the training set, and evaluates it on the validation set. Training outputs, including models and logs, are 
+    saved in a new folder named after the specified run name:
     ```
     python train.py --dataset_path example_dataset_dataset.pt --run_name example_dataset_train_run
     ```
 
 
-### On precomputed PDBbind dataset (Zenodo)
+### Run GEMS on precomputed PDBbind dataset (Zenodo)
 
 Download PyTorch datasets of precomputed interaction graphs from [Zenodo](https://doi.org/10.5281/zenodo.14260171) and run:
 
-* **Inference:**  
+* **Inference:**  <br />
+    The following command will automatically run inference using the model appropriate for the dataset type:
     ```
     python inference.py --dataset_path <path/to/downloaded/dataset_file>
     ```
 
-* **Training:**  
+* **Training:**  <br />
+    For training with cross-validation, run the command below multiple times, specifying different values for the `--fold_to_train` argument. For additional training parameters, refer to the argparse inputs in the `train.py` script:
     ```
     python train.py --dataset_path <path/to/downloaded/train/set>  --run_name downloaded_dataset_train_run
     ```
 
-* **Test:** Test the newly trained model with `test.py`, using the saved stdict and the path to a test dataset as input. If you want to test an ensemble of several models, provide all stdicts in a comma-separated string.
+* **Test:**  <br />
+    Test the newly trained model with `test.py`, using the saved stdict and the path to a test dataset as input. If you want to test an ensemble of several models, provide all stdicts in a comma-separated string.
     ```
     python test.py --dataset_path <path/to/downloaded/test/set> --stdicts cleansplit_run/cleansplit_run_f0_best_stdict.pt
     ```
     
 
 
-### On PDBbind (without precomputed datasets) 
+### Run GEMS on PDBbind (without precomputed datasets) 
 If you're interested in creating interaction graph datasets from the PDBbind source data, see our [PDBbind from scratch instructions](docs/GEMS_pdbbind.md).
 
 
-### On your own data
+### Run GEMS on your own data
 For running GEMS on your own protein-ligand complexes, refer to [Run on Your Data](docs/GEMS_own_data.md).
-
-
-## Dataset Filtering
-This repository also includes code for the filtering algorithm used to create PDBbind CleanSplit. To filter PDBbind yourself, refer to [Dataset Filtering Instructions](docs/dataset_filtering.md).
 
 
 ## License
