@@ -15,8 +15,10 @@ pytorch_datasets*/
 remove_redundancy.py
 PDBbind_dataset_filtering/logs/
 PDBbind_dataset_filtering/*.json
+
 PDBbind_search_algorithms/
 
+*before_publication*
 model/INITIAL/*
 example_dataset/*pt
 example_dataset/*csv
@@ -52,6 +54,7 @@ __pycache__
 
 # Ignore log files
 *.log
+*.err
 
 # Ignore PyTorch datasets
 dataset*.pt
