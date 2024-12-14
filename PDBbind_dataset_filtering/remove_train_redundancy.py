@@ -11,20 +11,20 @@ TM_threshold = 0.8
 S_threshold = 1.3
 label_threshold = 0.5
 
-input_data_split = 'PDBbind_dataset_filtering/PDBbind_split_leakage_removed.json'
-output_data_split = 'PDBbind_dataset_filtering/PDBbind_split_leakage_redund_removed.json'
+input_data_split = 'PDBbind_split_leakage_removed.json'
+output_data_split = 'PDBbind_split_leakage_redund_removed.json'
 
 # Define the path to the pairwise similarity matrices (PSM)
-PSM_tanimoto_file = 'PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tanimoto.hdf5'
-PSM_tm_scores_file = 'PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tm_scores.hdf5'
-PSM_rmsd_file = 'PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_rmsd_ligand.hdf5'
+PSM_tanimoto_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tanimoto.hdf5'
+PSM_tm_scores_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tm_scores.hdf5'
+PSM_rmsd_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_rmsd_ligand.hdf5'
 
 # List of complexes in the pairwise similarity matrix
-with open('PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_complexes.json', 'r') as f:
+with open('../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_complexes.json', 'r') as f:
     complexes = json.load(f)
 
 # Import the PDBbind data dictionary for the affinites and resolutions
-with open('PDBbind_data/PDBbind_data_dict.json', 'r') as f:
+with open('../PDBbind_data/PDBbind_data_dict.json', 'r') as f:
     pdbbind_data = json.load(f)
 
 # INPUT TRAINING DATASET from json file
@@ -41,15 +41,13 @@ train_or_test = np.array([True if complex in test_dataset else False for complex
 
 # INITIALIZE LOG FILE, REFINED LIST, RESOLUTIONS AND LABEL DIFFERENCES
 # -----------------------------------------------------------------------------------------------
-log_filename = 'remove_redundancy.log'
 
 # Write the initial information to the log file
-with open(log_filename, 'w') as log_file:
-    log_file.write("Removing redundancy from the training dataset\n")
-    log_file.write(f"Input data split: {input_data_split}\n")
-    log_file.write(f"Initial number of training complexes: {len(train_dataset)}\n")
-    log_file.write(f"Thresholds: \nTM-score > {TM_threshold}, \nS = tanimoto+(1-RMSE) > {S_threshold}, \nlabel difference < {label_threshold}\n")
-    log_file.write("\n")
+print("Removing redundancy from the training dataset")
+print(f"Input data split: {input_data_split}")
+print(f"Initial number of training complexes: {len(train_dataset)}")
+print(f"Thresholds: \nTM-score > {TM_threshold}, \nS = tanimoto+(1-RMSE) > {S_threshold}, \nlabel difference < {label_threshold}")
+print()
 
 # Vector showing which data point is in refined set with zeros and ones
 refined = np.array([1 if "refined" in pdbbind_data[complex]['dataset'] else 0 for complex in complexes])
@@ -163,13 +161,12 @@ while True:
     
 
     # Record the removal of this data point
-    with open(log_filename, 'a') as log_file:
-        log_file.write("New removal iteration" + "\n")
-        log_file.write(f"Non-zero entries in adjacency_matrix: {np.count_nonzero(adjacency_matrix)}" + "\n")
-        log_file.write(f"Maximal number of similarities: {max_sum_value}" + "\n")
-        #log_file.write(f"Info about the complexes with maximum similarities:" + "\n")
-        #for inf in info: log_file.write(str(inf) + "\n")
-        log_file.write(f"To remove index: {to_remove_idx}, complex: {complexes[to_remove_idx]}" + "\n")
+    print("New removal iteration")
+    print(f"Non-zero entries in adjacency_matrix: {np.count_nonzero(adjacency_matrix)}")
+    print(f"Maximal number of similarities: {max_sum_value}")
+    #print(f"Info about the complexes with maximum similarities:")
+    #for inf in info: print(str(inf))
+    print(f"To remove index: {to_remove_idx}, complex: {complexes[to_remove_idx]}")
 
 
     membership = "refined" if refined[to_remove_idx] == 1 else "general"
@@ -190,17 +187,14 @@ while True:
         for ind in similar_complexes_idx:
             log_string += f'\n---{complexes[ind]} (Label:{labels[ind]:.2f} +-{pairwise_label_diff[to_remove_idx, ind]:.2f} with Tanimoto:{similarity_matrix_tanimoto[to_remove_idx, ind]:.2f}, TM-score:{similarity_matrix_tm[to_remove_idx, ind]:.2f}, RMSD:{similarity_matrix_rmsd[to_remove_idx, ind]:.2f})'
   
-        with open(log_filename, 'a') as log_file:
-            log_file.write(log_string+ "\n\n")
+        print(log_string+ "\n\n")
 
     else:
-        with open(log_filename, 'a') as log_file:
-            log_file.write(f"Complex {complexes[to_remove_idx]} is not in the current training dataset\n")
+        print(f"Complex {complexes[to_remove_idx]} is not in the current training dataset\n")
 
 
 # Write results to log file
-with open(log_filename, 'a') as log_file:
-    log_file.write(f"\nFinal number of training complexes: {len(train_dataset_filtered)}\n")
+print(f"\nFinal number of training complexes: {len(train_dataset_filtered)}\n")
 
 
 # Copy the input data split
