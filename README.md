@@ -139,7 +139,7 @@ This section explains how to run inference or training of GEMS on the PDBbind da
     ```
 
 * **Training:**  <br />
-    To train GEMS on the downloaded dataset, execute the command below. This splits the data into a training set (80%) and validation set (20%), trains GEMS on the training set, and evaluates it on the validation set. To train with cross-validation, run the command below multiple times, specifying different values for the --fold_to_train argument. For additional training options and parameters, refer to the argparse inputs in the train.py script.
+    To train GEMS on the downloaded dataset, execute the command below. This splits the data into a training set (80%) and validation set (20%), trains GEMS on the training set, and evaluates it on the validation set. To train with cross-validation, run the command below multiple times, specifying different values for the --fold_to_train argument. For additional training options and parameters, refer to the argparse inputs in the `train.py` script.
     ```
     python train.py --dataset_path <path/to/downloaded/train/set>  --run_name <select unique run name>
     ```
