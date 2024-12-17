@@ -31,8 +31,8 @@ To compute ChemBERTa-77M, ANKH-Base and ESM2-T6 embeddings for your data, exectu
     * ANKH:          ```python -m dataprep.ankh_features --data_dir <path/to/data/dir> --ankh_base True``` <br />
     * ESM2:          ```python -m dataprep.esm_features --data_dir <path/to/data/dir> --esm_checkpoint t6``` <br />
 
-    You can also include more only a subset of these embeddings or change to ChemBERTa-10M (--model ChemBERTa-10M-MLM), to ANKH-Large (--ankh_base False) or 
-    to ESM2-T33 (--esm_checkpoint t33). We recommend running these scripts on a GPU.
+   You can also compute more embeddings, only a subset of these embeddings, or change to ChemBERTa-10M (--model ChemBERTa-10M-MLM), to ANKH-Large (-- 
+   ankh_base False) or to ESM2-T33 (--esm_checkpoint t33). We recommend running these scripts on a GPU.
   
 * **Graph construction:** <br />
 Construct interaction graphs for all protein-ligand complexes in your data directory, incorporating the desired language model embeddings. For example:
