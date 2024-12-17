@@ -58,16 +58,17 @@ Once your dataset preparation is complete, you can run inference, training, or t
     python inference.py --dataset_path <path/to/dataset>
     ```
     
-* **Training:** To train GEMS on your dataset, provide the path to the dataset and a unique run name. The model outputs, logs, and checkpoints will be saved in a directory named after your specified run_name.
+* **Training:** To train GEMS on your dataset, provide the path to the dataset and a unique run name. This script splits the data into a training set (80%) and validation set (20%), trains GEMS on the training set, and evaluates it on the validation set. The model outputs, logs, and checkpoints will be saved in a directory named after your specified run_name. To train with cross-validation, run the command below multiple times, specifying different values for the --fold_to_train argument. For additional training options and parameters, refer to the argparse inputs in the `train.py` script.
     ```
-    python train.py --dataset_path <path/to/dataset_file> --run_name <select a run name>
+    python train.py --dataset_path <path/to/dataset_file> --run_name <select unique run name>
     ```
 
 * **Test:** Test a trained model using the test.py script. Provide the path to the test dataset and the saved state dictionary (stdict) of your trained model:
     ```
     python test.py --dataset_path <path/to/downloaded/test/set> --stdicts <path/to/saved/stdict>
     ```
-To evaluate an ensemble of multiple models, pass all saved state dictionaries as a comma-separated list:
-    ```
-python test.py --dataset_path <path/to/test/dataset> --stdicts <path/to/stdict1>,<path/to/stdict2>,<path/to/stdict3>
 
+    To evaluate an ensemble of multiple models, pass all saved state dictionaries as a comma-separated list:
+    ```
+    python test.py --dataset_path <path/to/test/dataset> --stdicts <path/to/stdict1>,<path/to/stdict2>,<path/to/stdict3>
+    ```
