@@ -105,10 +105,10 @@ GEMS (GNN for Efficient Molecular Scoring) is a graph neural network designed fo
 
 
 ### Run GEMS on your own data
-To predict binding affinities for your own protein-ligand complexes using GEMS, follow the steps below. This example demonstrates the process using our example dataset. For detailed instructions on training GEMS on your data, refer to [retraining GEMS](docs/GEMS_own_data.md).
+To predict binding affinities for your own protein-ligand complexes using GEMS, follow the steps below, which demonstrate the process using an example dataset. For more detailed instructions on using and retraining GEMS with your data, refer to [GEMS your data](docs/GEMS_own_data.md).
 
-* **Prepare your data:**
-    * Save PDB and the SDF files of your dataset in a directory.
+* **Prepare your data:** 
+    * Save PDB and the SDF files of your dataset in a directory (as in `example_dataset/`).
     * Each protein-ligand pair should share the same unique identifier (_ID_) as filenames to indicate they form a complex. For example, use filenames like _ID_.pdb and _ID_.sdf to represent the same complex.
     * If you have several ligands binding to the same protein, an SDF may also contain more than one molecule structure.
 
