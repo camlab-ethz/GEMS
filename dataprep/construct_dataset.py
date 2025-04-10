@@ -45,6 +45,7 @@ def main():
     parser.add_argument("--delete_ligand", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If ligand nodes should be deleted from the graph (ablation study)")
     parser.add_argument("--delete_protein", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If protein nodes should be deleted from the graph (ablation study, only if masternode included")
     
+    parser.add_argument("--exclude_ic50", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="# If IC50-labelled datapoints should be excluded from the dataset")
     # INCLUDE A MASTERNODE
     parser.add_argument("--masternode", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If a masternode (mn) should be included in the graphs")
     parser.add_argument("--masternode_connectivity", default='all', help="If a mn is included, to which nodes it should be connected ('all', 'ligand', 'protein')")
@@ -71,6 +72,8 @@ def main():
                     delete_ligand=args.delete_ligand,
                     edge_features=args.edge_features, 
                     atom_features=args.atom_features,
+
+                    exclude_ic50=args.exclude_ic50,
 
                     # INCLUDE A MASTERNODE
                     masternode=args.masternode,

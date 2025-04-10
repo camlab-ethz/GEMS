@@ -474,8 +474,6 @@ for i, protein in enumerate(proteins):
 
             # # COMPUTE CONNECTIVITY BETWEEN LIGAND AND PROTEIN ATOMS
             # # -----------------------------------------------------
-            
-            # With numpy --------------------------------------------------------------------------------------------------------
             max_len = 4
             diff = protein_atomcoords[np.newaxis, :, :] - ligand_atomcoords[:, np.newaxis, :]
             pairwise_distances = np.linalg.norm(diff, axis=2)
