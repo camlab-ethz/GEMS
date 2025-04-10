@@ -243,10 +243,7 @@ if wandb_tracking:
 pretrained = args.pretrained
 start_epoch = args.start_epoch
 
-if os.path.exists(save_dir):
-    print(f'Aborted: Saving Directory  {save_dir} exists already')
-    sys.exit()
-else:
+if not os.path.exists(save_dir):
     os.makedirs(save_dir)
     print(f'Saving Directory generated')
 #----------------------------------------------------------------------------------------------------
