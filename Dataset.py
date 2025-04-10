@@ -45,6 +45,8 @@ class PDBbind_Dataset(Dataset):
                 edge_features=True,                 # If edge features should be included
                 atom_features=True,                 # If atom features should be included
 
+                exclude_ic50=False,                 # If IC50-labelled datapoints should be excluded
+
                 # INCLUDE A MASTERNODE
                 masternode=False,                   # If a masternode (mn) should be included
                 masternode_connectivity = 'all',    # If a mn is included, to which nodes it should be connected ('all', 'ligand', 'protein')
@@ -103,9 +105,12 @@ class PDBbind_Dataset(Dataset):
         self.input_data = {}
         ind = 0
         for file in self.filepaths:
+
             grph = torch.load(file)
             id = grph.id
             pos = grph.pos
+
+            if exclude_ic50 and "IC50" in self.data_dict[id].keys(): continue
 
             if self.labels:
                 min=0
@@ -307,10 +312,6 @@ class PDBbind_Dataset(Dataset):
                 train_graph = Data(x = x.float(), 
                                 edge_index=edge_index.long(),
                                 edge_attr=edge_attr.float(),
-                                # To do: If we want to do convolution on only ligand or protein edges, 
-                                # we need to pass the corresponding edge_index conaining these edges, but in such 
-                                # architectures we can't do the ablation anymore because there we don't have
-                                # any edge_index_lig or edge_index_prot.
                                 #edge_index_lig=edge_index_lig,
                                 #edge_index_prot=edge_index_prot,
                                 #edge_attr_lig=edge_attr_lig,
