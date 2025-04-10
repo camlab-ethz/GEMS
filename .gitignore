@@ -28,6 +28,8 @@ example_dataset/.logs/
 PDBbind_preprocessed/
 PDBbind_splits/
 TMalign/
+OptiMol/
+BuildUp/
 pafnucy_data/
 stuff/
 *old*/
@@ -46,7 +48,9 @@ find_clusters/
 logs/
 *.tar.gz
 *copy*
-
+*test*
+*_met*
+*_counts*
 
 # Ignore system files
 .DS_Store
