@@ -4,8 +4,16 @@ PDBbind/
 PDBbind_data/similarity/pairwise_similarity_matrix/*.sh
 PDBbind_data/similarity/pairwise_similarity_matrix/*.log
 PDBbind_data/similarity/pairwise_similarity_matrix/*.hdf5
+PDBbind_data/similarity/pairwise_similarity_matrix/original_paper_data/*.hdf5
+PDBbind_data/similarity/pairwise_similarity_matrix/original_paper_data/*.sh
+PDBbind_data/similarity/pairwise_similarity_matrix/original_paper_data/*.log
+PDBbind_data/similarity/pairwise_similarity_matrix/original_paper_data/*.json
+PDBbind_data/similarity/pairwise_similarity_matrix/original_paper_data/*.py
+
 PDBbind_data/similarity/pairwise_similarity_matrix/matrix_inspect.ipynb
 PDBbind_data/similarity/pairwise_similarity_matrix/matrix_merge.py
+PDBbind_data/similarity/pairwise_similarity_matrix/matrix_extract_to_json.py
+PDBbind_data/similarity/pairwise_similarity_matrix/compute_batches.py
 
 PDBbind_search_algorithm/*.png
 PDBbind_search_algorithm/*.json
@@ -15,6 +23,7 @@ pytorch_datasets*/
 remove_redundancy.py
 PDBbind_dataset_filtering/logs/
 PDBbind_dataset_filtering/*.json
+PDBbind_dataset_filtering/original_paper_logs/*.json
 
 PDBbind_search_algorithms/
 
@@ -38,6 +47,7 @@ huggingface/
 bash_scripts/
 benchmark_dataloaders*
 old_models/
+*metals*
 
 aggregate_results.py
 clustering/
@@ -49,8 +59,6 @@ logs/
 *.tar.gz
 *copy*
 *test*
-*_met*
-*_counts*
 
 # Ignore system files
 .DS_Store
@@ -59,6 +67,7 @@ __pycache__
 # Ignore log files
 *.log
 *.err
+*.txt
 
 # Ignore PyTorch datasets
 dataset*.pt
