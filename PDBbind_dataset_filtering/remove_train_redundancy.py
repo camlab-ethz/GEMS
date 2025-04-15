@@ -15,7 +15,7 @@ input_data_split = 'PDBbind_split_leakage_removed.json'
 output_data_split = 'PDBbind_split_leakage_redund_removed.json'
 
 # Define the path to the pairwise similarity matrices (PSM)
-PSM_tanimoto_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tanimoto.hdf5'
+PSM_tanimoto_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tanimoto_counts.hdf5'
 PSM_tm_scores_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tm_scores.hdf5'
 PSM_rmsd_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_rmsd_ligand.hdf5'
 
@@ -74,23 +74,33 @@ non_train_dataset_indices = [complexes.index(complex) for complex in complexes i
 with h5py.File(PSM_tm_scores_file, 'r') as f:
     similarity_matrix_tm = f['similarities'][:]
 
-adjacency_matrix = similarity_matrix_tm > TM_threshold # Pairs with TM-score > 0.8
 
 
-# TANIMOTO SIMILARITY MATRIX combined with RMSD SIMILARITY MATRIX
+
+# LIGAND SIMILARITY MATRIX
 with h5py.File(PSM_tanimoto_file, 'r') as f:
     similarity_matrix_tanimoto = f['similarities'][:]
 
 with h5py.File(PSM_rmsd_file, 'r') as f:
     similarity_matrix_rmsd = f['similarities'][:]
 
-similarity_matrix = similarity_matrix_tanimoto + (1 - similarity_matrix_rmsd) 
+similarity_matrix = similarity_matrix_tanimoto + (1 - similarity_matrix_rmsd)
 
-# Pairs with S = tanimoto+(1-RMSE) > 0.8
+# Pairs with 
+# --- TM-score > TM_threshold
+adjacency_matrix = similarity_matrix_tm > TM_threshold
+
+
+# Pairs with 
+# --- TM-score > TM_threshold 
+# --- tanimoto + (1-RMSE) > S_threshold
 adjacency_matrix = adjacency_matrix & (similarity_matrix > S_threshold)
 
 
-# PAIRWISE LABLE DIFFERENCES MATRIX
+# Pairs with 
+# --- TM-score > TM_threshold 
+# --- tanimoto + (1-RMSE) > S_threshold
+# --- label difference < label_threshold
 adjacency_matrix = adjacency_matrix & (pairwise_label_diff < label_threshold)
 
 
@@ -132,7 +142,7 @@ while True:
     info = [(i, sum, complexes[i], labels[i], pdbbind_data[complexes[i]]['dataset'], resolutions[i])
             for i, sum in enumerate(column_sums) if sum == max_sum_value]    
 
-    # Step 4: Remove the data point with the maximum sum, preferring general complexes with higher resolution values
+    # Step 4: Remove the data point with the maximum sum, preferring general set complexes with higher resolution values
     max_indices = np.where(column_sums == max_sum_value)[0] # Select the columns with the maximum sum
     refined_or_general = refined[max_indices]
     general = max_indices[refined_or_general == 0]
