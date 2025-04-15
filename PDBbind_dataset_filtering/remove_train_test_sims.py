@@ -25,8 +25,9 @@ The script performs the following steps:
 
 tanimoto_threshold = 0.9
 TM_threshold = 0.8
-S_threshold = 0.8
 label_threshold = 1.0
+S_threshold = 0.8
+
 
 input_data_split = '../PDBbind_data/PDBbind_data_split_pdbbind.json'
 
@@ -151,12 +152,13 @@ for test_idx, test_complex in test_set:
                 f'TMscore {tm_scores[idx]:.2f} '
                 f'Ligand RMSD {rmsds[idx]:.2f} '
                 f'dpK {dpK:.2f} '
-                f'S = {tanimoto[idx] + (1 - rmsds[idx]) + tm_scores[idx] - dpK:.2f} '
+                #f'S = {tanimoto[idx] + (1 - rmsds[idx]) + tm_scores[idx] - dpK:.2f} '
+                f'S = {tanimoto[idx] + (1 - rmsds[idx]):.2f} '
             )
 
             if complex in training_set_filtered:
                 training_set_filtered.remove(complex)
-                log_string += " - REMOVED FROM TRAINING SET"
+                log_string = log_string.replace('flagged', 'removed')
             else:
                 log_string += " - NOT IN FILT. TRAINING SET"
             
@@ -188,17 +190,17 @@ split_dict['casf2016_indep'] = casf2016_filtered
 split_dict['casf2013_indep'] = casf2013_filtered
 
 
-with open('PDBbind_split_leakage_removed_090425.json', 'w', encoding='utf-8') as json_file:
+with open('PDBbind_split_leakage_removed.json', 'w', encoding='utf-8') as json_file:
     json.dump(split_dict, json_file, ensure_ascii=False, indent=4)
 
-with open('train_test_similarities_casf2016_090425.json', 'w', encoding='utf-8') as json_file:
+with open('train_test_similarities_casf2016.json', 'w', encoding='utf-8') as json_file:
     json.dump(train_test_sims_casf2016, json_file, ensure_ascii=False, indent=4)
 
-with open('train_test_similarities_casf2016_n_090425.json', 'w', encoding='utf-8') as json_file:
+with open('train_test_similarities_casf2016_n.json', 'w', encoding='utf-8') as json_file:
     json.dump(train_test_sims_casf2016_n, json_file, ensure_ascii=False, indent=4)
 
-with open('train_test_similarities_casf2013_090425.json', 'w', encoding='utf-8') as json_file:
+with open('train_test_similarities_casf2013.json', 'w', encoding='utf-8') as json_file:
     json.dump(train_test_sims_casf2013, json_file, ensure_ascii=False, indent=4)
 
-with open('train_test_similarities_casf2013_n_090425.json', 'w', encoding='utf-8') as json_file:
+with open('train_test_similarities_casf2013_n.json', 'w', encoding='utf-8') as json_file:
     json.dump(train_test_sims_casf2013_n, json_file, ensure_ascii=False, indent=4)
