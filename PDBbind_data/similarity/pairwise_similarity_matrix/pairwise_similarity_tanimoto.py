@@ -42,7 +42,7 @@ def handle_signal(signal, frame):
 def parse_sdf_files(folder_path, complexes):
     parsed_molecules = {}
     for complex_id in complexes:
-        sdf_path = os.path.join(folder_path, complex_id + '_ligand.sdf')
+        sdf_path = os.path.join(folder_path, complex_id + '.sdf')
         try:
             mol = Chem.SDMolSupplier(sdf_path)[0]
             parsed_molecules[complex_id] = mol
@@ -55,8 +55,8 @@ def compute_tversky_similarity(mol1, mol2, alpha=0.5, beta=0.5):
     mfpgen = rdFingerprintGenerator.GetMorganGenerator(radius=2, fpSize=2048)
 
     # Generate fingerprints
-    fp1 = mfpgen.GetFingerprint(mol1)
-    fp2 = mfpgen.GetFingerprint(mol2)
+    fp1 = mfpgen.GetCountFingerprint(mol1)
+    fp2 = mfpgen.GetCountFingerprint(mol2)
 
     tversky_sim = DataStructs.TverskySimilarity(fp1, fp2, alpha, beta)
     return tversky_sim
@@ -85,12 +85,16 @@ def main(folder_path):
     try:
         # List of the names of the complexes
         complexes = sorted([compl[0:4] for compl in os.listdir(folder_path) 
-                            if compl[0].isdigit() and compl.endswith('protein.pdb')])
+                            if compl[0].isdigit() and compl.endswith('.pdb')])
         num_complexes = len(complexes)
         print("Number of complexes: {}".format(num_complexes), flush=True)
 
-        #To Do: Export the list of complexes to a JSON file
-
+        # Save list of complexes to json file
+        if not os.path.exists('pairwise_similarity_complexes.json'):
+            with open('pairwise_similarity_complexes.json', 'w') as f:
+                json.dump(complexes, f)
+            print("List of complexes saved to pairwise_similarity_complexes.json", flush=True)
+            
         # Initialize the HDF5 file and dataset to save the similarities
         with h5py.File('pairwise_similarity_tanimoto.hdf5', 'a') as f:
             if 'similarities' not in f:
