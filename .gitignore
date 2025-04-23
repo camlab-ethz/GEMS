@@ -15,8 +15,9 @@ PDBbind_data/similarity/pairwise_similarity_matrix/matrix_merge.py
 PDBbind_data/similarity/pairwise_similarity_matrix/matrix_extract_to_json.py
 PDBbind_data/similarity/pairwise_similarity_matrix/compute_batches.py
 
-PDBbind_search_algorithm/*.png
-PDBbind_search_algorithm/*.json
+PDBbind_search_algorithm/original_paper_data/*
+PDBbind_search_algorithm/*/*.png
+PDBbind_search_algorithm/*/*.json
 PDBbind_search_algorithm_0/
 
 pytorch_datasets*/
@@ -24,6 +25,11 @@ remove_redundancy.py
 PDBbind_dataset_filtering/logs/
 PDBbind_dataset_filtering/*.json
 PDBbind_dataset_filtering/original_paper_logs/*.json
+
+PDBbind_dataset_filtering/remove_train_redundancy_with_npy_generation.py
+PDBbind_dataset_filtering/remove_train_redundancy_h5py.py
+PDBbind_dataset_filtering/remove_train_test_sims_h5py.py
+PDBbind_dataset_filtering/remove_train_test_sims_json.py
 
 PDBbind_search_algorithms/
 
@@ -58,7 +64,8 @@ find_clusters/
 logs/
 *.tar.gz
 *copy*
-*test*
+test*
+*.pkl*
 
 # Ignore system files
 .DS_Store
