@@ -191,7 +191,7 @@ def process_pair(id1, id2, mol1, mol2, folder_path, tm_align_path):
 
 
 
-def main(folder_path, tm_align_path, save_as_json=True):
+def main(folder_path, tm_align_path, save_as_json=False):
 
     try:
         complexes = sorted([compl[0:4] for compl in os.listdir(folder_path) 
@@ -227,14 +227,17 @@ def main(folder_path, tm_align_path, save_as_json=True):
         print("Parsed all ligands!")
         print()
 
-
+        # --------------------------------------------------------------------------------------------------------------
         # Loop through each complex and compare it with all other complexes in parallel
+        # --------------------------------------------------------------------------------------------------------------
         tic = time()
         for i in range(num_complexes):
 
             print(f"Processing {complexes[i]} ({i})...", flush=True)
 
+
             # Check if the complex's similarities have already been precomputed
+            # --------------------------------------------------------------------------------------------------------------
             precomputed_rmsds = os.path.join(folder_path, f"{complexes[i]}_similarities_rmsd.json")
             precomputed_tm_scores = os.path.join(folder_path, f"{complexes[i]}_similarities_tm_scores.json")
             
@@ -245,7 +248,6 @@ def main(folder_path, tm_align_path, save_as_json=True):
                     with open(precomputed_rmsds, 'r') as f:
                         rmsd_data = json.load(f)
                         rmsds = [rmsd_data[complex] for complex in complexes] # Convert values to list in the right order
-
                     with h5py.File(f'pairwise_similarity_rmsd_ligand.hdf5', 'a') as f:
                             dset = f['similarities']
                             dset[i, :] = rmsds
@@ -259,36 +261,48 @@ def main(folder_path, tm_align_path, save_as_json=True):
                             dset = f['similarities']
                             dset[i, :] = tm_scores
                             dset[:, i] = tm_scores
+                    
                     print(f"--- Precomputed data found for {complexes[i]}, skipping...", flush=True)
                 
                 except Exception as e:
                     logger.error(f"Error in retrieving precomputed data: {str(e)}")
+            # --------------------------------------------------------------------------------------------------------------
+
 
 
             # Compare complex to all other complexes in parallel
+            # --------------------------------------------------------------------------------------------------------------
             else:
                 to_compare = [j for j in range(i+1, num_complexes)]
-                if len(to_compare) == 0: continue
-
                 print(f"--- Comparing {complexes[i]} ({i}) to indexes {to_compare[0]}-{to_compare[-1]}", flush=True)
 
                 tac = time()
-                # RUN ALL THE COMPARISONS IN PARALLEL, accumulate the results
-                results = Parallel(n_jobs=-1)(delayed(process_pair)(
-                        complexes[i], complexes[j], parsed_molecules[complexes[i]], parsed_molecules[complexes[j]],
-                        folder_path, tm_align_path) for j in to_compare)
+                if len(to_compare) > 0:
+                    # RUN ALL THE COMPARISONS IN PARALLEL, accumulate the results
+                    results = Parallel(n_jobs=-1)(delayed(process_pair)(
+                            complexes[i], complexes[j], parsed_molecules[complexes[i]], parsed_molecules[complexes[j]],
+                            folder_path, tm_align_path) for j in to_compare)
 
+                    # APPEND THE TM SCORES TO THE HDF5 FILE
+                    with h5py.File(f'pairwise_similarity_tm_scores.hdf5', 'a') as f:
+                        dset = f['similarities']
+                        for j, metrics in zip(to_compare, results):
+                            dset[i, j] = metrics[0]
+                            dset[j, i] = metrics[0]
 
-                # APPEND THE TM SCORES TO THE HDF5 FILE
-                with h5py.File(f'pairwise_similarity_tm_scores.hdf5', 'a') as f:
-                    dset = f['similarities']
-                    for j, metrics in zip(to_compare, results):
-                        dset[i, j] = metrics[0]
-                        dset[j, i] = metrics[0]
+                    # APPEND THE LIGAND RMSD TO THE HDF5 FILE
+                    with h5py.File(f'pairwise_similarity_rmsd_ligand.hdf5', 'a') as f:
+                            dset = f['similarities']
+                            for j, metrics in zip(to_compare, results):
+                                dset[i, j] = metrics[1]
+                                dset[j, i] = metrics[1]
 
-                    if save_as_json:
+                if save_as_json:
 
-                        # Extract line from the dataset and save it to a JSON file
+                    # Save the TM scores to a JSON file
+                    with h5py.File(f'pairwise_similarity_tm_scores.hdf5', 'a') as f:
+                        dset = f['similarities']
+
                         line_data = np.array(dset[i, :], dtype=np.float32)
                         line_data = line_data.tolist()
                         sim_data = {complexes[i]: line_data[i] for i in range(len(complexes))}
@@ -297,27 +311,39 @@ def main(folder_path, tm_align_path, save_as_json=True):
                         with open(precomputed_tm_scores, 'w') as f:
                             json.dump(sim_data, f, indent=4)
 
-
-                # APPEND THE LIGAND RMSD TO THE HDF5 FILE
-                with h5py.File(f'pairwise_similarity_rmsd_ligand.hdf5', 'a') as f:
+                    # Save the RMSD data to a JSON file
+                    with h5py.File(f'pairwise_similarity_rmsd_ligand.hdf5', 'a') as f:
                         dset = f['similarities']
-                        for j, metrics in zip(to_compare, results):
-                            dset[i, j] = metrics[1]
-                            dset[j, i] = metrics[1]
+                        # Extract line from the dataset and save it to a JSON file
+                        line_data = np.array(dset[i, :], dtype=np.float32)
+                        line_data = line_data.tolist()
+                        sim_data = {complexes[i]: line_data[i] for i in range(len(complexes))}
+                    
+                        # Save the dictionary to a JSON file with indentation
+                        with open(precomputed_rmsds, 'w') as f:
+                            json.dump(sim_data, f, indent=4)
 
-                        if save_as_json:
-
-                            # Extract line from the dataset and save it to a JSON file
-                            line_data = np.array(dset[i, :], dtype=np.float32)
-                            line_data = line_data.tolist()
-                            sim_data = {complexes[i]: line_data[i] for i in range(len(complexes))}
-                        
-                            # Save the dictionary to a JSON file with indentation
-                            with open(precomputed_rmsds, 'w') as f:
-                                json.dump(sim_data, f, indent=4)
-                
                 toc = time()
                 print(f"--- Done: Time needed: {toc - tac:.2f} seconds. Total Time: {toc - tic}", flush=True)
+            # --------------------------------------------------------------------------------------------------------------
+
+
+        # Make sure the HDF5 files are symmetric and the diagonal is correct
+        with h5py.File(f'pairwise_similarity_rmsd_ligand.hdf5', 'a') as f:
+            dset = f['similarities']
+            dset[:] = np.maximum(dset[:], dset[:].T)
+
+            arr = dset[:]
+            np.fill_diagonal(arr, 0.0)
+            dset[:] = arr
+
+        with h5py.File(f'pairwise_similarity_tm_scores.hdf5', 'a') as f:
+            dset = f['similarities']
+            dset[:] = np.maximum(dset[:], dset[:].T)
+
+            arr = dset[:]
+            np.fill_diagonal(arr, 1.0)
+            dset[:] = arr
 
 
     except Exception as e:
@@ -333,7 +359,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Compute and store pairwise metrics for 3D complexes.")
     parser.add_argument('folder_path', type=str, help='Path to the folder containing the 3D complexes')
     parser.add_argument('tm_align_path', type=str, help='Path to the TM-align executable')
+    parser.add_argument('--save_as_json', type=bool, default=False, help='Save the per complex similarities as JSON files')
     args = parser.parse_args()
 
-    main(args.folder_path, args.tm_align_path)
+    main(args.folder_path, args.tm_align_path, save_as_json=args.save_as_json)
 
