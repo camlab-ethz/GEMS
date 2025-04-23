@@ -39,12 +39,13 @@ def plot_spearman_correlations(correlations, save_path=None, xlabel=''):
         plt.savefig(save_path, dpi=300)
 
 
-def compute_pearson_correlations_in_clusters(casf2016_predictions):
+
+def compute_spearman_correlations_in_clusters(casf2016_predictions):
 
     predicted_ids = list(casf2016_predictions.keys())
     spearman_correlations = []
 
-    with open('clusters_casf2016.json') as f:
+    with open('PDBbind_data/clusters_casf2016.json') as f:
         clusters = json.load(f)
 
     for cluster in clusters:
@@ -58,7 +59,12 @@ def compute_pearson_correlations_in_clusters(casf2016_predictions):
 
         # Extract the true and predicted scores for the cluster
         true_scores = [data[i][1] for i in range(len(data)) if data[i][0] in ids]
-        predicted_scores = [casf2016_predictions[id][1] for id in ids]
+
+        # Check if the predictions are lists or floats and extract the scores accordingly
+        if casf2016_predictions[ids[0]] is list:
+            predicted_scores = [casf2016_predictions[id][1] for id in ids]
+        else:
+            predicted_scores = [casf2016_predictions[id] for id in ids]
         
         # Calculate the Spearman correlation
         spearman_correlation, _ = spearmanr(true_scores, predicted_scores)
@@ -68,59 +74,70 @@ def compute_pearson_correlations_in_clusters(casf2016_predictions):
 
 
 
-# Initialize the argument parser
-parser = argparse.ArgumentParser(description="Plot Spearman correlations for CASF-2016 dataset")
-parser.add_argument("model_path", 
-                    type=str, 
-                    help="Either the path to the folder containing the model prediction files for all random seeds \
-                          or the path to the predictions file of a specific model (json).")
-args = parser.parse_args()
-model_path = args.model_path
+def main(model_path):
+    
+    """
+    Computes the Spearman correlations for the CASF-2016 dataset predictions.
+    If the model path is a specific predictions file, it loads the predictions and computes the correlations.
+    If the model path is a folder containing predictions for all random seeds, it loads the predictions for each seed,
+    summarizes them, and computes the correlations.
+    """
+
+    # If the model path is a specific predictions file of a specific model, load the predictions 
+    if model_path.endswith('.json'):
+        with open(model_path) as f:
+            casf2016_predictions = json.load(f)
+        spearman_correlations = compute_spearman_correlations_in_clusters(casf2016_predictions)
+
+        # SAVE PEARSON CORRELATIONS TO A FILE AT MODEL PATH
+        save_path = model_path.replace('.json', '_spearman_correlations.json')
+        with open(save_path, 'w') as f:
+            json.dump(spearman_correlations, f)
+
+        # Plot the Spearman correlations and save the plot where the prediction file is located
+        save_path = model_path.replace('.json', '_spearman_correlations.png')
+        plot_spearman_correlations(spearman_correlations, save_path, xlabel=model_path.split('/')[-1])
 
 
-# LOAD THE PREDICTIONS FROM THE MODEL ###
-# -------------------------------------------------------------------------------------------------------------
+    # If the model path is a folder containing predictions for all random seeds, load the predictions for each seed
+    else:
+        casf2016_predictions = {}
+        for random_seed in range(0, 5):
+            predictions_path = f'{model_path}_{random_seed}/dataset_casf2016_predictions.json'
+            with open(predictions_path) as f:
+                fold_predictions = json.load(f)
 
-# If the model path is a specific predictions file of a specific model, load the predictions 
-if model_path.endswith('.json'):
-    with open(model_path) as f:
-        casf2016_predictions = json.load(f)
-    spearman_correlations = compute_pearson_correlations_in_clusters(casf2016_predictions)
+            for complex in fold_predictions:
+                if complex not in casf2016_predictions:
+                    casf2016_predictions[complex] = [fold_predictions[complex]]
+                else:
+                    casf2016_predictions[complex].append(fold_predictions[complex])
 
-    # SAVE PEARSON CORRELATIONS TO A FILE AT MODEL PATH
-    save_path = model_path.replace('.json', '_spearman_correlations.json')
-    with open(save_path, 'w') as f:
-        json.dump(spearman_correlations, f)
+        # Summarize the saved predictions into average values for each complex
+        for complex in casf2016_predictions:
+            casf2016_predictions[complex] = sum(casf2016_predictions[complex]) / len(casf2016_predictions[complex])
 
-    # Plot the Spearman correlations and save the plot where the prediction file is located
-    save_path = model_path.replace('.json', '_spearman_correlations.png')
-    plot_spearman_correlations(spearman_correlations, save_path, xlabel=model_path.split('/')[-1])
+        spearman_correlations = compute_spearman_correlations_in_clusters(casf2016_predictions)
+
+        # SAVE PEARSON CORRELATIONS TO A FILE AT MODEL PATH
+        with open(f'{model_path}_spearman_correlations.json', 'w') as f:
+            json.dump(spearman_correlations, f)
+
+        # Plot the Spearman correlations and save the plot where the prediction file is located
+        save_path = f"{model_path}_spearman_correlations.png"
+        plot_spearman_correlations(spearman_correlations, save_path, xlabel=model_path.split('/')[-1])
 
 
-# If the model path is a folder containing predictions for all random seeds, load the predictions for each seed
-else:
-    casf2016_predictions = {}
-    for random_seed in range(0, 5):
-        predictions_path = f'{model_path}_{random_seed}/dataset_casf2016_predictions.json'
-        with open(predictions_path) as f:
-            fold_predictions = json.load(f)
 
-        for complex in fold_predictions:
-            if complex not in casf2016_predictions:
-                casf2016_predictions[complex] = [fold_predictions[complex]]
-            else:
-                casf2016_predictions[complex].append(fold_predictions[complex])
+if __name__ == "__main__":
 
-    # Summarize the saved predictions into average values for each complex
-    for complex in casf2016_predictions:
-        casf2016_predictions[complex] = sum(casf2016_predictions[complex]) / len(casf2016_predictions[complex])
+    # Initialize the argument parser
+    parser = argparse.ArgumentParser(description="Plot Spearman correlations for CASF-2016 dataset")
+    parser.add_argument("model_path", 
+                        type=str, 
+                        help="Either the path to the folder containing the model prediction files for all random seeds \
+                            or the path to the predictions file of a specific model (json).")
+    args = parser.parse_args()
+    model_path = args.model_path
 
-    spearman_correlations = compute_pearson_correlations_in_clusters(casf2016_predictions)
-
-    # SAVE PEARSON CORRELATIONS TO A FILE AT MODEL PATH
-    with open(f'{model_path}_spearman_correlations.json', 'w') as f:
-        json.dump(spearman_correlations, f)
-
-    # Plot the Spearman correlations and save the plot where the prediction file is located
-    save_path = f"{model_path}_spearman_correlations.png"
-    plot_spearman_correlations(spearman_correlations, save_path, xlabel=model_path.split('/')[-1])
+    main(model_path)
