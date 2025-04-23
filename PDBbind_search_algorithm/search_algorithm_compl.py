@@ -3,6 +3,7 @@ import numpy as np
 import os
 import json
 import torch
+import argparse
 import matplotlib.pyplot as plt
 
 
@@ -13,6 +14,7 @@ class RMSELoss(torch.nn.Module):
     def forward(self, output, targets):
         return torch.sqrt(self.mse(output, targets))
 criterion = RMSELoss()
+
 
 def plot_predictions(y_true, y_pred, title, label):
     plt.figure(figsize=(8, 8))
@@ -30,99 +32,110 @@ def plot_predictions(y_true, y_pred, title, label):
     plt.show()
 
 
-# Add an argparse for remove_data_leakage and top_n
-import argparse
-parser = argparse.ArgumentParser(description="Compute and store pairwise metrics for 3D complexes.")
-parser.add_argument('--data_split', required=True, type=str, help='Path to the data split dictionary to use for data leakage test')
-parser.add_argument('--test_dataset', required=True, type=str, help='Name of the test dataset to use for data leakage test [casf2013, casf2016]')
-parser.add_argument('--top_n', type=int, default=5, help='Number of top similar complexes to consider')
-args = parser.parse_args()
+def compute_lookup_predictions(data_split, test_dataset, top_n):
 
-top_n = args.top_n
-data_split = args.data_split
-test_dataset = args.test_dataset
+    """
+    Compute the predictions for the test dataset using the lookup method.
+    The predictions are based on the average of the top n most similar training complexes.
+    The similarity is computed using the pairwise similarity matrices (PSM) for Tanimoto, TM-score, and RMSD.
+    """
 
+    # Import list of complexes from json file
+    with open('../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_complexes.json', 'r') as f:
+        complexes = json.load(f)
 
-# Import list of complexes from json file
-with open('../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_complexes.json', 'r') as f:
-    complexes = json.load(f)
+    # Import affinity dict and get true affinity for each complex
+    with open('../PDBbind_data/PDBbind_data_dict.json', 'r') as f:
+        affinity_data = json.load(f)
 
-# Import affinity dict and get true affinity for each complex
-with open('../PDBbind_data/PDBbind_data_dict.json', 'r') as f:
-    affinity_data = json.load(f)
-
-# Define the path to the pairwise similarity matrices (PSM)
-PSM_tanimoto_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tanimoto.hdf5'
-PSM_tm_scores_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tm_scores.hdf5'
-PSM_rmsd_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_rmsd_ligand.hdf5'
+    # Define the path to the pairwise similarity matrices (PSM)
+    PSM_tanimoto_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tanimoto.hdf5'
+    PSM_tm_scores_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tm_scores.hdf5'
+    PSM_rmsd_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_rmsd_ligand.hdf5'
 
 
-# Loop over the test complexes and look for the most similar training complexes
-# ---------------------------------------------------------------------------------
-print(f"Computing predictions for {test_dataset} test set\n\n")
+    # Loop over the test complexes and look for the most similar training complexes
+    # ---------------------------------------------------------------------------------
+    print(f"Computing predictions for {test_dataset} test set\n\n")
 
-with open(data_split, 'r') as f:
-    split = json.load(f)
-    train_dataset = split['train']
-    test_complexes = split[test_dataset]
+    with open(data_split, 'r') as f:
+        split = json.load(f)
+        train_dataset = split['train']
+        test_complexes = split[test_dataset]
 
-train_or_not = np.array([1 if complex in train_dataset else 0 for complex in complexes])
+    train_or_not = np.array([1 if complex in train_dataset else 0 for complex in complexes])
 
-true_labels = [affinity_data[complex]['log_kd_ki'] for complex in test_complexes]
-predicted_labels = {}
+    true_labels = [affinity_data[complex]['log_kd_ki'] for complex in test_complexes]
+    predicted_labels = {}
 
-for complex in test_complexes:
-    print()
-    print(f"Finding similar training complexes for {complex}")
-    complex_idx = complexes.index(complex)
-
-
-    # Load the pairwise similarity data
-    with h5py.File(PSM_tanimoto_file, 'r') as f:
-        tanimoto = f['similarities'][complex_idx, :]
-
-    with h5py.File(PSM_tm_scores_file, 'r') as f:
-        tm_scores = f['similarities'][complex_idx, :]
-
-    with h5py.File(PSM_rmsd_file, 'r') as f:
-        rmsds = f['similarities'][complex_idx, :]
-
-    # Calculate similarity scores
-    similarity_scores = tanimoto + tm_scores# - rmsds # RMSD distorts the selection when no similar complexes are found
-    similarity_scores[complex_idx] = -np.inf # Set the metrics of the complex itself to small number
-    similarity_scores[train_or_not == 0] = -np.inf # Set the metrics of all complexes not in the training dataset to small number
-
-    sorted_indices = np.argsort(similarity_scores)
-    sorted_indices = list(reversed(sorted_indices))
-    print(f"Most similar indeces: {sorted_indices[0:5]}")
-    print(f"Similarity scores: {similarity_scores[sorted_indices[0:5]]}")
-
-    # Get the top n similar and average their labels
-    top_indices = sorted_indices[:top_n]
-    print(f"Most similar indeces: {top_indices}")
-    names = [complexes[idx] for idx in top_indices]
-    print(names)
-    for idx in top_indices: 
-        print(f"Tanimoto: {tanimoto[idx]}, TM-score: {tm_scores[idx]}, RMSD: {rmsds[idx]}")
-    affinities = np.array([affinity_data[complex]['log_kd_ki'] for complex in names])
-    print(f"Affinities: {affinities}")
-    weights = similarity_scores[top_indices]
-    print(f"Weights: {weights}")
-    weighted_average = np.average(affinities, weights=weights)
-    print(f"Predicted affinity: {weighted_average}")
-    predicted_labels[complex] = weighted_average.item()
+    for complex in test_complexes:
+        print()
+        print(f"Finding similar training complexes for {complex}")
+        complex_idx = complexes.index(complex)
 
 
-# Export the predictions to a json file
-with open(f'{test_dataset}_predictions_top{top_n}_compl.json', 'w', encoding='utf-8') as json_file:
-    json.dump(predicted_labels, json_file, ensure_ascii=False, indent=4)
+        # Load the pairwise similarity data
+        with h5py.File(PSM_tanimoto_file, 'r') as f:
+            tanimoto = f['similarities'][complex_idx, :]
 
-# Compute the evaluation metrics
-predicted_labels = np.array([predicted_labels[complex] for complex in test_complexes])
-corr_matrix = np.corrcoef(true_labels, predicted_labels)
-r = corr_matrix[0, 1]
-rmse = criterion(torch.tensor(predicted_labels), torch.tensor(true_labels))
+        with h5py.File(PSM_tm_scores_file, 'r') as f:
+            tm_scores = f['similarities'][complex_idx, :]
 
-split_dict = os.path.basename(data_split).split('.')[0]
-plot_predictions(true_labels, predicted_labels, f"{test_dataset} predictions \n{split_dict}\nWeighted average of labels of top {top_n} similar complexes\nR = {r:.3f}, RMSE = {rmse:.3f}", f"{test_dataset} Predictions")
-plt.savefig(f'{test_dataset}_predictions_top{top_n}_compl', dpi=300)
+        with h5py.File(PSM_rmsd_file, 'r') as f:
+            rmsds = f['similarities'][complex_idx, :]
+
+        # Calculate similarity scores
+        similarity_scores = tanimoto + tm_scores # - rmsds # RMSD distorts the selection when no similar complexes are found
+        similarity_scores[complex_idx] = -np.inf # Set the metrics of the complex itself to small number
+        similarity_scores[train_or_not == 0] = -np.inf # Set the metrics of all complexes not in the training dataset to small number
+
+        sorted_indices = np.argsort(similarity_scores)
+        sorted_indices = list(reversed(sorted_indices))
+        print(f"Most similar indeces: {sorted_indices[0:5]}")
+        print(f"Similarity scores: {similarity_scores[sorted_indices[0:5]]}")
+
+        # Get the top n similar and average their labels
+        top_indices = sorted_indices[:top_n]
+        print(f"Most similar indeces: {top_indices}")
+        names = [complexes[idx] for idx in top_indices]
+        print(names)
+        for idx in top_indices: 
+            print(f"Tanimoto: {tanimoto[idx]}, TM-score: {tm_scores[idx]}, RMSD: {rmsds[idx]}")
+        affinities = np.array([affinity_data[complex]['log_kd_ki'] for complex in names])
+        print(f"Affinities: {affinities}")
+        weights = similarity_scores[top_indices]
+        print(f"Weights: {weights}")
+        weighted_average = np.average(affinities, weights=weights)
+        print(f"Predicted affinity: {weighted_average}")
+        predicted_labels[complex] = weighted_average.item()
+
+
+    # Export the predictions to a json file
+    with open(f'{test_dataset}_predictions_top{top_n}_compl.json', 'w', encoding='utf-8') as json_file:
+        json.dump(predicted_labels, json_file, ensure_ascii=False, indent=4)
+
+    # Compute the evaluation metrics
+    predicted_labels = np.array([predicted_labels[complex] for complex in test_complexes])
+    corr_matrix = np.corrcoef(true_labels, predicted_labels)
+    r = corr_matrix[0, 1]
+    rmse = criterion(torch.tensor(predicted_labels), torch.tensor(true_labels))
+
+    split_dict = os.path.basename(data_split).split('.')[0]
+    plot_predictions(true_labels, predicted_labels, f"{test_dataset} predictions \n{split_dict}\nWeighted average of labels of top {top_n} similar complexes\nR = {r:.3f}, RMSE = {rmse:.3f}", f"{test_dataset} Predictions")
+    plt.savefig(f'{test_dataset}_predictions_top{top_n}_compl', dpi=300)
+
+
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description="Compute predictions for the test dataset using the lookup method.")
+    parser.add_argument('--data_split', required=True, type=str, help='Path to the data split dictionary to use for data leakage test')
+    parser.add_argument('--test_dataset', required=True, type=str, help='Name of the test dataset to use for data leakage test [casf2013, casf2016]')
+    parser.add_argument('--top_n', type=int, default=5, help='Number of top similar complexes to consider')
+    args = parser.parse_args()
+
+    top_n = args.top_n
+    data_split = args.data_split
+    test_dataset = args.test_dataset
+
+    compute_lookup_predictions(data_split, test_dataset, top_n)
