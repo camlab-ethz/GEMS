@@ -1,7 +1,6 @@
-import h5py
-import numpy as np
 import os
 import json
+import numpy as np
 
 """
 This script removes data leakage by filtering out training complexes that are highly similar to test complexes 
@@ -22,11 +21,13 @@ The script performs the following steps:
 """
 
 # INPUTS ------------------------------------------------------------------------------------------------
+runid = "c18"
 
 tanimoto_threshold = 0.9
-TM_threshold = 0.8
+TM_threshold = 0.6
 label_threshold = 1.0
 S_threshold = 0.8
+
 
 
 input_data_split = '../PDBbind_data/PDBbind_data_split_pdbbind.json'
@@ -43,9 +44,13 @@ with open('../PDBbind_data/PDBbind_data_dict.json', 'r') as f:
     affinity_data = json.load(f)
 
 # Define the path to the pairwise similarity matrices (PSM)
-PSM_tanimoto_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tanimoto.hdf5'
-PSM_tm_scores_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tm_scores.hdf5'
-PSM_rmsd_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_rmsd_ligand.hdf5'
+PSM_tanimoto_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_matrix_tanimoto.npy'
+PSM_tm_scores_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_matrix_tm.npy'
+PSM_rmsd_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_matrix_rmsd.npy'
+
+PSM_tanimoto = np.load(PSM_tanimoto_file)
+PSM_tm_scores = np.load(PSM_tm_scores_file)
+PSM_rmsd = np.load(PSM_rmsd_file)
 
 # Get the indexes and names from json file
 with open('../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_complexes.json', 'r') as f:
@@ -112,15 +117,9 @@ for test_idx, test_complex in test_set:
     #   Tanimoto + (1 - RMSD) > 0.8
 
     # Load the pairwise similarity data
-    with h5py.File(PSM_tanimoto_file, 'r') as f:
-        tanimoto = f['similarities'][test_idx, :]
-
-    with h5py.File(PSM_tm_scores_file, 'r') as f:
-        tm_scores = f['similarities'][test_idx, :]
-
-    with h5py.File(PSM_rmsd_file, 'r') as f:
-        rmsds = f['similarities'][test_idx, :]
-
+    tanimoto = PSM_tanimoto[test_idx, :]
+    tm_scores = PSM_tm_scores[test_idx, :]
+    rmsds = PSM_rmsd[test_idx, :]
 
     # Filter the training complexes that fulfill the conditions
     mask1 = (tanimoto > tanimoto_threshold) | ((tm_scores > TM_threshold) & (tanimoto + (1 - rmsds) > S_threshold))
@@ -140,7 +139,7 @@ for test_idx, test_complex in test_set:
         dpK = np.abs(affinity_data[complex]['log_kd_ki'] - test_complex_affinity)
         if dpK < label_threshold:
 
-            if (tm_scores[idx] > 0.8) & (tanimoto[idx] + (1 - rmsds[idx]) > 0.8):
+            if (tm_scores[idx] > TM_threshold) & (tanimoto[idx] + (1 - rmsds[idx]) > S_threshold):
                 reason = "COMPL SIMILARITY"
                 similarities.append(complex)
             else:
@@ -190,17 +189,17 @@ split_dict['casf2016_indep'] = casf2016_filtered
 split_dict['casf2013_indep'] = casf2013_filtered
 
 
-with open('PDBbind_split_leakage_removed.json', 'w', encoding='utf-8') as json_file:
+with open(f'PDBbind_split_leakage_removed_{runid}.json', 'w', encoding='utf-8') as json_file:
     json.dump(split_dict, json_file, ensure_ascii=False, indent=4)
 
-with open('train_test_similarities_casf2016.json', 'w', encoding='utf-8') as json_file:
+with open(f'train_test_similarities_casf2016_{runid}.json', 'w', encoding='utf-8') as json_file:
     json.dump(train_test_sims_casf2016, json_file, ensure_ascii=False, indent=4)
 
-with open('train_test_similarities_casf2016_n.json', 'w', encoding='utf-8') as json_file:
+with open(f'train_test_similarities_casf2016_n_{runid}.json', 'w', encoding='utf-8') as json_file:
     json.dump(train_test_sims_casf2016_n, json_file, ensure_ascii=False, indent=4)
 
-with open('train_test_similarities_casf2013.json', 'w', encoding='utf-8') as json_file:
+with open(f'train_test_similarities_casf2013_{runid}.json', 'w', encoding='utf-8') as json_file:
     json.dump(train_test_sims_casf2013, json_file, ensure_ascii=False, indent=4)
 
-with open('train_test_similarities_casf2013_n.json', 'w', encoding='utf-8') as json_file:
+with open(f'train_test_similarities_casf2013_n_{runid}.json', 'w', encoding='utf-8') as json_file:
     json.dump(train_test_sims_casf2013_n, json_file, ensure_ascii=False, indent=4)

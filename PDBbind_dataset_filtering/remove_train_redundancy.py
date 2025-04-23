@@ -1,4 +1,4 @@
-import h5py
+import os
 import json
 import numpy as np
 
@@ -11,13 +11,13 @@ TM_threshold = 0.8
 S_threshold = 1.3
 label_threshold = 0.5
 
-input_data_split = 'PDBbind_split_leakage_removed.json'
-output_data_split = 'PDBbind_split_leakage_redund_removed.json'
+input_data_split = 'PDBbind_split_leakage_removed_c18.json'
+output_data_split = 'PDBbind_split_leakage_removed_c19_redund.json'
 
 # Define the path to the pairwise similarity matrices (PSM)
-PSM_tanimoto_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tanimoto_counts.hdf5'
-PSM_tm_scores_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tm_scores.hdf5'
-PSM_rmsd_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_rmsd_ligand.hdf5'
+PSM_tanimoto_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_matrix_tanimoto.npy'
+PSM_tm_scores_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_matrix_tm.npy'
+PSM_rmsd_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_matrix_rmsd.npy'
 
 # List of complexes in the pairwise similarity matrix
 with open('../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_complexes.json', 'r') as f:
@@ -26,6 +26,9 @@ with open('../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_simila
 # Import the PDBbind data dictionary for the affinites and resolutions
 with open('../PDBbind_data/PDBbind_data_dict.json', 'r') as f:
     pdbbind_data = json.load(f)
+
+# Define the directory with the similarity data
+similarity_dir = '../PDBbind/'
 
 # INPUT TRAINING DATASET from json file
 with open(input_data_split, 'r') as f:
@@ -39,7 +42,7 @@ train_or_test = np.array([True if complex in test_dataset else False for complex
 
 
 
-# INITIALIZE LOG FILE, REFINED LIST, RESOLUTIONS AND LABEL DIFFERENCES
+# INITIALIZE REFINED LIST, RESOLUTIONS AND LABEL DIFFERENCES
 # -----------------------------------------------------------------------------------------------
 
 # Write the initial information to the log file
@@ -70,21 +73,27 @@ non_train_dataset_indices = [complexes.index(complex) for complex in complexes i
 # CREATE ADJACENCY MATRIX BASED ON THRESHOLDS FOR TANIMOTO, TM-SCORE AND LABEL DIFFERENCES
 # -----------------------------------------------------------------------------------------------
 
+
 # TM-SCORE SIMILARITY MATRIX
-with h5py.File(PSM_tm_scores_file, 'r') as f:
-    similarity_matrix_tm = f['similarities'][:]
+if os.path.exists(PSM_tm_scores_file):
+    similarity_matrix_tm = np.load(PSM_tm_scores_file)
+else:
+    raise FileNotFoundError(f"TM-score similarity matrix file not found: {PSM_tm_scores_file}")
+
+# TANIMOTO SIMILARITY MATRIX
+if os.path.exists(PSM_tanimoto_file):
+    similarity_matrix_tanimoto = np.load(PSM_tanimoto_file)
+else:
+    raise FileNotFoundError(f"Tanimoto similarity matrix file not found: {PSM_tanimoto_file}")
+
+# RMSD SIMILARITY MATRIX
+if os.path.exists(PSM_rmsd_file):
+    similarity_matrix_rmsd = np.load(PSM_rmsd_file)
+else:
+    raise FileNotFoundError(f"RMSD similarity matrix file not found: {PSM_rmsd_file}")
 
 
-
-
-# LIGAND SIMILARITY MATRIX
-with h5py.File(PSM_tanimoto_file, 'r') as f:
-    similarity_matrix_tanimoto = f['similarities'][:]
-
-with h5py.File(PSM_rmsd_file, 'r') as f:
-    similarity_matrix_rmsd = f['similarities'][:]
-
-similarity_matrix = similarity_matrix_tanimoto + (1 - similarity_matrix_rmsd)
+ligand_similarity_matrix = similarity_matrix_tanimoto + (1 - similarity_matrix_rmsd)
 
 # Pairs with 
 # --- TM-score > TM_threshold
@@ -94,7 +103,7 @@ adjacency_matrix = similarity_matrix_tm > TM_threshold
 # Pairs with 
 # --- TM-score > TM_threshold 
 # --- tanimoto + (1-RMSE) > S_threshold
-adjacency_matrix = adjacency_matrix & (similarity_matrix > S_threshold)
+adjacency_matrix = adjacency_matrix & (ligand_similarity_matrix > S_threshold)
 
 
 # Pairs with 
