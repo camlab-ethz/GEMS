@@ -1,4 +1,7 @@
 # Ignore all folders with data
+CASF2016/
+CASF2016_docking_decoys/
+CASF2016_docking_decoys_test/
 experiments/
 PDBbind/
 PDBbind_data/similarity/pairwise_similarity_matrix/*.sh
@@ -34,7 +37,7 @@ PDBbind_dataset_filtering/remove_train_test_sims_json.py
 PDBbind_search_algorithms/
 
 *before_publication*
-model/INITIAL/*
+model/*/*
 example_dataset/*pt
 example_dataset/*csv
 example_dataset/*pth
@@ -59,6 +62,8 @@ aggregate_results.py
 clustering/
 inference_test*/
 find_clusters/
+find_most_similar*
+split_mol2_file.py
 *check*
 
 logs/
