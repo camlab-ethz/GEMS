@@ -120,7 +120,6 @@ def run_tmalign(tm_align_path, pdb1, pdb2, matrix_path=None):
     result = subprocess.run(command, text=True, capture_output=True)
 
     if result.returncode == 0:
-        #print("Output:\n", result.stdout)
         tm_score, seq_id = parse_tm_align_output(result.stdout)
         
         # Write result.stdout to txt
