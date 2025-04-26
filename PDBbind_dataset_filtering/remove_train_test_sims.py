@@ -135,7 +135,6 @@ for test_idx, test_complex in test_set:
     for complex, idx in zip(similar_complexes_names, similar_complexes_idx):
         
         # Check the difference between the affinity_values
-        # If the absolute difference is lower than 1, remove the training complex
         dpK = np.abs(affinity_data[complex]['log_kd_ki'] - test_complex_affinity)
         if dpK < label_threshold:
 
