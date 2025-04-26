@@ -117,150 +117,157 @@ def plot_predictions(ax, y_true, y_pred, title, label):
 
 
 
+def inference(dataset_path, model_path, ligand_embeddings=None, protein_embeddings=None):
+
+    # Load the dataset
+    print(f"Loading dataset from {dataset_path}")
+    dataset = torch.load(dataset_path)
+    node_feat_dim = dataset[0].x.shape[1]
+    edge_feat_dim = dataset[0].edge_attr.shape[1]
+    print(f"Dataset Loaded with {len(dataset)} samples")
+
+    # Check if the dataset has labels
+    labels = dataset[0].y > 0
+    print(f"Dataset has labels: {labels}")
+
+
+    # SELECT THE MODEL ARCHITECTURE AND STATE DICT PATHS
+    #------------------------------------------------------------------------------------------------------
+    # Check if the dataset has protein and ligand embeddings and choose the correct model state dict paths
+    if not protein_embeddings: protein_embeddings = dataset.protein_embeddings
+    if not ligand_embeddings: ligand_embeddings = dataset.ligand_embeddings
+
+    # Currently providing stdicts for the following combinations of embeddings:
+    # 1. No embeddings (00AEPL with GATE18e)
+    # 2. ChemBERTa-77M only (00AEPL with GATE18d)
+    # 3. ChemBERTa-77M and ankh_base (B0AEPL with GATE18d)
+    # 4. ChemBERTa-77M and esm2_t6 (06AEPL with GATE18d)
+    # 5. ChemBERTa-77M and esm2_t6 and ankh_base (B6AEPL with GATE18d)
+    # 6. Ablation (only ligands): ChemBERTa-77M and esm2_t6 and ankh_base (B6AE0L with GATE18d)
+    print(f"Protein Embeddings: {protein_embeddings}")
+    print(f"Ligand Embeddings: {ligand_embeddings}")
+
+    dataset_id = os.path.basename(dataset_path)[0:6]
+
+    # Check if ablation is enabled
+    try: ablation = dataset.delete_protein
+    except AttributeError: ablation = False
+
+    if len(ligand_embeddings) == 0: # 1. No embeddings
+        model_arch = "GATE18e"
+        dataset_id = "00AEPL"
+    elif len(protein_embeddings) == 0: # 2. ChemBERTa-77M only
+        model_arch = "GATE18d"
+        dataset_id = "00AEPL" 
+    elif 'ankh_base' in protein_embeddings and 'esm2_t6' not in protein_embeddings:
+        model_arch = "GATE18d"
+        dataset_id = "B0AEPL"
+    elif 'esm2_t6' in protein_embeddings and 'ankh_base' not in protein_embeddings:
+        model_arch = "GATE18d"
+        dataset_id = "06AEPL"
+    elif 'ankh_base' in protein_embeddings and 'esm2_t6' in protein_embeddings:
+        model_arch = "GATE18d"
+        if ablation or dataset_id == "B6AE0L":
+            dataset_id = "B6AE0L"
+        else:
+            dataset_id = "B6AEPL"
+    else:
+        raise ValueError("Invalid combination of protein and ligand embeddings found in dataset")
+
+
+    # Generate paths with wildcard for dropout
+    stdict_paths_patterns = [
+        f"{model_path}/{model_arch}_{dataset_id}_*_f0_best_stdict.pt",
+        f"{model_path}/{model_arch}_{dataset_id}_*_f1_best_stdict.pt",
+        f"{model_path}/{model_arch}_{dataset_id}_*_f2_best_stdict.pt",
+        f"{model_path}/{model_arch}_{dataset_id}_*_f3_best_stdict.pt",
+        f"{model_path}/{model_arch}_{dataset_id}_*_f4_best_stdict.pt",
+    ]
+
+    # Find the actual paths matching the patterns
+    stdict_paths = []
+    for pattern in stdict_paths_patterns:
+        matched_files = glob.glob(pattern)
+        stdict_paths.extend(matched_files)
+    #------------------------------------------------------------------------------------------------------
+
+
+
+    print(f"Running Inference with {dataset_path} using model {model_arch}")
+    print(f"Model State Dict Paths:")
+    for path in stdict_paths: print(path)
+
+    # Loaders
+    test_loader = DataLoader(dataset = dataset, batch_size=128, shuffle=True, num_workers=4, persistent_workers=True)
+    print("Data Loader Created")
+
+    # Device Selection
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    print(f"Device: {device}")
+
+    # Ensemble Model
+    criterion = RMSELoss()
+    model_class = getattr(sys.modules[__name__], model_arch)
+    models = [model_class(
+                dropout_prob=0, 
+                in_channels=node_feat_dim,
+                edge_dim=edge_feat_dim,
+                conv_dropout_prob=0).float().to(device)
+                for _ in range(len(stdict_paths))]
+
+
+    ## MODEL NAME ##
+    model_paths = list(stdict_paths)
+    models = [load_model_state(model, path, device) for model, path in zip(models, model_paths)]
+
+    # Run inference
+    test_metrics = evaluate(models, test_loader, criterion, device, labels)
+
+
+
+    # Save the output, plot the results if there are labels in the dataset
+    #-------------------------------------------------------------------------------------------------------------------------
+    if labels:
+        # Create a figure with a single plot (no subplots)
+        fig, ax1 = plt.subplots(figsize=(8, 8))
+
+        # Plot the predictions for test data only
+        #loss, r, rmse, r2, y_true, y_pred = test_metrics
+        loss, r, rmse, r2, y_true, y_pred, ids = test_metrics
+        plot_predictions(ax1, y_true, y_pred, f"Predictions Inference\nR = {r:.3f}, RMSE = {rmse:.3f}", "Inference Predictions")
+
+        # Save the y_true and y_pred in a single CSV file using the csv module
+        with open(f'{dataset_path.split(".")[0]}_predictions.csv', mode='w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(['id', 'y_true', 'y_pred'])  # Write the header
+            writer.writerows(sorted(zip(ids, y_true.tolist(), y_pred.tolist()), key=lambda x: x[0]))  # Write the data
+
+        plt.tight_layout()
+        plt.savefig(f'{dataset_path.split(".")[0]}_predictions.png', dpi=300)
+
+    else:
+        y_true, y_pred, ids = test_metrics
+
+        # Save the sorted y_true and y_pred in a single CSV file using the csv module
+        with open(f'{dataset_path.split(".")[0]}_predictions.csv', mode='w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(['id', 'y_true', 'y_pred'])  # Write the header
+            writer.writerows(sorted(zip(ids, y_true.tolist(), y_pred.tolist()), key=lambda x: x[0]))  # Write the sorted data
+    #-------------------------------------------------------------------------------------------------------------------------
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Testing Parameters and Input Dataset Control")
-
-    # Model Parameters
     parser.add_argument("--dataset_path", required=True, help="The path to the test dataset pt file")
+    parser.add_argument("--model_path", default="model", help="The path to the directory containing the model state dicts")
+    parser.add_argument("--ligand_embeddings", help="List of ligand embeddings used in the model", default=None)
+    parser.add_argument("--protein_embeddings", help="List of protein embeddings used in the model", default=None)
     return parser.parse_args()
 
-args = parse_args()
-dataset_path = args.dataset_path
 
+if __name__ == "__main__":
+    args = parse_args()
+    dataset_path = args.dataset_path
+    model_path = args.model_path
 
-# Load the dataset
-print(f"Loading dataset from {dataset_path}")
-dataset = torch.load(dataset_path)
-node_feat_dim = dataset[0].x.shape[1]
-edge_feat_dim = dataset[0].edge_attr.shape[1]
-print(f"Dataset Loaded with {len(dataset)} samples")
-
-# Check if the dataset has labels
-labels = dataset[0].y > 0
-print(f"Dataset has labels: {labels}")
-
-
-
-# SELECT THE MODEL ARCHITECTURE AND STATE DICT PATHS
-#------------------------------------------------------------------------------------------------------
-# Check if the dataset has protein and ligand embeddings and choose the correct model state dict paths
-protein_embeddings = dataset.protein_embeddings
-ligand_embeddings = dataset.ligand_embeddings
-
-# Currently providing stdicts for the following combinations of embeddings:
-# 1. No embeddings (00AEPL with GATE18e)
-# 2. ChemBERTa-77M only (00AEPL with GATE18d)
-# 3. ChemBERTa-77M and ankh_base (B0AEPL with GATE18d)
-# 4. ChemBERTa-77M and esm2_t6 (06AEPL with GATE18d)
-# 5. ChemBERTa-77M and esm2_t6 and ankh_base (B6AEPL with GATE18d)
-# 6. Ablation (only ligands): ChemBERTa-77M and esm2_t6 and ankh_base (B6AE0L with GATE18d)
-print(f"Protein Embeddings: {protein_embeddings}")
-print(f"Ligand Embeddings: {ligand_embeddings}")
-
-dataset_id = os.path.basename(dataset_path)[0:6]
-
-# Check if ablation is enabled
-try: ablation = dataset.delete_protein
-except AttributeError: ablation = False
-
-if len(ligand_embeddings) == 0: # 1. No embeddings
-    model_arch = "GATE18e"
-    dataset_id = "00AEPL"
-elif len(protein_embeddings) == 0: # 2. ChemBERTa-77M only
-    model_arch = "GATE18d"
-    dataset_id = "00AEPL" 
-elif 'ankh_base' in protein_embeddings and 'esm2_t6' not in protein_embeddings:
-    model_arch = "GATE18d"
-    dataset_id = "B0AEPL"
-elif 'esm2_t6' in protein_embeddings and 'ankh_base' not in protein_embeddings:
-    model_arch = "GATE18d"
-    dataset_id = "06AEPL"
-elif 'ankh_base' in protein_embeddings and 'esm2_t6' in protein_embeddings:
-    model_arch = "GATE18d"
-    if ablation or dataset_id == "B6AE0L":
-        dataset_id = "B6AE0L"
-    else:
-        dataset_id = "B6AEPL"
-else:
-    raise ValueError("Invalid combination of protein and ligand embeddings found in dataset")
-
-
-# Generate paths with wildcard for dropout
-stdict_paths_patterns = [
-    f"model/{model_arch}_{dataset_id}_*_f0_best_stdict.pt",
-    f"model/{model_arch}_{dataset_id}_*_f1_best_stdict.pt",
-    f"model/{model_arch}_{dataset_id}_*_f2_best_stdict.pt",
-    f"model/{model_arch}_{dataset_id}_*_f3_best_stdict.pt",
-    f"model/{model_arch}_{dataset_id}_*_f4_best_stdict.pt",
-]
-
-# Find the actual paths matching the patterns
-stdict_paths = []
-for pattern in stdict_paths_patterns:
-    matched_files = glob.glob(pattern)
-    stdict_paths.extend(matched_files)
-#------------------------------------------------------------------------------------------------------
-
-
-
-print(f"Running Inference with {dataset_path} using model {model_arch}")
-print(f"Model State Dict Paths:")
-for path in stdict_paths: print(path)
-
-# Loaders
-test_loader = DataLoader(dataset = dataset, batch_size=128, shuffle=True, num_workers=4, persistent_workers=True)
-print("Data Loader Created")
-
-# Device Selection
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-print(f"Device: {device}")
-
-# Ensemble Model
-criterion = RMSELoss()
-model_class = getattr(sys.modules[__name__], model_arch)
-models = [model_class(
-            dropout_prob=0, 
-            in_channels=node_feat_dim,
-            edge_dim=edge_feat_dim,
-            conv_dropout_prob=0).float().to(device)
-            for _ in range(len(stdict_paths))]
-
-
-## MODEL NAME ##
-model_paths = list(stdict_paths)
-models = [load_model_state(model, path, device) for model, path in zip(models, model_paths)]
-
-# Run inference
-test_metrics = evaluate(models, test_loader, criterion, device, labels)
-
-
-
-# Save the output, plot the results if there are labels in the dataset
-#-------------------------------------------------------------------------------------------------------------------------
-if labels:
-    # Create a figure with a single plot (no subplots)
-    fig, ax1 = plt.subplots(figsize=(8, 8))
-
-    # Plot the predictions for test data only
-    #loss, r, rmse, r2, y_true, y_pred = test_metrics
-    loss, r, rmse, r2, y_true, y_pred, ids = test_metrics
-    plot_predictions(ax1, y_true, y_pred, f"Predictions Inference\nR = {r:.3f}, RMSE = {rmse:.3f}", "Inference Predictions")
-
-    # Save the y_true and y_pred in a single CSV file using the csv module
-    with open(f'{dataset_path.split(".")[0]}_predictions.csv', mode='w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(['id', 'y_true', 'y_pred'])  # Write the header
-        writer.writerows(sorted(zip(ids, y_true.tolist(), y_pred.tolist()), key=lambda x: x[0]))  # Write the data
-
-    plt.tight_layout()
-    plt.savefig(f'{dataset_path.split(".")[0]}_predictions.png', dpi=300)
-
-else:
-    y_true, y_pred, ids = test_metrics
-
-    # Save the sorted y_true and y_pred in a single CSV file using the csv module
-    with open(f'{dataset_path.split(".")[0]}_predictions.csv', mode='w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(['id', 'y_true', 'y_pred'])  # Write the header
-        writer.writerows(sorted(zip(ids, y_true.tolist(), y_pred.tolist()), key=lambda x: x[0]))  # Write the sorted data
-#-------------------------------------------------------------------------------------------------------------------------
+    inference(dataset_path, model_path, args.ligand_embeddings, args.protein_embeddings)
