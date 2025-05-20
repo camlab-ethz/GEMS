@@ -80,7 +80,7 @@ def process_pair(id1, id2, mol1, mol2):
 
 
 
-def main(folder_path):
+def main(folder_path, save_as_json=False):
 
     try:
         # List of the names of the complexes
@@ -94,7 +94,8 @@ def main(folder_path):
             with open('pairwise_similarity_complexes.json', 'w') as f:
                 json.dump(complexes, f)
             print("List of complexes saved to pairwise_similarity_complexes.json", flush=True)
-            
+
+
         # Initialize the HDF5 file and dataset to save the similarities
         with h5py.File('pairwise_similarity_tanimoto.hdf5', 'a') as f:
             if 'similarities' not in f:
@@ -102,39 +103,111 @@ def main(folder_path):
             else:
                 dset = f['similarities']
 
+
         # Parse the SDF files and store the molecules in a dictionary
         print("Parsing all SDF files...", flush=True)
         parsed_molecules = parse_sdf_files(folder_path, complexes)
         print("Parsed all ligands!", flush=True)
+        print()
 
+        # --------------------------------------------------------------------------------------------------------------
         # Loop through each complex and compare it with all other complexes in parallel
+        # --------------------------------------------------------------------------------------------------------------
         tic = time()
         for i in range(num_complexes):
 
-            to_compare = [j for j in range(i+1, num_complexes)]
-            if len(to_compare) == 0: continue
+            print(f"Processing {complexes[i]} ({i})...", flush=True)
 
-            # RUN ALL THE COMPARISONS IN PARALLEL, accumulate the results
-            results = Parallel(n_jobs=-1)(delayed(process_pair)(
-                    complexes[i], complexes[j], parsed_molecules[complexes[i]], parsed_molecules[complexes[j]]) for j in to_compare)
 
-            # APPEND THE TANIMOTO SCORES TO THE HDF5 FILE
-            with h5py.File('pairwise_similarity_tanimoto.hdf5', 'a') as f:
-                dset = f['similarities']
-                for j, metrics in zip(to_compare, results):
-                    dset[i, j] = metrics
-                    dset[j, i] = metrics
+            # Check if the complex's similarities have already been precomputed
+            # --------------------------------------------------------------------------------------------------------------
+            precomputed_scores = os.path.join(folder_path, f"{complexes[i]}_similarities_tanimoto.json")
+            
+            if os.path.exists(precomputed_scores):
+                
+                try:
+                    # Append tanimoto data to the h5py file
+                    with open(precomputed_scores, 'r') as f:
+                        scores = json.load(f)
+                        scores = [scores[complex] for complex in complexes] # Convert values to list in the right order
+                    with h5py.File('pairwise_similarity_tanimoto.hdf5', 'a') as f:
+                        dset = f['similarities']
+                        dset[i, :] = scores
+                        dset[:, i] = scores
 
-            print(f"Time: {time() - tic:.2f} - Compared {complexes[i]} ({i}) to indexes {to_compare[0]}-{to_compare[-1]}", flush=True)
 
+                    
+                    print(f"--- Precomputed data found for {complexes[i]}, skipping...", flush=True)
+                
+                except Exception as e:
+                    logger.error(f"Error in retrieving precomputed data: {str(e)}")
+            # --------------------------------------------------------------------------------------------------------------
+
+
+
+            # Compare complex to all other complexes in parallel
+            # --------------------------------------------------------------------------------------------------------------
+            else:
+                to_compare = [j for j in range(i+1, num_complexes)]
+                tac = time()
+                if len(to_compare) > 0:
+
+                    # RUN ALL THE COMPARISONS IN PARALLEL, accumulate the results
+                    print(f"--- Comparing {complexes[i]} ({i}) to indexes {to_compare[0]}-{to_compare[-1]}", flush=True)
+                    results = Parallel(n_jobs=-1)(delayed(process_pair)(
+                            complexes[i], complexes[j], parsed_molecules[complexes[i]], parsed_molecules[complexes[j]]) for j in to_compare)
+
+                    # APPEND THE TANIMOTO SCORES TO THE HDF5 FILE
+                    with h5py.File('pairwise_similarity_tanimoto.hdf5', 'a') as f:
+                        dset = f['similarities']
+                        for j, metrics in zip(to_compare, results):
+                            dset[i, j] = metrics
+                            dset[j, i] = metrics
+
+                if save_as_json:
+
+                    # Save the tanimoto scores to a JSON file
+                    with h5py.File('pairwise_similarity_tanimoto.hdf5', 'a') as f:
+                        dset = f['similarities']
+
+                        line_data = np.array(dset[i, :], dtype=np.float32)
+                        line_data = line_data.tolist()
+                        sim_data = {complexes[j]: line_data[j] for j in range(num_complexes)}
+                    
+                    # Save the dictionary to a JSON file with indentation
+                    with open(precomputed_scores, 'w') as f:
+                        json.dump(sim_data, f, indent=4)
+                        
+                    print(f"--- Saved the tanimoto scores for {complexes[i]} to {precomputed_scores}", flush=True)
+
+                toc = time()
+                print(f"--- Done: Time needed: {toc - tac:.2f} seconds. Total Time: {toc - tic}", flush=True)
+            # --------------------------------------------------------------------------------------------------------------
+
+
+        # Make sure the HDF5 files are symmetric and the diagonal is correct
+        with h5py.File(f'pairwise_similarity_rmsd_ligand.hdf5', 'a') as f:
+            dset = f['similarities']
+            dset[:] = np.maximum(dset[:], dset[:].T)
+
+            arr = dset[:]
+            np.fill_diagonal(arr, 0.0)
+            dset[:] = arr
+
+        with h5py.File(f'pairwise_similarity_tm_scores.hdf5', 'a') as f:
+            dset = f['similarities']
+            dset[:] = np.maximum(dset[:], dset[:].T)
+
+            arr = dset[:]
+            np.fill_diagonal(arr, 1.0)
+            dset[:] = arr
 
     except Exception as e:
         logger.error(f"Error in main function: {str(e)}")
         sys.exit(1)
 
     toc = time()
-    print("Elapsed time: {:.2f} seconds".format(toc - tic))
-
+    print(f"Elapsed time: {toc - tic:.2f} seconds", flush=True)
 
 
 
@@ -142,7 +215,8 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description="Compute and store pairwise metrics for 3D complexes.")
     parser.add_argument('folder_path', type=str, help='Path to the folder containing the 3D complexes')
+    parser.add_argument('--save_as_json', type=bool, default=False, help='Save the per complex similarities as JSON files')
     args = parser.parse_args()
 
-    main(args.folder_path)
+    main(args.folder_path, save_as_json=args.save_as_json)
 
