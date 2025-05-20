@@ -2,48 +2,22 @@ import matplotlib.pyplot as plt
 import numpy as np
 import json
 import argparse
-from scipy.stats import spearmanr
+from scipy.stats import spearmanr, pearsonr
+from sklearn.metrics import mean_squared_error
+import math
 
 
-def plot_spearman_correlations(correlations, save_path=None, xlabel=''):
-    """
-    Plots a boxplot of Spearman correlations and overlays individual data points
-    with jitter for visibility and transparency for overlapping points.
-    
-    Parameters:
-    correlations (list or numpy array): List of 57 Spearman correlation coefficients.
-    """
-    # Create figure and axis
-    fig, ax = plt.subplots(figsize=(8, 6))
-    
-    # Create boxplot
-    ax.boxplot(correlations, vert=True, patch_artist=True, 
-               boxprops=dict(facecolor='lightblue', color='black'), 
-               medianprops=dict(color='black'))
-
-    # Add jittered individual points
-    # Create some jitter by adding small random noise to the x-coordinate
-    jitter = 0.04 * (np.random.rand(len(correlations)) - 0.5)  # Adding jitter to the x-axis
-    x_values = np.ones(len(correlations)) + jitter  # x-values for the points, centered around 1 (single boxplot)
-
-    # Scatter the points with transparency (alpha)
-    ax.scatter(x_values, correlations, color='black', alpha=0.5)
-
-    # Label the axes
-    ax.set_ylabel("Spearman Correlation Coefficient", fontsize=12)
-    ax.set_xticklabels([xlabel], fontsize=12)
-    ax.set_title("Distribution of Spearman Correlations across 57 Clusters", fontsize=14)
-    
-    # Save the plot at 300 dpi if a path is provided
-    if save_path:
-        plt.savefig(save_path, dpi=300)
+def unscale(value):
+    min=0
+    max=16
+    return value * (max - min) + min
 
 
-
-def compute_spearman_correlations_in_clusters(casf2016_predictions):
-
+def compute_metrics_in_clusters(casf2016_predictions, denormalize=False):
     predicted_ids = list(casf2016_predictions.keys())
-    spearman_correlations = []
+    spearman_correlations = {}
+    pearson_correlations = {}
+    absolute_errors = {}
 
     with open('PDBbind_data/clusters_casf2016.json') as f:
         clusters = json.load(f)
@@ -57,24 +31,32 @@ def compute_spearman_correlations_in_clusters(casf2016_predictions):
             else:
                 ids.append(lst[0])    
 
-        # Extract the true and predicted scores for the cluster
+        # Extract true and predicted scores
         true_scores = [data[i][1] for i in range(len(data)) if data[i][0] in ids]
 
-        # Check if the predictions are lists or floats and extract the scores accordingly
         if isinstance(casf2016_predictions[ids[0]], list):
-            predicted_scores = [casf2016_predictions[id][1] for id in ids]
+            if denormalize: predicted_scores = [unscale(casf2016_predictions[id][1]) for id in ids]
+            else: predicted_scores = [casf2016_predictions[id][0] for id in ids]
         else:
-            predicted_scores = [casf2016_predictions[id] for id in ids]
+            if denormalize: predicted_scores = [unscale(casf2016_predictions[id]) for id in ids]
+            else: predicted_scores = [casf2016_predictions[id] for id in ids]
 
-        # Calculate the Spearman correlation
-        spearman_correlation, _ = spearmanr(true_scores, predicted_scores)
-        spearman_correlations.append(spearman_correlation)
+        # Compute metrics
+        spearman, _ = spearmanr(true_scores, predicted_scores)
+        pearson, _ = pearsonr(true_scores, predicted_scores)
 
-    return spearman_correlations
+        # Compute absolute errors for each complex in the cluster
+        errors = [abs(t - p) for t, p in zip(true_scores, predicted_scores)]
+
+        spearman_correlations[cluster] = spearman
+        pearson_correlations[cluster] = pearson
+        absolute_errors[cluster] = errors
+
+    return spearman_correlations, pearson_correlations, absolute_errors
 
 
 
-def main(model_path):
+def main(model_path, denormalize=False):
     
     """
     Computes the Spearman correlations for the CASF-2016 dataset predictions.
@@ -87,16 +69,21 @@ def main(model_path):
     if model_path.endswith('.json'):
         with open(model_path) as f:
             casf2016_predictions = json.load(f)
-        spearman_correlations = compute_spearman_correlations_in_clusters(casf2016_predictions)
+        spearman_corrs, pearson_corrs, abs_errors = compute_metrics_in_clusters(casf2016_predictions, denormalize=denormalize)
 
-        # SAVE PEARSON CORRELATIONS TO A FILE AT MODEL PATH
-        save_path = model_path.replace('.json', '_spearman_correlations.json')
-        with open(save_path, 'w') as f:
-            json.dump(spearman_correlations, f)
+        # Define base path
+        base_path = model_path.replace('.json', '') if model_path.endswith('.json') else model_path
 
-        # Plot the Spearman correlations and save the plot where the prediction file is located
-        save_path = model_path.replace('.json', '_spearman_correlations.png')
-        plot_spearman_correlations(spearman_correlations, save_path, xlabel=model_path.split('/')[-1])
+        # Save metrics to JSON
+        with open(f"{base_path}_spearman_correlations.json", 'w') as f:
+            json.dump(spearman_corrs, f, indent=2)
+
+        with open(f"{base_path}_pearson_correlations.json", 'w') as f:
+            json.dump(pearson_corrs, f, indent=2)
+
+        with open(f"{base_path}_absolute_errors.json", 'w') as f:
+            json.dump(abs_errors, f, indent=2)
+
 
 
     # If the model path is a folder containing predictions for all random seeds, load the predictions for each seed
@@ -117,15 +104,20 @@ def main(model_path):
         for complex in casf2016_predictions:
             casf2016_predictions[complex] = sum(casf2016_predictions[complex]) / len(casf2016_predictions[complex])
 
-        spearman_correlations = compute_spearman_correlations_in_clusters(casf2016_predictions)
+        spearman_corrs, pearson_corrs, abs_errors = compute_metrics_in_clusters(casf2016_predictions, denormalize=denormalize)
 
-        # SAVE PEARSON CORRELATIONS TO A FILE AT MODEL PATH
-        with open(f'{model_path}_spearman_correlations.json', 'w') as f:
-            json.dump(spearman_correlations, f)
+        # Define base path
+        base_path = model_path.replace('.json', '') if model_path.endswith('.json') else model_path
 
-        # Plot the Spearman correlations and save the plot where the prediction file is located
-        save_path = f"{model_path}_spearman_correlations.png"
-        plot_spearman_correlations(spearman_correlations, save_path, xlabel=model_path.split('/')[-1])
+        # Save metrics to JSON
+        with open(f"{base_path}_spearman_correlations.json", 'w') as f:
+            json.dump(spearman_corrs, f, indent=2)
+
+        with open(f"{base_path}_pearson_correlations.json", 'w') as f:
+            json.dump(pearson_corrs, f, indent=2)
+
+        with open(f"{base_path}_absolute_errors.json", 'w') as f:
+            json.dump(abs_errors, f, indent=2)
 
 
 
@@ -137,7 +129,11 @@ if __name__ == "__main__":
                         type=str, 
                         help="Either the path to the folder containing the model prediction files for all random seeds \
                             or the path to the predictions file of a specific model (json).")
+    parser.add_argument("--denormalize",
+                        action="store_true",
+                        help="If set, the predictions will be denormalized using the unscale function.")
     args = parser.parse_args()
     model_path = args.model_path
+    denormalize = args.denormalize
 
-    main(model_path)
+    main(model_path, denormalize)
