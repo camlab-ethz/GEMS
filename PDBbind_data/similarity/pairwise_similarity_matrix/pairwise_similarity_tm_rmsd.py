@@ -193,6 +193,7 @@ def process_pair(id1, id2, mol1, mol2, folder_path, tm_align_path):
 def main(folder_path, tm_align_path, save_as_json=False):
 
     try:
+        # List of the names of the complexes
         complexes = sorted([compl[0:4] for compl in os.listdir(folder_path) 
                             if compl[0].isdigit() and compl.endswith('.pdb')])
         num_complexes = len(complexes)
@@ -221,9 +222,9 @@ def main(folder_path, tm_align_path, save_as_json=False):
 
 
         # Parse the SDF files and store the molecules in a dictionary
-        print("Parsing all SDF files...")
+        print("Parsing all SDF files...", flush=True)
         parsed_molecules = parse_sdf_files(folder_path, complexes)
-        print("Parsed all ligands!")
+        print("Parsed all ligands!", flush=True)
         print()
 
         # --------------------------------------------------------------------------------------------------------------
@@ -248,9 +249,9 @@ def main(folder_path, tm_align_path, save_as_json=False):
                         rmsd_data = json.load(f)
                         rmsds = [rmsd_data[complex] for complex in complexes] # Convert values to list in the right order
                     with h5py.File(f'pairwise_similarity_rmsd_ligand.hdf5', 'a') as f:
-                            dset = f['similarities']
-                            dset[i, :] = rmsds
-                            dset[:, i] = rmsds
+                        dset = f['similarities']
+                        dset[i, :] = rmsds
+                        dset[:, i] = rmsds
 
                     # Append TM scores data to the h5py file
                     with open(precomputed_tm_scores, 'r') as f:
@@ -273,17 +274,17 @@ def main(folder_path, tm_align_path, save_as_json=False):
             # --------------------------------------------------------------------------------------------------------------
             else:
                 to_compare = [j for j in range(i+1, num_complexes)]
-                print(f"--- Comparing {complexes[i]} ({i}) to indexes {to_compare[0]}-{to_compare[-1]}", flush=True)
-
                 tac = time()
                 if len(to_compare) > 0:
+
                     # RUN ALL THE COMPARISONS IN PARALLEL, accumulate the results
+                    print(f"--- Comparing {complexes[i]} ({i}) to indexes {to_compare[0]}-{to_compare[-1]}", flush=True)
                     results = Parallel(n_jobs=-1)(delayed(process_pair)(
                             complexes[i], complexes[j], parsed_molecules[complexes[i]], parsed_molecules[complexes[j]],
                             folder_path, tm_align_path) for j in to_compare)
 
                     # APPEND THE TM SCORES TO THE HDF5 FILE
-                    with h5py.File(f'pairwise_similarity_tm_scores.hdf5', 'a') as f:
+                    with h5py.File('pairwise_similarity_tm_scores.hdf5', 'a') as f:
                         dset = f['similarities']
                         for j, metrics in zip(to_compare, results):
                             dset[i, j] = metrics[0]
@@ -299,24 +300,24 @@ def main(folder_path, tm_align_path, save_as_json=False):
                 if save_as_json:
 
                     # Save the TM scores to a JSON file
-                    with h5py.File(f'pairwise_similarity_tm_scores.hdf5', 'a') as f:
+                    with h5py.File('pairwise_similarity_tm_scores.hdf5', 'a') as f:
                         dset = f['similarities']
 
                         line_data = np.array(dset[i, :], dtype=np.float32)
                         line_data = line_data.tolist()
-                        sim_data = {complexes[i]: line_data[i] for i in range(len(complexes))}
+                        sim_data = {complexes[j]: line_data[j] for j in range(num_complexes)}
                     
                         # Save the dictionary to a JSON file with indentation
                         with open(precomputed_tm_scores, 'w') as f:
                             json.dump(sim_data, f, indent=4)
 
                     # Save the RMSD data to a JSON file
-                    with h5py.File(f'pairwise_similarity_rmsd_ligand.hdf5', 'a') as f:
+                    with h5py.File('pairwise_similarity_rmsd_ligand.hdf5', 'a') as f:
                         dset = f['similarities']
-                        # Extract line from the dataset and save it to a JSON file
+
                         line_data = np.array(dset[i, :], dtype=np.float32)
                         line_data = line_data.tolist()
-                        sim_data = {complexes[i]: line_data[i] for i in range(len(complexes))}
+                        sim_data = {complexes[k]: line_data[k] for k in range(num_complexes)}
                     
                         # Save the dictionary to a JSON file with indentation
                         with open(precomputed_rmsds, 'w') as f:
@@ -344,12 +345,12 @@ def main(folder_path, tm_align_path, save_as_json=False):
             np.fill_diagonal(arr, 1.0)
             dset[:] = arr
 
-
     except Exception as e:
         logger.error(f"Error in main function: {str(e)}")
         sys.exit(1)
 
-    print(f"Elapsed time: {time() - tic:.2f} seconds", flush=True)
+    toc = time()
+    print(f"Elapsed time: {toc - tic:.2f} seconds", flush=True)
 
 
 
