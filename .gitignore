@@ -20,7 +20,7 @@ PDBbind_search_algorithm/*/*.png
 PDBbind_search_algorithm/*/*.json
 PDBbind_search_algorithm_0/
 
-pytorch_datasets*/
+GEMS_pytorch_datasets/
 remove_redundancy.py
 PDBbind_dataset_filtering/logs/
 PDBbind_dataset_filtering/*.json
