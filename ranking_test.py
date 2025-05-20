@@ -61,11 +61,11 @@ def compute_spearman_correlations_in_clusters(casf2016_predictions):
         true_scores = [data[i][1] for i in range(len(data)) if data[i][0] in ids]
 
         # Check if the predictions are lists or floats and extract the scores accordingly
-        if casf2016_predictions[ids[0]] is list:
+        if isinstance(casf2016_predictions[ids[0]], list):
             predicted_scores = [casf2016_predictions[id][1] for id in ids]
         else:
             predicted_scores = [casf2016_predictions[id] for id in ids]
-        
+
         # Calculate the Spearman correlation
         spearman_correlation, _ = spearmanr(true_scores, predicted_scores)
         spearman_correlations.append(spearman_correlation)
