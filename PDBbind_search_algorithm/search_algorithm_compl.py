@@ -13,7 +13,6 @@ class RMSELoss(torch.nn.Module):
         self.mse = torch.nn.MSELoss()
     def forward(self, output, targets):
         return torch.sqrt(self.mse(output, targets))
-criterion = RMSELoss()
 
 
 def plot_predictions(y_true, y_pred, title, label):
@@ -36,8 +35,8 @@ def compute_lookup_predictions(data_split, test_dataset, top_n):
 
     """
     Compute the predictions for the test dataset using the lookup method.
-    The predictions are based on the average of the top n most similar training complexes.
-    The similarity is computed using the pairwise similarity matrices (PSM) for Tanimoto, TM-score, and RMSD.
+    The predictions are based on the average label of the top n most similar training complexes.
+    The similarity is computed using the pairwise similarity matrices (PSM) for Tanimoto and TM-score.
     """
 
     # Import list of complexes from json file
@@ -49,9 +48,9 @@ def compute_lookup_predictions(data_split, test_dataset, top_n):
         affinity_data = json.load(f)
 
     # Define the path to the pairwise similarity matrices (PSM)
-    PSM_tanimoto_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tanimoto.hdf5'
-    PSM_tm_scores_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tm_scores.hdf5'
-    PSM_rmsd_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_rmsd_ligand.hdf5'
+    PSM_tanimoto_file = '../pairwise_similarity_matrices/pairwise_similarity_matrix_tanimoto.npy'
+    PSM_tm_scores_file = '../pairwise_similarity_matrices/pairwise_similarity_matrix_tm.npy'
+    PSM_rmsd_file = '../pairwise_similarity_matrices/pairwise_similarity_matrix_rmsd.npy'
 
 
     # Loop over the test complexes and look for the most similar training complexes
@@ -73,16 +72,10 @@ def compute_lookup_predictions(data_split, test_dataset, top_n):
         print(f"Finding similar training complexes for {complex}")
         complex_idx = complexes.index(complex)
 
-
         # Load the pairwise similarity data
-        with h5py.File(PSM_tanimoto_file, 'r') as f:
-            tanimoto = f['similarities'][complex_idx, :]
-
-        with h5py.File(PSM_tm_scores_file, 'r') as f:
-            tm_scores = f['similarities'][complex_idx, :]
-
-        with h5py.File(PSM_rmsd_file, 'r') as f:
-            rmsds = f['similarities'][complex_idx, :]
+        tanimoto = np.load(PSM_tanimoto_file)[complex_idx, :]
+        tm_scores = np.load(PSM_tm_scores_file)[complex_idx, :]
+        rmsds = np.load(PSM_rmsd_file)[complex_idx, :]
 
         # Calculate similarity scores
         similarity_scores = tanimoto + tm_scores # - rmsds # RMSD distorts the selection when no similar complexes are found
@@ -118,10 +111,13 @@ def compute_lookup_predictions(data_split, test_dataset, top_n):
     predicted_labels = np.array([predicted_labels[complex] for complex in test_complexes])
     corr_matrix = np.corrcoef(true_labels, predicted_labels)
     r = corr_matrix[0, 1]
+    criterion = RMSELoss()
     rmse = criterion(torch.tensor(predicted_labels), torch.tensor(true_labels))
 
     split_dict = os.path.basename(data_split).split('.')[0]
-    plot_predictions(true_labels, predicted_labels, f"{test_dataset} predictions \n{split_dict}\nWeighted average of labels of top {top_n} similar complexes\nR = {r:.3f}, RMSE = {rmse:.3f}", f"{test_dataset} Predictions")
+    plot_predictions(true_labels, 
+                     predicted_labels, 
+                     f"{test_dataset} predictions \n{split_dict}\nWeighted average of labels of top {top_n} similar complexes\nR = {r:.3f}, RMSE = {rmse:.3f}", f"{test_dataset} Predictions")
     plt.savefig(f'{test_dataset}_predictions_top{top_n}_compl', dpi=300)
 
 
