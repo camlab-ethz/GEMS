@@ -7,10 +7,11 @@ The scripts for removing train-test similarities and training redundancy can be 
 and `PDBbind_dataset_filtering/remove_train_redundancy.py`
 
 #### Download Pairwise Similarity Matrices from Zenodo
-The scripts for dataset filtering rely on precomputed similarity matrices that you can download from Zenodo (https://doi.org/10.5281/zenodo.14260171). Save the downloaded similarity matrices at the following location:
-- `PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tanimoto.hdf5`
-- `PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tm_scores.hdf5`
-- `PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_rmsd_ligand.hdf5`
+The scripts for dataset filtering rely on precomputed similarity matrices and the index file that you can download from Zenodo (https://doi.org/10.5281/zenodo.14260171). Save the downloaded similarity matrices at the following location:
+- `pairwise_similarity_matrices/pairwise_similarity_complexes.json`
+- `pairwise_similarity_matrices/pairwise_similarity_matrix_tm.npy`
+- `pairwise_similarity_matrices/pairwise_similarity_matrix_tanimoto.npy`
+- `pairwise_similarity_matrices/pairwise_similarity_matrix_rmsd.npy`
 
 ## Removing Train-Test Similarities `remove_train_test_sims.py`
 
@@ -21,13 +22,13 @@ The most similar complexes are removed from the training dataset based on predef
 * **Input Split:** The original split of the dataset, a dictionary assigning all complexes to 'train', 'casf2016' and 'casf2013'.
     * see `PDBbind_data/PDBbind_data_split_pdbbind.json`
 * **Pairwise Similarity Matrices:** containing all pairwise Tanimoto Similarites, TM-Scores and Ligand RMSDs for the whole PDBbind dataset (including CASF).
-    * see `PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tanimoto.hdf5`
-    * see `PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tm_scores.hdf5`
-    * see `PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_rmsd_ligand.hdf5`
+    * `pairwise_similarity_matrices/pairwise_similarity_matrix_tanimoto.npy`
+    * `pairwise_similarity_matrices/pairwise_similarity_matrix_tm.npy`
+    * `pairwise_similarity_matrices/pairwise_similarity_matrix_rmsd.npy`
 * **List of Indexes:** A list of datapoint IDs corresponding to the order of the complexes in the pairwise similarity matrices.
-    * see `PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_complexes.json`
+    * `pairwise_similarity_matrices/pairwise_similarity_complexes.json`
 * **PDBbind Affinity Data:** A dictionary containing log_kd_ki values for all complexes in PDBbind.
-    * see `PDBbind_data/PDBbind_data_dict.json`
+    * `PDBbind_data/PDBbind_data_dict.json`
  
 ### Outputs of the filtering algorithm:
 * **Output Split:** The updated split of the dataset, with a potentially smaller 'train' dataset and the additional datasets "casf2013_indep" and "casf2016_indep" representing the independent subsets of the two benchmark datasets (complexes for which now similar training complexes were found using the given thresholds)
@@ -50,11 +51,11 @@ This script generates a symmetric adjacency matrix to represent pairwise similar
 * **Input Training Dataset:** The original training dataset, including a list of all complex IDs that are in the original training dataset (can be the output of the `remove_train_test_sims.py` script).
     * see `PDBbind_data/PDBbind_data_split_pdbbind.json`
 * **Pairwise Similarity Matrices:** containing all pairwise Tanimoto Similarites, TM-Scores and Ligand RMSDs for the whole PDBbind dataset (including CASF).
-    * see `PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tanimoto.hdf5`
-    * see `PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tm_scores.hdf5`
-    * see `PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_rmsd_ligand.hdf5`
+    * `pairwise_similarity_matrices/pairwise_similarity_matrix_tanimoto.npy`
+    * `pairwise_similarity_matrices/pairwise_similarity_matrix_tm.npy`
+    * `pairwise_similarity_matrices/pairwise_similarity_matrix_rmsd.npy`
 * **List of Indexes:** A list of datapoint IDs corresponding to the order of the complexes in the pairwise similarity matrices.
-    * see `PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_complexes.json`
+    * `pairwise_similarity_matrices/pairwise_similarity_complexes.json`
 * **PDBbind Affinity, Resolution and Dataset Membership Data:** A dictionary containing log_kd_ki values for all complexes in PDBbind, as well as their resolution and their membership in the refined dataset.
     * see `PDBbind_data/PDBbind_data_dict.json`
 
