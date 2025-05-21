@@ -9,23 +9,18 @@ from torch_geometric.utils import add_self_loops
 
 
 '''
-GATE18
-BASED ON GATE3 but
+GEMS18
+BASED ON GEMS3 but
 - Initial node transformation with NodeTransform MLP
 - global feature is initialized with ChemBERTa embeddings
 - global feature computation is based on global add pooling on nodes
-- NodeModel is a GATEv2Conv layer 
+- NodeModel is a GATv2Conv layer 
 
 NEW: COMPUTATION IS FLEXIBLE (Can become larger)
 NEW: Node feature dim reduced
 
 architectures with 2 layers and no residuals with prediction based on updating the global features of the model
 in each layer of the model. A final regression head transforms the global vector into a prediction.
-
-The architectures are as follows:
-
-GATE18a: Global feature is becoming larger up to 768 and node feature dim is reduced
-GATE18b: Global feature is 384 and node feature dim is reduced
 
 
 dropout and conv_dropout are possible
@@ -98,9 +93,9 @@ class GlobalModel(torch.nn.Module):
 #################################################################################################################
 
 
-class GATE18d(nn.Module):
+class GEMS18d(nn.Module):
     def __init__(self, dropout_prob, in_channels, edge_dim, conv_dropout_prob):
-        super(GATE18d, self).__init__()
+        super(GEMS18d, self).__init__()
 
         self.NodeTransform = FeatureTransformMLP(in_channels, 256, 64, dropout=dropout_prob)
         
@@ -156,9 +151,9 @@ class GATE18d(nn.Module):
     
 
 
-class GATE18e(nn.Module):
+class GEMS18e(nn.Module):
     def __init__(self, dropout_prob, in_channels, edge_dim, conv_dropout_prob):
-        super(GATE18e, self).__init__()
+        super(GEMS18e, self).__init__()
 
         self.NodeTransform = FeatureTransformMLP(in_channels, 256, 64, dropout=dropout_prob)
         
