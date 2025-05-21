@@ -1,6 +1,6 @@
 ## This is the GitHub repository for the publication: 
 
-#  GEMS: A Generalizable GNN Framework For Protein-Ligand Binding Affinity Prediction Through Robust Data Filtering and Language Model Integration
+#  GEMS - Enhancing Generalizable Binding Affinity Prediction by Removing Data Leakage and Integrating Language Model Embeddings into Graph Neural Networks
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10](https://img.shields.io/badge/Python-3.10-blue.svg)](https://www.python.org/downloads/release/python-310/)
 [![Conda](https://img.shields.io/badge/conda-supported-green.svg)](https://docs.conda.io/)
@@ -87,7 +87,7 @@ The filtering algorithm that created PDBbind CleanSplit is included in this repo
 
 
 ## Search Algorithm for Detecting Data Leakage
-Some deep-learning-based binding affinity prediction models are outperformed on the CASF benchmarks by a simple search algorithm. This algorithm identifies the most structurally similar training complexes in PDBbind and averages their affinities, exposing data leakage between PDBbind and the CASF2016 benchmark. In contrast, the performance of this algorithm is significantly reduced when tested on PDBbind CleanSplit, a refined dataset specifically designed to eliminate data leakage into the CASF benchmark datasets. To test the performance of the search algorithm, navigate to the `PDBbind_search_algorithm/` directory and execute the following commands:
+Some deep-learning-based binding affinity prediction models are outperformed on the CASF benchmarks by a simple search algorithm. This algorithm identifies the most structurally similar training complexes in PDBbind and averages their affinities. The performance of this algorithm is significantly reduced when tested on PDBbind CleanSplit, a refined dataset specifically designed to eliminate data leakage into the CASF benchmark datasets. To test the performance of the search algorithm, navigate to the `PDBbind_search_algorithm/` directory and execute the following commands:
 
 * **On original PDBbind:**
     ```
@@ -128,7 +128,7 @@ To generate binding affinity predictions for the newly created dataset, use the 
 ### Run GEMS on PDBbind 
 This section explains how to run inference or training of GEMS on the PDBbind database using our precomputed datasets of interaction graphs on [Zenodo](https://doi.org/10.5281/zenodo.14260171). These include **PDBbind CleanSplit**, the complete **PDBbind database** (v.2020) and the **CASF benchmarks**. For more details on available datasets and variants, refer to [GEMS Variants and Datasets](docs/GEMS_variants_and_datasets.md). 
 
-**Note:** If you prefer to start with the PDBbind source data and construct the graphs yourself (e.g., using custom language model embeddings), follow the instructions in [PDBbind from scratch](docs/GEMS_pdbbind.md).
+**Note:** If you prefer to start with the PDBbind source data and construct the graphs yourself (e.g., using other language model embeddings), follow the instructions in [PDBbind from scratch](docs/GEMS_pdbbind.md).
 
 * **Download Datasets:** Download PyTorch datasets from [Zenodo](https://doi.org/10.5281/zenodo.14260171)
 
