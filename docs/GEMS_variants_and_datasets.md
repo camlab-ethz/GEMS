@@ -3,6 +3,7 @@ PDBbind CleanSplit is a refined training dataset for binding affinity prediction
 
 We provide PyTorch datasets of precomputed interaction graphs for **PDBbind CleanSplit**, for the complete **PDBbind** database (v.2020) and for the **CASF benchmarks** on Zenodo (https://doi.org/10.5281/zenodo.14260171). Each PyTorch dataset is available in five versions containing different combinations of language model embeddings in the graph features.
 
+### Preprocessed datasets
 * `pytorch_datasets_00AEPL` -  ChemBERTa-77M included
 * `pytorch_datasets_B0AEPL` -  ChemBERTa-77M and ankh_base included
 * `pytorch_datasets_06AEPL` -  ChemBERTa-77M and ESM2-T6 included
@@ -11,13 +12,14 @@ We provide PyTorch datasets of precomputed interaction graphs for **PDBbind Clea
 
 In addition, we provide GEMS models that have been trained on each of these datasets: 
 
-* `model/GATE18e_00AEPL_d0100` - No embedding included (trained with GATE18e architecture, neglects ChemBERTa)
-* `model/GATE18d_00AEPL_d0100` - ChemBERTa-77M included
-* `model/GATE18d_B0AEPL_d0600` - ChemBERTa-77M and ankh_base included
-* `model/GATE18d_06AEPL_d0500` - ChemBERTa-77M and ESM2-T6 included
-* `model/GATE18d_B6AEPL_d0500` - ChemBERTa-77M, ankh_base and ESM2-T6 included
-* `model/GATE18d_B6AE0L_d0100` - **Ablation:** ChemBERTa-77M, ankh_base and ESM2-T6 included, protein nodes deleted from graph
+### Pretrained models
+* `model/GEMS18e_00AEPL_d0100` - No embedding included (trained with GEMS18e architecture, neglects ChemBERTa)
+* `model/GEMS18d_00AEPL_d0100` - ChemBERTa-77M included
+* `model/GEMS18d_B0AEPL_d0600` - ChemBERTa-77M and ankh_base included
+* `model/GEMS18d_06AEPL_d0500` - ChemBERTa-77M and ESM2-T6 included
+* `model/GEMS18d_B6AEPL_d0500` - ChemBERTa-77M, ankh_base and ESM2-T6 included
+* `model/GEMS18d_B6AE0L_d0100` - **Ablation:** ChemBERTa-77M, ankh_base and ESM2-T6 included, protein nodes deleted from graph
 
 For each model, we provide five stdicts corresponding to the models originating from 5-fold cross-validation. Depending on the language model embeddings incorporated, these model showed different performance on benchmark datasets:
 
-![Description](model_stdicts.png)
+![Description](GEMS_stdicts.png)
