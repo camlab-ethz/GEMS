@@ -137,7 +137,7 @@ if save_path == None: save_path = os.path.dirname(dataset_path)
 # Load the datasets
 test_dataset = torch.load(dataset_path)
 test_loader = DataLoader(dataset = test_dataset, batch_size=128, shuffle=True, num_workers=4, persistent_workers=True)
-
+print(f'Dataset: {dataset_path}')
 
 # Emsemble Model
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -162,6 +162,8 @@ models = [model_class(
 model_paths = list(stdicts)
 #for m in model_paths: print(m)
 models = [load_model_state(model, path) for model, path in zip(models, model_paths)]
+print('Loaded models:')
+print(model_paths)
 
 
 # Run inference
@@ -179,4 +181,5 @@ with open(os.path.join(save_path, f'{test_dataset_name}_predictions.json'), 'w',
 # Save Predictions Scatterplot
 filepath = os.path.join(save_path, f'{test_dataset_name}_predictions.png')
 plot_predictions(y_true, y_pred, test_dataset_name, metrics=f"R = {r:.3f}\nRMSE = {rmse:.3f}", filepath=filepath, axislim=14)
+print(f'Predictions saved to {os.path.join(save_path, f"{test_dataset_name}_predictions")}')
 #-------------------------------------------------------------------------------------------------------------------------
