@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from Dataset import *
 from torch_geometric.loader import DataLoader
-from model.GATE18 import *
+from model.GEMS18 import *
 
 
 class RMSELoss(torch.nn.Module):
@@ -119,7 +119,7 @@ def parse_args():
     parser.add_argument("--dataset_path", required=True, help="The path to the test dataset pt file")
 
     # OPTIONAL Arguments 
-    parser.add_argument("--model_arch", default="GATE18d", help="The name of the model architecture")
+    parser.add_argument("--model_arch", default="GEMS18d", help="The name of the model architecture")
     parser.add_argument("--save_path", default=None, help="The path where the results should be exported to")
 
     return parser.parse_args()

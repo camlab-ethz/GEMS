@@ -7,7 +7,7 @@ import torch
 import matplotlib.pyplot as plt
 import numpy as np
 from torch_geometric.loader import DataLoader
-from model.GATE18 import *
+from model.GEMS18 import *
 
 
 class RMSELoss(torch.nn.Module):
@@ -138,12 +138,12 @@ def inference(dataset_path, model_path, ligand_embeddings=None, protein_embeddin
     if not ligand_embeddings: ligand_embeddings = dataset.ligand_embeddings
 
     # Currently providing stdicts for the following combinations of embeddings:
-    # 1. No embeddings (00AEPL with GATE18e)
-    # 2. ChemBERTa-77M only (00AEPL with GATE18d)
-    # 3. ChemBERTa-77M and ankh_base (B0AEPL with GATE18d)
-    # 4. ChemBERTa-77M and esm2_t6 (06AEPL with GATE18d)
-    # 5. ChemBERTa-77M and esm2_t6 and ankh_base (B6AEPL with GATE18d)
-    # 6. Ablation (only ligands): ChemBERTa-77M and esm2_t6 and ankh_base (B6AE0L with GATE18d)
+    # 1. No embeddings (00AEPL with GEMS18e)
+    # 2. ChemBERTa-77M only (00AEPL with GEMS18d)
+    # 3. ChemBERTa-77M and ankh_base (B0AEPL with GEMS18d)
+    # 4. ChemBERTa-77M and esm2_t6 (06AEPL with GEMS18d)
+    # 5. ChemBERTa-77M and esm2_t6 and ankh_base (B6AEPL with GEMS18d)
+    # 6. Ablation (only ligands): ChemBERTa-77M and esm2_t6 and ankh_base (B6AE0L with GEMS18d)
     print(f"Protein Embeddings: {protein_embeddings}")
     print(f"Ligand Embeddings: {ligand_embeddings}")
 
@@ -154,19 +154,19 @@ def inference(dataset_path, model_path, ligand_embeddings=None, protein_embeddin
     except AttributeError: ablation = False
 
     if len(ligand_embeddings) == 0: # 1. No embeddings
-        model_arch = "GATE18e"
+        model_arch = "GEMS18e"
         dataset_id = "00AEPL"
     elif len(protein_embeddings) == 0: # 2. ChemBERTa-77M only
-        model_arch = "GATE18d"
+        model_arch = "GEMS18d"
         dataset_id = "00AEPL" 
     elif 'ankh_base' in protein_embeddings and 'esm2_t6' not in protein_embeddings:
-        model_arch = "GATE18d"
+        model_arch = "GEMS18d"
         dataset_id = "B0AEPL"
     elif 'esm2_t6' in protein_embeddings and 'ankh_base' not in protein_embeddings:
-        model_arch = "GATE18d"
+        model_arch = "GEMS18d"
         dataset_id = "06AEPL"
     elif 'ankh_base' in protein_embeddings and 'esm2_t6' in protein_embeddings:
-        model_arch = "GATE18d"
+        model_arch = "GEMS18d"
         if ablation or dataset_id == "B6AE0L":
             dataset_id = "B6AE0L"
         else:

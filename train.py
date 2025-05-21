@@ -12,7 +12,7 @@ from Dataset import *
 from torch_geometric.loader import DataLoader
 from sklearn.model_selection import StratifiedKFold
 from torch.utils.data import Subset
-from model.GATE18 import *
+from model.GEMS18 import *
 
 
 """
@@ -44,7 +44,7 @@ OPTIONAL Command-line Arguments (with default values):
     --random_seed:          OPTIONAL - Random seed for dataset splitting.
 
     MODEL PARAMETERS
-    --model:                OPTIONAL - Name of the model architecture to be used [GATE18d, GATE18e]
+    --model:                OPTIONAL - Name of the model architecture to be used [GEMS18d, GEMS18e]
     --loss_func:            OPTIONAL - Loss function to be used ['MSE', 'RMSE', 'wMSE', 'L1', 'Huber'].
     --optim:                OPTIONAL - Optimizer to be used ['Adam', 'Adagrad', 'SGD'].
     --num_epochs:           OPTIONAL - Number of epochs for training.
@@ -87,7 +87,7 @@ def parse_args():
     parser.add_argument("--run_name", required=True, help="Name of the Run")
     
     # Model type and save path
-    parser.add_argument("--model", default="GATE18d", help="The name of the model architecture")
+    parser.add_argument("--model", default="GEMS18d", help="The name of the model architecture")
     parser.add_argument("--save_dir", default=None, help="The path for saving results and logs. Default: run_name/")
 
     # Training Parameters
