@@ -10,6 +10,8 @@ PDBbind_data/similarity/pairwise_similarity_matrix/original_paper_data/*.log
 PDBbind_data/similarity/pairwise_similarity_matrix/original_paper_data/*.json
 PDBbind_data/similarity/pairwise_similarity_matrix/original_paper_data/*.py
 
+pairwise_similarity_matrices/*.json
+
 PDBbind_data/similarity/pairwise_similarity_matrix/matrix_inspect.ipynb
 PDBbind_data/similarity/pairwise_similarity_matrix/matrix_merge.py
 PDBbind_data/similarity/pairwise_similarity_matrix/matrix_extract_to_json.py
@@ -18,6 +20,8 @@ PDBbind_data/similarity/pairwise_similarity_matrix/compute_batches.py
 PDBbind_search_algorithm/original_paper_data/*
 PDBbind_search_algorithm/*/*.png
 PDBbind_search_algorithm/*/*.json
+PDBbind_search_algorithm/*.json
+PDBbind_search_algorithm/*.png
 PDBbind_search_algorithm_0/
 
 GEMS_pytorch_datasets/
