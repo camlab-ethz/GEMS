@@ -83,11 +83,21 @@ PDBbind CleanSplit is a refined training dataset for binding affinity prediction
 Precomputed datasets for **PDBbind CleanSplit**, the full **PDBbind database** (v.2020), and the **CASF benchmarks** are available on [Zenodo](https://doi.org/10.5281/zenodo.14260171). For details on the available datasets, refer to [GEMS Variants and Datasets](docs/GEMS_variants_and_datasets.md).
 
 * **Filtering Algorithm:**  <br />
-The filtering algorithm that created PDBbind CleanSplit is included in this repository. To run the algorithm, refer to [Filtering Instructions](docs/dataset_filtering.md).  <br />   <br />
+The filtering algorithm that created PDBbind CleanSplit is included in this repository. To run the algorithm, refer to [Filtering Instructions](docs/dataset_filtering.md).
+
+* **Pairwise Similarity Matrices for PDBbind:** <br />
+The pairwise Tanimoto similarities, TM-scores and pocket-aligned ligand RMSD values for all PDBbind complexes can be downloaded from Zenodo (https://doi.org/10.5281/zenodo.14260171). See [Filtering Instructions](docs/dataset_filtering.md). <br /> <br />
 
 
 ## Search Algorithm for Detecting Data Leakage
-Some deep-learning-based binding affinity prediction models are outperformed on the CASF benchmarks by a simple search algorithm. This algorithm identifies the most structurally similar training complexes in PDBbind and averages their affinities. The performance of this algorithm is significantly reduced when tested on PDBbind CleanSplit, a refined dataset specifically designed to eliminate data leakage into the CASF benchmark datasets. To test the performance of the search algorithm, navigate to the `PDBbind_search_algorithm/` directory and execute the following commands:
+Some deep-learning-based binding affinity prediction models are outperformed on the CASF benchmarks by a simple search algorithm. This algorithm identifies the most structurally similar training complexes in PDBbind and averages their affinities. The performance of this algorithm is significantly reduced when tested on PDBbind CleanSplit, a refined dataset specifically designed to eliminate data leakage into the CASF benchmark datasets. <br />
+To test the performance of the search algorithm, first download the precomputed similarity matrices and the index file from Zenodo (https://doi.org/10.5281/zenodo.14260171) and save them at the following location:
+- `PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_compleses.json`
+- `PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tanimoto.hdf5`
+- `PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tm_scores.hdf5`
+- `PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_rmsd_ligand.hdf5`
+
+Then, navigate to the `PDBbind_search_algorithm/` directory and execute the following commands:
 
 * **On original PDBbind:**
     ```
