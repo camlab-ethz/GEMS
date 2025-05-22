@@ -7,7 +7,7 @@
 [![Docker](https://img.shields.io/badge/docker-supported-blue.svg)](https://www.docker.com/)
 
 
-David Graber [1,2,3], Peter Stockinger[2], Fabian Meyer [2], Siddhartha Mishra [1]§ Claus Horn [4]§, and Rebecca Buller [2]§
+David Graber [1,2,3], Peter Stockinger[2], Fabian Meyer [2], Claus Horn [4]§, Siddhartha Mishra [1]§ and Rebecca Buller [2]§
 
 <sub>1 Seminar for Applied Mathematics, Department of Mathematics, and ETH AI Center, ETH Zurich, 8092 Zurich, Switzerland</sub><br />
 <sub>2 Competence Center for Biocatalysis, Zurich University of Applied Sciences, 8820 Waedenswil, Switzerland</sub><br />
@@ -16,7 +16,7 @@ David Graber [1,2,3], Peter Stockinger[2], Fabian Meyer [2], Siddhartha Mishra [
 <sub>§ corresponding authors, shared senior authorship</sub>
 <br /> <br /> 
 Preprint: https://www.biorxiv.org/content/10.1101/2024.12.09.627482v1 <br />
-Dataset: https://doi.org/10.5281/zenodo.14260171 
+Dataset: https://doi.org/10.5281/zenodo.15482796
 
 ## Overview 
 This repository provides all resources required to use **GEMS**, a graph-based deep learning model designed for protein-ligand binding affinity prediction. It includes instructions for installing dependencies, preparing datasets, training the model, and running inference. The repository also features **PDBbind CleanSplit**, a refined training dataset based on PDBbind that minimizes data leakage and enhances model generalization. Detailed examples demonstrate how to apply GEMS to your data.
@@ -80,22 +80,24 @@ conda install wandb --channel conda-forge
 PDBbind CleanSplit is a refined training dataset for binding affinity prediction models that is based on PDBbind and has been filtered to reduce redundancy and train-test data leakage into the CASF benchmark datasets. The dataset split is available in `PDBbind_data/PDBbind_data_split_cleansplit.json`. 
 
 * **Precomputed Datasets:**  <br />
-Precomputed datasets for **PDBbind CleanSplit**, the full **PDBbind database** (v.2020), and the **CASF benchmarks** are available on [Zenodo](https://doi.org/10.5281/zenodo.14260171). For details on the available datasets, refer to [GEMS Variants and Datasets](docs/GEMS_variants_and_datasets.md).
+Precomputed datasets for **PDBbind CleanSplit**, the full **PDBbind database** (v.2020), and the **CASF benchmarks** are available on [Zenodo](https://doi.org/10.5281/zenodo.15482796). For details on the available datasets, refer to [GEMS Variants and Datasets](docs/GEMS_variants_and_datasets.md).
 
 * **Filtering Algorithm:**  <br />
 The filtering algorithm that created PDBbind CleanSplit is included in this repository. To run the algorithm, refer to [Filtering Instructions](docs/dataset_filtering.md).
 
 * **Pairwise Similarity Matrices for PDBbind:** <br />
-The pairwise Tanimoto similarities, TM-scores and pocket-aligned ligand RMSD values for all PDBbind complexes can be downloaded from Zenodo (https://doi.org/10.5281/zenodo.14260171). See [Filtering Instructions](docs/dataset_filtering.md). <br /> <br />
+The pairwise Tanimoto similarities, TM-scores and pocket-aligned ligand RMSD values for all PDBbind complexes can be downloaded from [Zenodo](https://doi.org/10.5281/zenodo.15482796). See [Filtering Instructions](docs/dataset_filtering.md). <br /> <br />
 
 
 ## Search Algorithm for Detecting Data Leakage
-Some deep-learning-based binding affinity prediction models are outperformed on the CASF benchmarks by a simple search algorithm. This algorithm identifies the most structurally similar training complexes in PDBbind and averages their affinities. The performance of this algorithm is significantly reduced when tested on PDBbind CleanSplit, a refined dataset specifically designed to eliminate data leakage into the CASF benchmark datasets. <br />
-To test the performance of the search algorithm, first download the precomputed similarity matrices and the index file from Zenodo (https://doi.org/10.5281/zenodo.14260171) and save them at the following location:
-- `PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_compleses.json`
-- `PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tanimoto.hdf5`
-- `PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_tm_scores.hdf5`
-- `PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_rmsd_ligand.hdf5`
+Some deep-learning-based binding affinity prediction models are outperformed on the CASF benchmarks by a simple search algorithm. This algorithm identifies the most structurally similar training complexes in PDBbind and averages their affinities. The performance of this algorithm is significantly reduced when tested on PDBbind CleanSplit, a refined dataset specifically designed to eliminate data leakage into the CASF benchmark datasets. <br /> <br />
+To test the performance of the search algorithm, first download the precomputed similarity matrices from [Zenodo](https://doi.org/10.5281/zenodo.15482796) and save them at the following location:
+
+- `pairwise_similarity_matrices/pairwise_similarity_complexes.json`
+- `pairwise_similarity_matrices/pairwise_similarity_matrix_tanimoto.npy`
+- `pairwise_similarity_matrices/pairwise_similarity_matrix_tm.npy`
+- `pairwise_similarity_matrices/pairwise_similarity_matrix_rmsd.npy`
+
 
 Then, navigate to the `PDBbind_search_algorithm/` directory and execute the following commands:
 
@@ -136,11 +138,12 @@ To generate binding affinity predictions for the newly created dataset, use the 
 
 
 ### Run GEMS on PDBbind 
-This section explains how to run inference or training of GEMS on the PDBbind database using our precomputed datasets of interaction graphs on [Zenodo](https://doi.org/10.5281/zenodo.14260171). These include **PDBbind CleanSplit**, the complete **PDBbind database** (v.2020) and the **CASF benchmarks**. For more details on available datasets and variants, refer to [GEMS Variants and Datasets](docs/GEMS_variants_and_datasets.md). 
+This section explains how to run inference or training of GEMS on the PDBbind database using our precomputed datasets of interaction graphs on [Zenodo](https://doi.org/10.5281/zenodo.15482796). These include **PDBbind CleanSplit**, the complete **PDBbind database** (v.2020) and the **CASF benchmarks**. For more details on available datasets and variants, refer to [GEMS Variants and Datasets](docs/GEMS_variants_and_datasets.md). 
 
 **Note:** If you prefer to start with the PDBbind source data and construct the graphs yourself (e.g., using other language model embeddings), follow the instructions in [PDBbind from scratch](docs/GEMS_pdbbind.md).
 
-* **Download Datasets:** Download PyTorch datasets from [Zenodo](https://doi.org/10.5281/zenodo.14260171)
+* **Download datasets:**  <br />
+Download PyTorch datasets from [Zenodo](https://doi.org/10.5281/zenodo.15482796)
 
 * **Inference:**  <br />
     To generate affinity predictions, use the following command. The script will load the appropriate model for the dataset type:
