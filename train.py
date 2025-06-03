@@ -102,7 +102,7 @@ def parse_args():
     parser.add_argument("--learning_rate", default=0.001, type=float, help="The learning rate with which the model should train (float)")
     parser.add_argument("--weight_decay", default=0.001, type=float, help="The weight decay parameter with which the model should train (float)")
     parser.add_argument("--conv_dropout", default=0, type=float, help="The dropout probability that should be applied in the convolutional layers")
-    parser.add_argument("--dropout", default=0, type=float, help="The dropout probability that should be applied in the dropout layer")
+    parser.add_argument("--dropout", default=0.5, type=float, help="The dropout probability that should be applied in the dropout layer")
     parser.add_argument("--random_seed", default=0, type=int, help="The random seed that should be used for the splitting of the dataset")
 
     # Early stopping
