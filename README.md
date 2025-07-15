@@ -1,6 +1,7 @@
 ## This is the GitHub repository for the publication: 
 
 #  GEMS - Enhancing Generalizable Binding Affinity Prediction by Removing Data Leakage and Integrating Language Model Embeddings into Graph Neural Networks
+[![DOI](https://zenodo.org/badge/707121287.svg)](https://doi.org/10.5281/zenodo.15919356)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10](https://img.shields.io/badge/Python-3.10-blue.svg)](https://www.python.org/downloads/release/python-310/)
 [![Conda](https://img.shields.io/badge/conda-supported-green.svg)](https://docs.conda.io/)
