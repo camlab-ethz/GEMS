@@ -1,6 +1,7 @@
 ## This is the GitHub repository for the publication: 
 
 #  GEMS - Enhancing Generalizable Binding Affinity Prediction by Removing Data Leakage and Integrating Language Model Embeddings into Graph Neural Networks
+[![DOI](https://zenodo.org/badge/707121287.svg)](https://doi.org/10.5281/zenodo.15919356)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10](https://img.shields.io/badge/Python-3.10-blue.svg)](https://www.python.org/downloads/release/python-310/)
 [![Conda](https://img.shields.io/badge/conda-supported-green.svg)](https://docs.conda.io/)
@@ -15,7 +16,7 @@ David Graber [1,2,3], Peter Stockinger[2], Fabian Meyer [2], Claus Horn [4]§, S
 <sub>4 School of Medicine, Yale University, New Haven, CT 06510, USA</sub><br />
 <sub>§ corresponding authors, shared senior authorship</sub>
 <br /> <br /> 
-Preprint: https://www.biorxiv.org/content/10.1101/2024.12.09.627482v1 <br />
+Preprint: https://doi.org/10.1101/2024.12.09.627482 <br />
 Dataset: https://doi.org/10.5281/zenodo.15482796
 
 ## Overview 
