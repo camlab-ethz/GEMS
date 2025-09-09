@@ -8,7 +8,6 @@ import subprocess
 import logging
 from logging.handlers import RotatingFileHandler
 import warnings
-import h5py
 from scipy.spatial import KDTree
 from time import time
 from joblib import Parallel, delayed
@@ -182,11 +181,32 @@ def process_pair(id1, id2, mol1, mol2, folder_path, tm_align_path):
         if os.path.exists(matrix_path): os.remove(matrix_path)
         logger.error(f"--- Error processing pair {id1}, {id2}: {str(e)}")
 
-    return [tm_score, ligand_rmsd]
+    return [tm_score, seq_id, ligand_rmsd]
 
 
 
+def matrices_to_npy(similarity_matrix_tm, PSM_tm_scores_file,
+                    similarity_matrix_rmsd, PSM_rmsd_file,
+                    similarity_matrix_seqid, PSM_seqid_file):
+        '''
+        Saving matrices to the disk as .npy files, overwriting existing matrices. 
+        Makes sure the np matrices are symmetric and the diagonal is correct.
+        Convert matrices to float32 to save space.
+        '''
+        similarity_matrix_tm = np.maximum(similarity_matrix_tm[:], similarity_matrix_tm[:].T)
+        np.fill_diagonal(similarity_matrix_tm, 1.0)
+        np.save(PSM_tm_scores_file, similarity_matrix_tm.astype(np.float32))
+        print(f"TM-score similarity matrix saved to {PSM_tm_scores_file}", flush=True)
 
+        similarity_matrix_rmsd = np.minimum(similarity_matrix_rmsd[:], similarity_matrix_rmsd[:].T)
+        np.fill_diagonal(similarity_matrix_rmsd, 0.0)
+        np.save(PSM_rmsd_file, similarity_matrix_rmsd.astype(np.float32))
+        print(f"RMSD similarity matrix saved to {PSM_rmsd_file}", flush=True)
+        
+        similarity_matrix_seqid = np.maximum(similarity_matrix_seqid[:], similarity_matrix_seqid[:].T)
+        np.fill_diagonal(similarity_matrix_seqid, 1.0)
+        np.save(PSM_seqid_file, similarity_matrix_seqid.astype(np.float32))
+        print(f"Sequence identity similarity matrix saved to {PSM_seqid_file}", flush=True)
 
 
 
@@ -206,19 +226,18 @@ def main(folder_path, tm_align_path, save_as_json=False):
             print("List of complexes saved to pairwise_similarity_complexes.json", flush=True)
 
 
-        # Initialize the HDF5 file and dataset to save the similarities
-        with h5py.File(f'pairwise_similarity_tm_scores.hdf5', 'a') as f:
-            if 'similarities' not in f:
-                dset = f.create_dataset("similarities", (num_complexes, num_complexes), dtype='float32', compression="gzip")
-            else:
-                dset = f['similarities']
+        # INITIALIZE PAIRWISE SIMILARITY MATRICES
+        PSM_tm_scores_file = "pairwise_similarity_matrix_tm.npy"
+        print("Initializing TM-score similarity matrix with zeros...", flush=True)
+        similarity_matrix_tm = np.zeros((len(complexes), len(complexes)), dtype=np.float32)
 
+        PSM_rmsd_file = "pairwise_similarity_matrix_rmsd.npy"
+        print("Initializing RMSD similarity matrix with infinity...", flush=True)
+        similarity_matrix_rmsd = np.ones((len(complexes), len(complexes)), dtype=np.float32) * np.inf
 
-        with h5py.File(f'pairwise_similarity_rmsd_ligand.hdf5', 'a') as f:
-            if 'similarities' not in f:
-                dset = f.create_dataset("similarities", (num_complexes, num_complexes), dtype='float32', compression="gzip")
-            else:
-                dset = f['similarities']
+        PSM_seqid_file = "pairwise_similarity_matrix_seqid.npy"
+        print("Initializing sequence identity similarity matrix with zeros...", flush=True)
+        similarity_matrix_seqid = np.zeros((len(complexes), len(complexes)), dtype=np.float32)
 
 
         # Parse the SDF files and store the molecules in a dictionary
@@ -233,36 +252,41 @@ def main(folder_path, tm_align_path, save_as_json=False):
         tic = time()
         for i in range(num_complexes):
 
-            print(f"Processing {complexes[i]} ({i})...", flush=True)
+            print(f"Processing {complexes[i]} ({i})...")
 
 
             # Check if the complex's similarities have already been precomputed
             # --------------------------------------------------------------------------------------------------------------
             precomputed_rmsds = os.path.join(folder_path, f"{complexes[i]}_similarities_rmsd.json")
             precomputed_tm_scores = os.path.join(folder_path, f"{complexes[i]}_similarities_tm_scores.json")
+            precomputed_seqids = os.path.join(folder_path, f"{complexes[i]}_similarities_seqid.json")
             
-            if os.path.exists(precomputed_rmsds) and os.path.exists(precomputed_tm_scores):
+            if os.path.exists(precomputed_rmsds) and os.path.exists(precomputed_tm_scores) and os.path.exists(precomputed_seqids):
                 
                 try:
-                    # Append RMSD data to the h5py file
-                    with open(precomputed_rmsds, 'r') as f:
-                        rmsd_data = json.load(f)
-                        rmsds = [rmsd_data[complex] for complex in complexes] # Convert values to list in the right order
-                    with h5py.File(f'pairwise_similarity_rmsd_ligand.hdf5', 'a') as f:
-                        dset = f['similarities']
-                        dset[i, :] = rmsds
-                        dset[:, i] = rmsds
 
-                    # Append TM scores data to the h5py file
+                    # Append sequence identity data to the sequence identity matrix
+                    with open(precomputed_seqids, 'r') as f:
+                        seqid_data = json.load(f)
+                        seqids = [seqid_data[complex] for complex in complexes]
+                    similarity_matrix_seqid[i, :] = seqids
+                    similarity_matrix_seqid[:, i] = seqids
+
+                    # Append TM scores data to the TM matrix
                     with open(precomputed_tm_scores, 'r') as f:
                         tm_data = json.load(f)
-                        tm_scores = [tm_data[complex] for complex in complexes] # Convert values to list in the right order
-                    with h5py.File(f'pairwise_similarity_tm_scores.hdf5', 'a') as f:
-                            dset = f['similarities']
-                            dset[i, :] = tm_scores
-                            dset[:, i] = tm_scores
+                        tm_scores = [tm_data[complex] for complex in complexes]
+                    similarity_matrix_tm[i, :] = tm_scores
+                    similarity_matrix_tm[:, i] = tm_scores
+
+                    # Append RMSD data to the RMSD matrix
+                    with open(precomputed_rmsds, 'r') as f:
+                        rmsd_data = json.load(f)
+                        rmsds = [rmsd_data[complex] for complex in complexes]
+                    similarity_matrix_rmsd[i, :] = rmsds
+                    similarity_matrix_rmsd[:, i] = rmsds
                     
-                    print(f"--- Precomputed data found for {complexes[i]}, skipping...", flush=True)
+                    print(f"--- Precomputed data found for {complexes[i]}, skipping...")
                 
                 except Exception as e:
                     logger.error(f"Error in retrieving precomputed data: {str(e)}")
@@ -278,72 +302,61 @@ def main(folder_path, tm_align_path, save_as_json=False):
                 if len(to_compare) > 0:
 
                     # RUN ALL THE COMPARISONS IN PARALLEL, accumulate the results
-                    print(f"--- Comparing {complexes[i]} ({i}) to indexes {to_compare[0]}-{to_compare[-1]}", flush=True)
+                    print(f"--- Comparing {complexes[i]} ({i}) to indexes {to_compare[0]}-{to_compare[-1]}")
                     results = Parallel(n_jobs=-1)(delayed(process_pair)(
                             complexes[i], complexes[j], parsed_molecules[complexes[i]], parsed_molecules[complexes[j]],
                             folder_path, tm_align_path) for j in to_compare)
 
-                    # APPEND THE TM SCORES TO THE HDF5 FILE
-                    with h5py.File('pairwise_similarity_tm_scores.hdf5', 'a') as f:
-                        dset = f['similarities']
-                        for j, metrics in zip(to_compare, results):
-                            dset[i, j] = metrics[0]
-                            dset[j, i] = metrics[0]
+                    # APPEND THE DATA TO THE SIMILARITY MATRICES
+                    for j, metrics in zip(to_compare, results):
+                        similarity_matrix_tm[i, j] = metrics[0]
+                        similarity_matrix_tm[j, i] = metrics[0]
 
-                    # APPEND THE LIGAND RMSD TO THE HDF5 FILE
-                    with h5py.File(f'pairwise_similarity_rmsd_ligand.hdf5', 'a') as f:
-                            dset = f['similarities']
-                            for j, metrics in zip(to_compare, results):
-                                dset[i, j] = metrics[1]
-                                dset[j, i] = metrics[1]
+                        similarity_matrix_seqid[i, j] = metrics[1]
+                        similarity_matrix_seqid[j, i] = metrics[1]                        
+
+                        similarity_matrix_rmsd[i, j] = metrics[2]
+                        similarity_matrix_rmsd[j, i] = metrics[2]
 
                 if save_as_json:
 
                     # Save the TM scores to a JSON file
-                    with h5py.File('pairwise_similarity_tm_scores.hdf5', 'a') as f:
-                        dset = f['similarities']
-
-                        line_data = np.array(dset[i, :], dtype=np.float32)
-                        line_data = line_data.tolist()
-                        sim_data = {complexes[j]: line_data[j] for j in range(num_complexes)}
-                    
-                        # Save the dictionary to a JSON file with indentation
+                    row = similarity_matrix_tm[i, :].tolist()
+                    sim_data = {complexes[j]: row[j] for j in range(num_complexes)}
+                    if not os.path.exists(precomputed_tm_scores):
                         with open(precomputed_tm_scores, 'w') as f:
                             json.dump(sim_data, f, indent=4)
 
-                    # Save the RMSD data to a JSON file
-                    with h5py.File('pairwise_similarity_rmsd_ligand.hdf5', 'a') as f:
-                        dset = f['similarities']
+                    # Save the SEQIDS to a JSON file
+                    row = similarity_matrix_seqid[i, :].tolist()
+                    sim_data = {complexes[j]: row[j] for j in range(num_complexes)}
+                    if not os.path.exists(precomputed_seqids):
+                        with open(precomputed_seqids, 'w') as f:
+                            json.dump(sim_data, f, indent=4)
 
-                        line_data = np.array(dset[i, :], dtype=np.float32)
-                        line_data = line_data.tolist()
-                        sim_data = {complexes[k]: line_data[k] for k in range(num_complexes)}
-                    
-                        # Save the dictionary to a JSON file with indentation
+                    # Save the RMSD data to a JSON file
+                    row = similarity_matrix_rmsd[i, :].tolist()
+                    sim_data = {complexes[k]: row[k] for k in range(num_complexes)}
+                    if not os.path.exists(precomputed_rmsds):
                         with open(precomputed_rmsds, 'w') as f:
                             json.dump(sim_data, f, indent=4)
 
                 toc = time()
-                print(f"--- Done: Time needed: {toc - tac:.2f} seconds. Total Time: {toc - tic}", flush=True)
+                print(f"--- Done: Time needed: {toc - tac:.2f} seconds. Total Time: {toc - tic}")
+
+            # Save the similarity matrices to .npy files every 1000 complexes
+            if (i + 1) % 1000 == 0: 
+                matrices_to_npy(similarity_matrix_tm, PSM_tm_scores_file,
+                                similarity_matrix_rmsd, PSM_rmsd_file,
+                                similarity_matrix_seqid, PSM_seqid_file)
             # --------------------------------------------------------------------------------------------------------------
 
 
-        # Make sure the HDF5 files are symmetric and the diagonal is correct
-        with h5py.File(f'pairwise_similarity_rmsd_ligand.hdf5', 'a') as f:
-            dset = f['similarities']
-            dset[:] = np.maximum(dset[:], dset[:].T)
+        # Save the final similarity matrices to .npy files
+        matrices_to_npy(similarity_matrix_tm, PSM_tm_scores_file,
+                        similarity_matrix_rmsd, PSM_rmsd_file,
+                        similarity_matrix_seqid, PSM_seqid_file)
 
-            arr = dset[:]
-            np.fill_diagonal(arr, 0.0)
-            dset[:] = arr
-
-        with h5py.File(f'pairwise_similarity_tm_scores.hdf5', 'a') as f:
-            dset = f['similarities']
-            dset[:] = np.maximum(dset[:], dset[:].T)
-
-            arr = dset[:]
-            np.fill_diagonal(arr, 1.0)
-            dset[:] = arr
 
     except Exception as e:
         logger.error(f"Error in main function: {str(e)}")
