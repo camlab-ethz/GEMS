@@ -1,14 +1,25 @@
+# Extensions
+*.sh
+*slurm*
+tmp/
+*.fasta
+*.csv
+*.tsv
+*.h5
+*.npy
+*.log
+*.ipynb
+
 # Ignore all folders with data
 experiments/
 PDBbind/
-PDBbind_data/similarity/pairwise_similarity_matrix/*.sh
-PDBbind_data/similarity/pairwise_similarity_matrix/*.log
-PDBbind_data/similarity/pairwise_similarity_matrix/*.hdf5
-PDBbind_data/similarity/pairwise_similarity_matrix/original_paper_data/*.hdf5
-PDBbind_data/similarity/pairwise_similarity_matrix/original_paper_data/*.sh
-PDBbind_data/similarity/pairwise_similarity_matrix/original_paper_data/*.log
-PDBbind_data/similarity/pairwise_similarity_matrix/original_paper_data/*.json
-PDBbind_data/similarity/pairwise_similarity_matrix/original_paper_data/*.py
+OOD_PIG_dataset/
+
+# Ignore bash scripts and logs in PSM folder
+# PDBbind_data/similarity/pairwise_similarity_matrix/*.sh
+# PDBbind_data/similarity/pairwise_similarity_matrix/*.log
+PDBbind_data/similarity/pairwise_similarity_matrix/original_paper_data/*
+PDBbind_data/similarity/pairwise_similarity_matrix/original_paper_code/*
 
 pairwise_similarity_matrices/*.json
 
@@ -41,6 +52,9 @@ CASF2016/
 CASF2016_docking_decoys/
 CASF2016_screening_decoys/
 
+OOD_test_dataset/
+diffusion_ood_splits/
+
 *before_publication*
 model/*/*
 example_dataset/*pt
@@ -66,8 +80,6 @@ old_models/
 aggregate_results.py
 clustering/
 inference_test*/
-find_clusters/
-find_most_similar*
 split_mol2_file.py
 *check*
 
@@ -101,12 +113,4 @@ db.sqlite
 # Ignore editor-specific files
 .vscode/
 
-# Other
-*.sh
-*slurm*
-tmp/
-*.fasta
-*.csv
-*.tsv
-*.h5
-*.npy
+

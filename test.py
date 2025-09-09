@@ -124,62 +124,68 @@ def parse_args():
 
     return parser.parse_args()
 
-args = parse_args()
 
 
-# Paths
-dataset_path = args.dataset_path
-stdicts = args.stdicts.split(',')
-save_path = args.save_path
+def main():
+    args = parse_args()
 
-if save_path == None: save_path = os.path.dirname(dataset_path)
+    # Paths
+    dataset_path = args.dataset_path
+    stdicts = args.stdicts.split(',')
+    save_path = args.save_path
 
-# Load the datasets
-test_dataset = torch.load(dataset_path)
-test_loader = DataLoader(dataset = test_dataset, batch_size=128, shuffle=True, num_workers=4, persistent_workers=True)
-print(f'Dataset: {dataset_path}')
+    if save_path == None: save_path = os.path.dirname(dataset_path)
 
-# Emsemble Model
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-model_arch = args.model_arch
-conv_dropout_prob = 0
-dropout_prob = 0
-criterion = RMSELoss()
+    # Load the datasets
+    test_dataset = torch.load(dataset_path)
+    test_loader = DataLoader(dataset = test_dataset, batch_size=128, shuffle=True, num_workers=4, persistent_workers=True)
+    print(f'Dataset: {dataset_path}')
 
-node_feat_dim = test_dataset[0].x.shape[1]
-edge_feat_dim = test_dataset[0].edge_attr.shape[1]
+    # Emsemble Model
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    model_arch = args.model_arch
+    conv_dropout_prob = 0
+    dropout_prob = 0
+    criterion = RMSELoss()
 
-model_class = getattr(sys.modules[__name__], model_arch)
-models = [model_class(
-            dropout_prob=dropout_prob, 
-            in_channels=node_feat_dim,
-            edge_dim=edge_feat_dim,
-            conv_dropout_prob=conv_dropout_prob).float().to(device)
-            for _ in range(len(stdicts))]
+    node_feat_dim = test_dataset[0].x.shape[1]
+    edge_feat_dim = test_dataset[0].edge_attr.shape[1]
 
-
-## MODEL NAME ##
-model_paths = list(stdicts)
-#for m in model_paths: print(m)
-models = [load_model_state(model, path) for model, path in zip(models, model_paths)]
-print('Loaded models:')
-print(model_paths)
+    model_class = getattr(sys.modules[__name__], model_arch)
+    models = [model_class(
+                dropout_prob=dropout_prob, 
+                in_channels=node_feat_dim,
+                edge_dim=edge_feat_dim,
+                conv_dropout_prob=conv_dropout_prob).float().to(device)
+                for _ in range(len(stdicts))]
 
 
-# Run inference
-loss, r, rmse, r2_score, y_true, y_pred, id_to_pred = evaluate(models, test_loader, criterion, device)
+    ## MODEL NAME ##
+    model_paths = list(stdicts)
+    #for m in model_paths: print(m)
+    models = [load_model_state(model, path) for model, path in zip(models, model_paths)]
+    print('Loaded models:')
+    print(model_paths)
 
 
-# Plotting
-#-------------------------------------------------------------------------------------------------------------------------
-test_dataset_name = os.path.basename(dataset_path).split('.')[0]
+    # Run inference
+    loss, r, rmse, r2_score, y_true, y_pred, id_to_pred = evaluate(models, test_loader, criterion, device)
 
-# Save the predictions to a json file
-with open(os.path.join(save_path, f'{test_dataset_name}_predictions.json'), 'w', encoding='utf-8') as json_file:
-    json.dump(id_to_pred, json_file, ensure_ascii=False, indent=4)
 
-# Save Predictions Scatterplot
-filepath = os.path.join(save_path, f'{test_dataset_name}_predictions.png')
-plot_predictions(y_true, y_pred, test_dataset_name, metrics=f"R = {r:.3f}\nRMSE = {rmse:.3f}", filepath=filepath, axislim=14)
-print(f'Predictions saved to {os.path.join(save_path, f"{test_dataset_name}_predictions")}')
-#-------------------------------------------------------------------------------------------------------------------------
+    # Plotting
+    #-------------------------------------------------------------------------------------------------------------------------
+    test_dataset_name = os.path.basename(dataset_path).split('.')[0]
+
+    # Save the predictions to a json file
+    with open(os.path.join(save_path, f'{test_dataset_name}_predictions.json'), 'w', encoding='utf-8') as json_file:
+        json.dump(id_to_pred, json_file, ensure_ascii=False, indent=4)
+
+    # Save Predictions Scatterplot
+    filepath = os.path.join(save_path, f'{test_dataset_name}_predictions.png')
+    plot_predictions(y_true, y_pred, test_dataset_name, metrics=f"R = {r:.3f}\nRMSE = {rmse:.3f}", filepath=filepath, axislim=14)
+    print(f'Predictions saved to {os.path.join(save_path, f"{test_dataset_name}_predictions")}')
+    #-------------------------------------------------------------------------------------------------------------------------
+
+
+if __name__ == "__main__":
+    main()
