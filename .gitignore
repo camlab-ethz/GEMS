@@ -7,105 +7,45 @@ tmp/
 *.tsv
 *.h5
 *.npy
-*.log
-*.ipynb
-
-# Ignore all folders with data
-experiments/
-PDBbind/
-OOD_PIG_dataset/
-
-# Ignore bash scripts and logs in PSM folder
-# PDBbind_data/similarity/pairwise_similarity_matrix/*.sh
-# PDBbind_data/similarity/pairwise_similarity_matrix/*.log
-PDBbind_data/similarity/pairwise_similarity_matrix/original_paper_data/*
-PDBbind_data/similarity/pairwise_similarity_matrix/original_paper_code/*
-
-pairwise_similarity_matrices/*.json
-
-PDBbind_data/similarity/pairwise_similarity_matrix/matrix_inspect.ipynb
-PDBbind_data/similarity/pairwise_similarity_matrix/matrix_merge.py
-PDBbind_data/similarity/pairwise_similarity_matrix/matrix_extract_to_json.py
-PDBbind_data/similarity/pairwise_similarity_matrix/compute_batches.py
-
-PDBbind_search_algorithm/original_paper_data/*
-PDBbind_search_algorithm/*/*.png
-PDBbind_search_algorithm/*/*.json
-PDBbind_search_algorithm/*.json
-PDBbind_search_algorithm/*.png
-PDBbind_search_algorithm_0/
-
-GEMS_pytorch_datasets/
-remove_redundancy.py
-PDBbind_dataset_filtering/logs/
-PDBbind_dataset_filtering/*.json
-PDBbind_dataset_filtering/original_paper_logs/*.json
-
-PDBbind_dataset_filtering/remove_train_redundancy_with_npy_generation.py
-PDBbind_dataset_filtering/remove_train_redundancy_h5py.py
-PDBbind_dataset_filtering/remove_train_test_sims_h5py.py
-PDBbind_dataset_filtering/remove_train_test_sims_json.py
-
-PDBbind_search_algorithms/
-
-CASF2016/
-CASF2016_docking_decoys/
-CASF2016_screening_decoys/
-
-OOD_test_dataset/
-diffusion_ood_splits/
-
-*before_publication*
-model/*/*
-example_dataset/*pt
-example_dataset/*csv
-example_dataset/*pth
-example_dataset/.logs/
-
-PDBbind_preprocessed/
-PDBbind_splits/
-TMalign/
-OptiMol/
-BuildUp/
-pafnucy_data/
-stuff/
 *old*/
-visualization/
-huggingface/
-bash_scripts/
-benchmark_dataloaders*
-old_models/
-*metals*
-
-aggregate_results.py
-clustering/
-inference_test*/
-split_mol2_file.py
-*check*
-
-logs/
-*.tar.gz
-*copy*
-test*
+*.ipynb
 *.pkl*
-
-# Ignore system files
-.DS_Store
-__pycache__
+*.tar.gz
 
 # Ignore log files
 *.log
 *.err
 *.txt
+*.out
 
-# Ignore PyTorch datasets
-dataset*.pt
+# Ignore all folders with data
+experiments/
+PDBbind/
+PDBbind_preprocessed/
+CASF2016*/
+OOD_PIG_dataset/
+diffusion_ood_splits/
+PDBbind_splits/
+pairwise_similarity_matrices/*
+pafnucy_data/
+GEMS_pytorch_datasets/
+clustering/
+test_extract*
 
-# Ignore Node.js modules
-node_modules/
+# Ignore specific scripts and data processing files
+PDBbind_data/similarity/pairwise_similarity_matrix/matrix_merge.py
+PDBbind_data/similarity/pairwise_similarity_matrix/matrix_extract_to_json.py
+visualization/
+aggregate_results.py
 
-# Ignore Python virtual environments
-venv/
+# Ignore script outputs
+PDBbind_search_algorithm/*/*.png
+PDBbind_search_algorithm/*/*.json
+PDBbind_dataset_filtering/*.json
+
+# Ignore system files
+.DS_Store
+__pycache__
 
 # Ignore database files
 db.sqlite
@@ -113,4 +53,8 @@ db.sqlite
 # Ignore editor-specific files
 .vscode/
 
-
+TMalign/
+stuff/
+huggingface/
+bash_scripts/
+benchmark_dataloaders/
