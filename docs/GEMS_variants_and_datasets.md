@@ -44,6 +44,6 @@ Below you can see on which dataset the provided models were trained:
 <br>
 
 ### Performance of the models
-For each model, we provide five stdicts corresponding to the models originating from 5-fold cross-validation. Depending on the language model embeddings incorporated, these model showed different performance on benchmark datasets:
+For each model, we provide five stdicts corresponding to the models originating from 5-fold cross-validation. Depending on the language model embeddings incorporated, these model showed different performance:
 
 ![Description](plot_GEMS_stdicts.jpg)
