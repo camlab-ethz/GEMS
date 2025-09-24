@@ -7,12 +7,13 @@ import numpy as np
 # -----------------------------------------------------------------------------------------------
 
 # Thresholds for filtering based on TM-scores, S = tanimoto+(1-RMSE) and label differences
-TM_threshold = 0.8
+# Training complexes are considered redundant if they have:
+TM_threshold = 0.8 
 S_threshold = 1.3
 label_threshold = 0.5
 
-input_data_split = 'PDBbind_split_leakage_removed_c18.json'
-output_data_split = 'PDBbind_split_leakage_removed_c19_redund.json'
+input_data_split = 'PDBbind_split_leakage_removed_c11.json'
+output_data_split = 'PDBbind_split_leakage_removed_c11_redund.json'
 
 # Define the path to the pairwise similarity matrices (PSM)
 PSM_tanimoto_file = '../PDBbind_data/similarity/pairwise_similarity_matrix/pairwise_similarity_matrix_tanimoto.npy'
