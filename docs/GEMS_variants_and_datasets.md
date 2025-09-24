@@ -2,16 +2,16 @@
 PDBbind CleanSplit is a refined training dataset for binding affinity prediction models that is based on PDBbind and has been filtered to reduce redundancy and train-test data leakage into the CASF benchmark datasets. The composition of PDBbind CleanSplit can be found in `PDBbind_data/PDBbind_data_split_cleansplit.json`. 
 
 ### Preprocessed datasets on Zenodo
-We provide PyTorch datasets of precomputed interaction graphs for the following datasets on [Zenodo](https://doi.org/10.5281/zenodo.15482796). 
+We provide PyTorch datasets of precomputed interaction graphs for the following datasets on [Zenodo](https://doi.org/10.5281/zenodo.15482796):
 
-* **Complete PDBbind database (v.2020)** --> `train_pdbbind`
+* **PDBbind database v.2020 (excluding CASF complexes)** --> `train_pdbbind`
 * **PDBbind CleanSplit** --> `train_cleansplit`
 * **CASF2016 benchmark** --> `casf2016`
 * **Independent subset of CASF2016** --> `casf2016_indep`
 * **CASF2013 benchmark** --> `casf2013`
 * **Independent subset of CASF2013** --> `casf2013_indep`
 
-Each PyTorch dataset is available in five versions containing different combinations of language model embeddings in the graph features.
+Each PyTorch dataset is available in five versions containing different combinations of language model embeddings in the graph features:
 
 * `00AEPL` -  ChemBERTa-77M included
 * `B0AEPL` -  ChemBERTa-77M and ankh_base included
