@@ -4,6 +4,8 @@ import os
 import torch
 import matplotlib.pyplot as plt
 import numpy as np
+import json
+from scipy.stats import spearmanr, kendalltau
 from Dataset import *
 from torch_geometric.loader import DataLoader
 from model.GEMS18 import *
@@ -170,6 +172,12 @@ def main():
 
     # Run inference
     loss, r, rmse, r2_score, y_true, y_pred, id_to_pred = evaluate(models, test_loader, criterion, device)
+    
+    kendall_tau = kendalltau(y_true, y_pred)
+    tau = kendall_tau.statistic
+    
+    spearman_rho = spearmanr(y_true, y_pred)
+    rho = spearman_rho.statistic
 
 
     # Plotting
@@ -182,7 +190,7 @@ def main():
 
     # Save Predictions Scatterplot
     filepath = os.path.join(save_path, f'{test_dataset_name}_predictions.png')
-    plot_predictions(y_true, y_pred, test_dataset_name, metrics=f"R = {r:.3f}\nRMSE = {rmse:.3f}", filepath=filepath, axislim=14)
+    plot_predictions(y_true, y_pred, test_dataset_name, metrics=f"R = {r:.3f}\nR2 = {r2_score:.3f}\nkTau = {tau:.3f}\nspRho = {rho:.3f}", filepath=filepath, axislim=14)
     print(f'Predictions saved to {os.path.join(save_path, f"{test_dataset_name}_predictions")}')
     #-------------------------------------------------------------------------------------------------------------------------
 
