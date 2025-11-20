@@ -18,6 +18,40 @@ import torch
 from torch_geometric.utils import to_undirected, add_self_loops
 from torch_geometric.data import Data, Batch
 
+
+all_atoms = ['B', 'C', 'N', 'O', 'P', 'S', 'Se', 'metal', 'halogen']
+halogens = ['F', 'Cl', 'Br', 'I', 'At'] #Halogen atoms Fluorine (F), Chlorine (Cl), Bromine (Br), Iodine (I), and Astatine (At)
+metals = [
+    # Alkali Metals
+    'Li', 'Na', 'K', 'Rb', 'Cs', 'Fr',
+    # Alkaline Earth Metals
+    'Be', 'Mg', 'Ca', 'Sr', 'Ba', 'Ra',
+    # Transition Metals
+    'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn',
+    'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd',
+    'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg',
+    'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn',
+    'Nh', 'Fl', 'Mc', 'Lv',
+    # Lanthanides
+    'La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 
+    'Ho', 'Er', 'Tm', 'Yb', 'Lu',
+    # Actinides
+    'Ac', 'Th', 'Pa', 'U', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf', 
+    'Es', 'Fm', 'Md', 'No', 'Lr',
+    # Post-Transition Metals
+    'Al', 'Ga', 'In', 'Sn', 'Tl', 'Pb', 'Bi', 'Nh', 'Fl', 'Mc', 'Lv',
+    # Half-Metals
+    'As', 'Si', 'Sb', 'Te'
+]
+
+amino_acids = ["ALA", "ARG", "ASN", "ASP", "CYS", "GLN", "GLU", "GLY", "HIS", "ILE", "LEU",
+            "LYS", "MET", "PHE", "PRO", "SER", "THR", "TRP", "TYR", "VAL"]
+
+hetatm_smiles_dict = {'ZN': '[Zn+2]', 'MG': '[Mg+2]', 'NA': '[Na+1]', 'MN': '[Mn+2]', 'CA': '[Ca+2]', 'K': '[K+1]',
+                    'NI': '[Ni+2]', 'FE': '[Fe+2]', 'CO': '[Co+2]', 'HG': '[Hg+2]', 'CD': '[Cd+2]', 'CU': '[Cu+2]', 
+                    'CS': '[Cs+1]', 'AU': '[Au+1]', 'LI': '[Li+1]', 'GA': '[Ga+3]', 'IN': '[In+3]', 'BA': '[Ba+2]',
+                    'RB': '[Rb+1]', 'SR': '[Sr+2]'}
+
 '''
 This script takes protein-ligand complexes in PDB and SDF format and generates featurized interaction graphs.
 The data_dir should contain protein-ligand complexes, each represented by a protein structures in PDB format and ligand structures in 
@@ -308,42 +342,6 @@ def main():
     protein_embeddings = args.protein_embeddings
     ligand_embeddings = args.ligand_embeddings
     masternode = args.masternode
-
-
-    all_atoms = ['B', 'C', 'N', 'O', 'P', 'S', 'Se', 'metal', 'halogen']
-    halogens = ['F', 'Cl', 'Br', 'I', 'At'] #Halogen atoms Fluorine (F), Chlorine (Cl), Bromine (Br), Iodine (I), and Astatine (At)
-    metals = [
-        # Alkali Metals
-        'Li', 'Na', 'K', 'Rb', 'Cs', 'Fr',
-        # Alkaline Earth Metals
-        'Be', 'Mg', 'Ca', 'Sr', 'Ba', 'Ra',
-        # Transition Metals
-        'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn',
-        'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd',
-        'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg',
-        'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn',
-        'Nh', 'Fl', 'Mc', 'Lv',
-        # Lanthanides
-        'La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 
-        'Ho', 'Er', 'Tm', 'Yb', 'Lu',
-        # Actinides
-        'Ac', 'Th', 'Pa', 'U', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf', 
-        'Es', 'Fm', 'Md', 'No', 'Lr',
-        # Post-Transition Metals
-        'Al', 'Ga', 'In', 'Sn', 'Tl', 'Pb', 'Bi', 'Nh', 'Fl', 'Mc', 'Lv',
-        # Half-Metals
-        'As', 'Si', 'Sb', 'Te'
-    ]
-
-
-    amino_acids = ["ALA", "ARG", "ASN", "ASP", "CYS", "GLN", "GLU", "GLY", "HIS", "ILE", "LEU",
-                "LYS", "MET", "PHE", "PRO", "SER", "THR", "TRP", "TYR", "VAL"]
-
-    hetatm_smiles_dict = {'ZN': '[Zn+2]', 'MG': '[Mg+2]', 'NA': '[Na+1]', 'MN': '[Mn+2]', 'CA': '[Ca+2]', 'K': '[K+1]',
-                        'NI': '[Ni+2]', 'FE': '[Fe+2]', 'CO': '[Co+2]', 'HG': '[Hg+2]', 'CD': '[Cd+2]', 'CU': '[Cu+2]', 
-                        'CS': '[Cs+1]', 'AU': '[Au+1]', 'LI': '[Li+1]', 'GA': '[Ga+3]', 'IN': '[In+3]', 'BA': '[Ba+2]',
-                        'RB': '[Rb+1]', 'SR': '[Sr+2]'}
-
 
     # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     # PREPROCESSING
