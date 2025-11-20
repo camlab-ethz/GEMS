@@ -53,9 +53,8 @@ OPTIONAL Command-line Arguments (with default values):
     --weight_decay:         OPTIONAL - Weight decay parameter for training.
     --conv_dropout:         OPTIONAL - Dropout probability for convolutional layers.
     --dropout:              OPTIONAL - Dropout probability for dropout layer in fully-connected NN.
-    --early_stopping:       OPTIONAL - Whether to use early stopping.
     --early_stop_patience:  OPTIONAL - Patience for early stopping.
-    --early_stop_min_delta: OPTIONAL - Minimum delta for early stopping.
+    --early_stop_tolerance: OPTIONAL - Tolerance factor for early stopping
 
     ADAPTIVE LEARNING RATE
     --alr_lin:              OPTIONAL - Whether to use linear learning rate reduction scheme.
@@ -106,9 +105,8 @@ def parse_args():
     parser.add_argument("--random_seed", default=0, type=int, help="The random seed that should be used for the splitting of the dataset")
 
     # Early stopping
-    parser.add_argument("--early_stopping",  default=True, type=lambda x: x.lower() in ['true', '1', 'yes'], help="If early stopping should be used to prevent overfitting")
     parser.add_argument("--early_stop_patience", default=100, type=int, help="For how many epochs the validation loss can cease to decrease without triggering early stop")
-    parser.add_argument("--early_stop_min_delta", default=0.7, type=float, help="How far train loss and val loss are allowed to diverge without triggering early stop")
+    parser.add_argument("--early_stop_tolerance", default=0.01, type=float, help="Tolerance factor for early stopping")
 
     # If the learning rate should be adaptive LINEAR
     parser.add_argument("--alr_lin",  default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Linear learning rate reduction scheme will be used")
@@ -172,35 +170,30 @@ wandb_dir = save_dir
 run_name = f'{run_name}_f{fold_to_train}' 
 
 
-# Early Stopping
-early_stopping = args.early_stopping
-if early_stopping:
+class EarlyStopper:
+    def __init__(self, patience=1, tolerance=None):
+        self.patience = patience
+        self.tolerance = tolerance  # Allowed deviation from min_val_rmse without increasing the counter
+        self.counter = 0
+        self.min_val_rmse = float('inf')
 
-    class EarlyStopper:
-        def __init__(self, patience=1, min_delta=1):
-            self.patience = patience
-            self.min_delta = min_delta
+    def early_stop(self, val_rmse):
+        if val_rmse < self.min_val_rmse:
+            self.min_val_rmse = val_rmse
             self.counter = 0
-            self.min_validation_r = 0
-            #self.min_validation_r = float('inf')
 
-        def early_stop(self, val_r, train_r):
-            if abs(val_r - train_r) > self.min_delta and val_r > 0 and train_r > 0: 
-                print(f'Early Stopping: Difference Validation R - Train R has become higher than {self.min_delta}')
+        # Only increase the counter if val_rmse is larger than min_val_rmse + (tolerance * min_val_rmse)
+        elif val_rmse > (self.min_val_rmse + self.tolerance * self.min_val_rmse):
+            self.counter += 1
+            if self.counter >= self.patience:
+                print(f'Early Stopping: Validation RMSE has larger than {self.min_val_rmse + self.tolerance * self.min_val_rmse} for {self.patience} epochs')
                 return True
-            if val_r > self.min_validation_r:
-                self.min_validation_r = val_r
-                self.counter = 0
-            elif val_r < self.min_validation_r:
-                self.counter += 1
-                if self.counter >= self.patience:
-                    print(f'Early Stopping: Validation R has not decreased for {self.patience} epochs')
-                    return True
-            return False
-        
-    early_stopper = EarlyStopper(patience=args.early_stop_patience, min_delta=args.early_stop_min_delta)
+        else:
+            pass
+        return False
+    
 
-
+early_stopper = EarlyStopper(patience=args.early_stop_patience, tolerance=args.early_stop_tolerance)
 
 # Learning rate reduction scheme
 alr_lin = args.alr_lin
@@ -231,7 +224,6 @@ if wandb_tracking:
                 "Architecture": model_arch,
                 "Epochs": num_epochs,
                 "Optimizer": optim,
-                "Early Stopping": early_stopping,
                 "Early Stopping Patience": args.early_stop_patience,
                 "Batch Size": batch_size,
                 "Splitting Random Seed":random_seed,
@@ -664,14 +656,11 @@ if wandb_tracking:
 #-------------------------------------------------------------------------------------------------------------------------------
 
 # Initialize dictionary to store the current best epochs metrics
-best_epoch = val_r
+best_epoch = val_rmse
 best_metrics = {'val': (val_loss, val_r, val_rmse, val_r2, val_y_true, val_y_pred),
                 'train': (train_loss, train_r, train_rmse, train_r2, train_y_true, train_y_pred)}
-
-
 plotted = []
 last_saved_epoch = 0
-
 
 
 #===============================================================================================================================================
@@ -708,26 +697,24 @@ for epoch in range(epoch+1, num_epochs+1):
     if alr_lin: lin_scheduler.step()
     if alr_mult: mult_scheduler.step()
 
-
-    # If the previous best val_loss is beaten, save the model and update the best metrics dict
-    if val_r > best_epoch: 
+    # Update best metrics if this is a new best
+    if val_rmse < best_epoch:
+        best_epoch = val_rmse
         torch.save(Model.state_dict(), f'{save_dir}/{run_name}_best_stdict.pt')
-        log_string += ' Saved'
-        last_saved_epoch = epoch
-
-        best_epoch = val_r
         best_metrics['val'] = (val_loss, val_r, val_rmse, val_r2, val_y_true, val_y_pred)
         best_metrics['train'] = (train_loss, train_r, train_rmse, train_r2, train_y_true, train_y_pred)
+        log_string += ' Saved'
+        last_saved_epoch = epoch
+    else:
+        log_string += f" {early_stopper.counter}"
 
     print(log_string, flush=True)
 
     if epoch % 50 == 0:
         print(f'Time: {((time.time() - tic)/60):5.0f}')
 
-
-
     early_stop = False
-    if early_stopping: early_stop = early_stopper.early_stop(val_r, train_r)
+    early_stop = early_stopper.early_stop(val_rmse)
 
 
 
@@ -735,12 +722,6 @@ for epoch in range(epoch+1, num_epochs+1):
     # -------------------------------------------------------------------------------------------------------------------------------
     
     if epoch % 100 == 0 or epoch == num_epochs or early_stop:
-
-        # Plot the predictions
-        # predictions = plot_predictions( train_y_true, train_y_pred,
-        #                                 val_y_true, val_y_pred,
-        #                                 f"{run_name}: Epoch {epoch}\nTrain R = {train_r:.3f}, Validation R = {val_r:.3f}\n Train RMSE = {train_rmse:.3f}, Validation RMSE = {val_rmse:.3f}")
-
 
         # If there has been a new best epoch in the last interval of epochs, plot the predictions of this model      
         if last_saved_epoch not in plotted:
@@ -764,18 +745,12 @@ for epoch in range(epoch+1, num_epochs+1):
         plt.close('all')
         
         if wandb_tracking: 
-            wandb.log({ #"Predictions Scatterplot": wandb.Image(predictions),
-                        "Best Predictions Scatterplot": wandb.Image(best_predictions),
+            wandb.log({ "Best Predictions Scatterplot": wandb.Image(best_predictions),
                         "Residuals Plot":wandb.Image(residuals)
                         })
             
-    
-
     # Is it time for early stopping?
     if early_stop: break
-
-
-
 
 toc = time.time()
 training_time = (toc-tic)/60
