@@ -31,12 +31,14 @@ pafnucy_data/
 GEMS_pytorch_datasets/
 clustering/
 test_extract*
+export/
 
 # Ignore specific scripts and data processing files
 PDBbind_data/similarity/pairwise_similarity_matrix/matrix_merge.py
 PDBbind_data/similarity/pairwise_similarity_matrix/matrix_extract_to_json.py
 visualization/
 aggregate_results.py
+GEMS_minimal_example.py
 
 # Ignore script outputs
 PDBbind_search_algorithm/*/*.png
