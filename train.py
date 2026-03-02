@@ -125,7 +125,7 @@ def parse_args():
     parser.add_argument("--min_lr", default=0.5e-4, type=float, help="A lower bound on the learning rate")
 
     # If a state_dict should be loaded before the training
-    parser.add_argument("--pretrained",  default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Provide the path of a state dict that should be imported")
+    parser.add_argument("--pretrained", default=None, type=str, help="Path to a state dict to import for pretrained model")
     parser.add_argument("--start_epoch", default=0, type=int, help="Provide the starting epoch (in case of importing pretrained model)")
 
     return parser.parse_args()
