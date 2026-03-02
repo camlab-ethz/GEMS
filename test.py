@@ -190,7 +190,8 @@ def main():
 
     # Save Predictions Scatterplot
     filepath = os.path.join(save_path, f'{test_dataset_name}_predictions.png')
-    plot_predictions(y_true, y_pred, test_dataset_name, metrics=f"R = {r:.3f}\nR2 = {r2_score:.3f}\nkTau = {tau:.3f}\nspRho = {rho:.3f}", filepath=filepath, axislim=14)
+    # plot_predictions(y_true, y_pred, test_dataset_name, metrics=f"R = {r:.3f}\nR2 = {r2_score:.3f}\nkTau = {tau:.3f}\nspRho = {rho:.3f}", filepath=filepath, axislim=14)
+    plot_predictions(y_true, y_pred, test_dataset_name, metrics=f"RMSE = {rmse:.3f}\nPCC = {r:.3f}\nR2 = {r2_score:.3f}", filepath=filepath, axislim=14)
     print(f'Predictions saved to {os.path.join(save_path, f"{test_dataset_name}_predictions")}')
     #-------------------------------------------------------------------------------------------------------------------------
 
