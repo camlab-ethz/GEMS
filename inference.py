@@ -1,4 +1,5 @@
 import argparse
+from html import parser
 import sys
 import csv
 import os
@@ -117,7 +118,7 @@ def plot_predictions(ax, y_true, y_pred, title, label):
 
 
 
-def inference(dataset_path, model_path, ligand_embeddings=None, protein_embeddings=None):
+def inference(dataset_path, model_path, protein_embeddings=None, skip_ligand_embedding=False):
 
     # Load the dataset
     print(f"Loading dataset from {dataset_path}")
@@ -134,8 +135,14 @@ def inference(dataset_path, model_path, ligand_embeddings=None, protein_embeddin
     # SELECT THE MODEL ARCHITECTURE AND STATE DICT PATHS
     #------------------------------------------------------------------------------------------------------
     # Check if the dataset has protein and ligand embeddings and choose the correct model state dict paths
-    if not protein_embeddings: protein_embeddings = dataset.protein_embeddings
-    if not ligand_embeddings: ligand_embeddings = dataset.ligand_embeddings
+    if not protein_embeddings: 
+        protein_embeddings = dataset.protein_embeddings # Default = all available protein embeddings in the dataset
+    
+    if skip_ligand_embedding:
+        ligand_embeddings = [] # No ligand embedding
+    else:
+        ligand_embeddings = dataset.ligand_embeddings # Default = use ligand embedding in the dataset
+        
 
     # Currently providing stdicts for the following combinations of embeddings:
     # 1. No embeddings (00AEPL with GEMS18e)
@@ -260,14 +267,12 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Testing Parameters and Input Dataset Control")
     parser.add_argument("--dataset_path", required=True, help="The path to the test dataset pt file")
     parser.add_argument("--model_path", default="model", help="The path to the directory containing the model state dicts")
-    parser.add_argument("--ligand_embeddings", help="List of ligand embeddings used in the model", default=None)
     parser.add_argument("--protein_embeddings", help="List of protein embeddings used in the model", default=None)
+    parser.add_argument("--skip_ligand_embedding", default=False, type=lambda x: x.lower() in ['true', '1', 'yes'], help="Skip the use of the ligand embedding in the dataset")
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_args()
-    dataset_path = args.dataset_path
-    model_path = args.model_path
 
-    inference(dataset_path, model_path, args.ligand_embeddings, args.protein_embeddings)
+    inference(args.dataset_path, args.model_path, args.protein_embeddings, args.skip_ligand_embedding)
