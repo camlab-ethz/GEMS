@@ -659,7 +659,7 @@ def main():
 
                 for index, neighbor_list in enumerate(connections): 
                     for residue in neighbor_list:
-                        resname == residues_dict[residue]['resname']
+                        resname = residues_dict[residue]['resname']
                         
 
                         # --- EDGE INDEX ---
