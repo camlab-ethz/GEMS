@@ -175,11 +175,18 @@ This project is licensed under the MIT License. It is freely available for acade
 If you find this resource helpful, please cite the following publication:
 
 ```bibtex
-@article {Graber2024.12.09.627482,
-	author = {Graber, David and Stockinger, Peter and Meyer, Fabian and Mishra, Siddhartha and Horn, Claus and Buller, Rebecca M. U.},
-	title = {GEMS: A Generalizable GNN Framework For Protein-Ligand Binding Affinity Prediction Through Robust Data Filtering and Language Model Integration},
-	elocation-id = {2024.12.09.627482},
-	year = {2024},
-	doi = {10.1101/2024.12.09.627482},
+@article{GEMS, 
+  year     = {2025}, 
+  title    = {Resolving data bias improves generalization in binding affinity prediction}, 
+  author   = {Graber, David and Stockinger, Peter and Meyer, Fabian and Mishra, Siddhartha and Horn, Claus and Buller, Rebecca}, 
+  journal  = {Nature Machine Intelligence}, 
+  issn     = {2522-5839}, 
+  doi      = {10.1038/s42256-025-01124-5}, 
+  pmid     = {41143208}, 
+  pmcid    = {PMC12552120}, 
+  abstract = {The field of computational drug design requires accurate scoring functions to predict binding affinities for protein–ligand interactions. However, train–test data leakage between the PDBbind database and the Comparative Assessment of Scoring Function benchmark datasets has severely inflated the performance metrics of currently available deep-learning-based binding affinity prediction models, leading to overestimation of their generalization capabilities. Here we address this issue by proposing PDBbind CleanSplit, a training dataset curated by a new structure-based filtering algorithm that eliminates train–test data leakage as well as redundancies within the training set. Retraining current top-performing models on CleanSplit caused their benchmark performance to drop substantially, indicating that the performance of existing models is largely driven by data leakage. By contrast, our graph neural network model maintains high benchmark performance when trained on CleanSplit. Leveraging a sparse graph modelling of protein–ligand interactions and transfer learning from language models, our model is able to generalize to strictly independent test datasets.}, 
+  pages    = {1713--1725}, 
+  number   = {10}, 
+  volume   = {7}
 }
 ```
