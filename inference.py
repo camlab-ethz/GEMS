@@ -22,6 +22,7 @@ class RMSELoss(torch.nn.Module):
 def load_model_state(model, state_dict_path, device):
     if device == torch.device('cpu'):
         model.load_state_dict(torch.load(state_dict_path, map_location=torch.device('cpu')))
+        model.eval()  # Set the model to evaluation mode
     else:
         model.load_state_dict(torch.load(state_dict_path))
         model.eval()  # Set the model to evaluation mode
